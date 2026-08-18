@@ -1,0 +1,3 @@
+# Authorization
+
+Documentation pending.

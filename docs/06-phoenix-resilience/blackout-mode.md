@@ -1,0 +1,3 @@
+# Blackout Mode
+
+Documentation pending.

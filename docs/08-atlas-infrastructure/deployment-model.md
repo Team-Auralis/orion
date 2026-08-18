@@ -1,0 +1,3 @@
+# Deployment Model
+
+Documentation pending.
