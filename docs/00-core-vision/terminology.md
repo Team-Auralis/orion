@@ -1,0 +1,3 @@
+# Terminology
+
+Documentation pending.

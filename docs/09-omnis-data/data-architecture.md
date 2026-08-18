@@ -1,0 +1,3 @@
+# Data Architecture
+
+Documentation pending.

@@ -1,0 +1,3 @@
+# Failure Model
+
+Documentation pending.

@@ -1,0 +1,3 @@
+# Communication Model
+
+Documentation pending.

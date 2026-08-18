@@ -1,0 +1,3 @@
+# Component Model
+
+Documentation pending.

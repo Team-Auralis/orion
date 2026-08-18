@@ -1,0 +1,3 @@
+# Failover
+
+Documentation pending.

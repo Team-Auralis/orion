@@ -1,0 +1,3 @@
+# Degraded Mode
+
+Documentation pending.
