@@ -1,6 +1,11 @@
-# ORION
+# ORION: Planetary Resilience & Digital Twin Infrastructure
 
-**Resilient Communication, Emergency Coordination & Intelligent Infrastructure Platform**
+> **🛑 PROPRIETARY AND CONFIDENTIAL**
+> 
+> **Copyright (c) 2026 Team Auralis. All Rights Reserved.**
+> This repository, its architecture, and its source code are strictly proprietary. You may not copy, distribute, modify, or use this idea without explicit written permission from Team Auralis. Contact us for commercial or research licensing.
+
+---
 
 **Status: Documentation / Architecture Phase**
 **Implementation status: Not started**
