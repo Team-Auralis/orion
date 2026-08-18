@@ -12,7 +12,7 @@ export default function Home() {
     const fetchIncidents = async () => {
       try {
         // Ponytail: Simple fetch to our local API. In prod, use react-query and proper auth tokens.
-        const res = await fetch("http://localhost:8000/v1/incidents", {
+        const res = await fetch("http://localhost:8001/v1/incidents", {
             // This represents an operator logged in.
             // FastAPI currently mocks auth, but requires hitting the policy check.
             headers: { "Authorization": "Bearer MOCK_TOKEN" }

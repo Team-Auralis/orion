@@ -58,11 +58,13 @@ class IncidentResponse(BaseModel):
     created_at: str
 
 # --- Dependencies ---
-async def get_current_user() -> Dict[str, Any]:
+async def get_current_user(request: Request) -> Dict[str, Any]:
     # TODO: Verify real Keycloak JWT here
+    auth = request.headers.get("Authorization", "")
+    role = "operator" if "MOCK_TOKEN" in auth else "citizen"
     return {
         "subject": "user-123",
-        "role": "citizen"
+        "role": role
     }
 
 def check_policy(action: str, resource: str, resource_attributes: Dict[str, Any] = None):

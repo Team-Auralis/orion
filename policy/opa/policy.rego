@@ -1,23 +1,23 @@
 package orion.authz
-
+import rego.v1
 default allow = false
 
 # Helpers
-is_authenticated {
+is_authenticated if {
     input.subject != null
     input.subject != ""
 }
 
-is_operator {
+is_operator if {
     input.role == "operator"
 }
 
-is_citizen {
+is_citizen if {
     input.role == "citizen"
 }
 
 # Rule 1: Anyone authenticated can create an SOS incident
-allow {
+allow if {
     is_authenticated
     input.action == "incident:create"
     input.resource == "incident"
@@ -25,7 +25,7 @@ allow {
 }
 
 # Rule 2: Operators have access to the admin dashboard
-allow {
+allow if {
     is_authenticated
     is_operator
     input.action == "dashboard:view"
