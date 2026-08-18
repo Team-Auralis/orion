@@ -65,8 +65,8 @@ async def get_current_user() -> Dict[str, Any]:
         "role": "citizen"
     }
 
-async def check_policy(action: str, resource: str, resource_attributes: Dict[str, Any] = None):
-    def dependency(user: Dict[str, Any] = Depends(get_current_user)):
+def check_policy(action: str, resource: str, resource_attributes: Dict[str, Any] = None):
+    async def dependency(user: Dict[str, Any] = Depends(get_current_user)):
         opa_url = os.environ.get("OPA_URL", "http://localhost:8181/v1/data/orion/authz/allow")
         input_data = {
             "input": {
@@ -102,47 +102,52 @@ async def create_incident(
     user: Dict[str, Any] = Depends(check_policy(action="incident:create", resource="incident", resource_attributes={"incident_type": "SOS"})),
     db: Session = Depends(get_db)
 ):
-    # 1. Idempotency Check
-    if idempotency_key:
-        cached = db.query(IdempotencyKey).filter(IdempotencyKey.key == idempotency_key).first()
-        if cached:
-            return json.loads(cached.response_body)
-
-    # 2. State Mutation
-    incident_id = f"INC-{uuid.uuid4().hex[:8].upper()}"
-    now = datetime.now(timezone.utc)
-    
-    new_incident = Incident(
-        id=incident_id,
-        type=incident.type,
-        user_id=user["subject"],
-        latitude=incident.location.latitude,
-        longitude=incident.location.longitude,
-        message=incident.message,
-        created_at=now,
-        updated_at=now
-    )
-    db.add(new_incident)
-
     response_data = {
-        "incident_id": incident_id,
+        "incident_id": f"INC-{uuid.uuid4().hex[:8].upper()}",
         "status": "CREATED",
-        "created_at": now.isoformat()
+        "created_at": datetime.now(timezone.utc).isoformat()
     }
 
-    # 3. Cache Idempotency
-    if idempotency_key:
-        db.add(IdempotencyKey(key=idempotency_key, response_body=json.dumps(response_data)))
+    db_is_online = True
+    try:
+        # 1. Idempotency Check
+        if idempotency_key:
+            cached = db.query(IdempotencyKey).filter(IdempotencyKey.key == idempotency_key).first()
+            if cached:
+                return json.loads(cached.response_body)
 
-    db.commit()
+        # 2. State Mutation
+        new_incident = Incident(
+            id=response_data["incident_id"],
+            type=incident.type,
+            user_id=user["subject"],
+            latitude=incident.location.latitude,
+            longitude=incident.location.longitude,
+            message=incident.message,
+            created_at=response_data["created_at"],
+            updated_at=response_data["created_at"]
+        )
+        db.add(new_incident)
+
+        # 3. Cache Idempotency
+        if idempotency_key:
+            db.add(IdempotencyKey(key=idempotency_key, response_body=json.dumps(response_data)))
+
+        db.commit()
+    except Exception as e:
+        # PHOENIX FALLBACK
+        db.rollback()
+        db_is_online = False
+        print(f"DATABASE OFFLINE. Triggering NATS Fallback: {e}")
+        response_data["status"] = "ACCEPTED_DEGRADED_MODE"
 
     # 4. Event Publication
     event = {
         "event_id": f"evt-{uuid.uuid4()}",
         "event_type": "incident.created",
         "version": 1,
-        "timestamp": now.isoformat(),
-        "incident_id": incident_id,
+        "timestamp": response_data["created_at"],
+        "incident_id": response_data["incident_id"],
         "actor_id": user["subject"],
         "incident_type": incident.type,
         "correlation_id": idempotency_key or f"req-{uuid.uuid4().hex[:6]}"
@@ -154,6 +159,9 @@ async def create_incident(
         print("Warning: NATS not connected, event dropped.")
         # In a real resilient system, we might use an outbox pattern here
     
+    from fastapi.responses import JSONResponse
+    if not db_is_online:
+        return JSONResponse(status_code=202, content=response_data)
     return response_data
 
 @app.get("/v1/incidents")

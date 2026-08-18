@@ -5,7 +5,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 DATABASE_URL = os.environ.get(
     "DATABASE_URL", 
-    "postgresql://orion_admin:orion_password@localhost:5432/orion"
+    "postgresql://orion_admin:orion_password@localhost:5433/orion"
 )
 
 engine = create_engine(DATABASE_URL)
@@ -34,7 +34,10 @@ class IdempotencyKey(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 # Ponytail: Let SQLAlchemy create tables for V1. In real prod, use Alembic.
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print(f"Warning: Could not create tables, database offline: {e}")
 
 def get_db():
     db = SessionLocal()
