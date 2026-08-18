@@ -1,7 +1,7 @@
 import httpx
 import uuid
 
-API_URL = "http://localhost:8000/v1"
+API_URL = "http://localhost:8001/v1"
 
 def test_sos_flow():
     print("--- Testing Authorized SOS Flow ---")
@@ -28,11 +28,14 @@ def test_sos_flow():
             print(f"Response Body: {resp.json()}")
             
             if resp.status_code == 200:
-                print("✅ SOS successfully created and authorized.")
+                if resp.json().get("status") == "ACCEPTED_DEGRADED_MODE":
+                    print("[SUCCESS] SOS accepted in DEGRADED MODE (Database Offline).")
+                else:
+                    print("[SUCCESS] SOS successfully created and authorized.")
             else:
-                print("❌ SOS creation failed.")
+                print("[FAILED] SOS creation failed.")
     except httpx.ConnectError:
-        print("❌ Could not connect to API. Is it running?")
+        print("[FAILED] Could not connect to API. Is it running?")
 
 def test_negative_path():
     print("\n--- Testing Negative Path (Citizen -> Admin) ---")
@@ -43,12 +46,12 @@ def test_negative_path():
             print(f"Response Code: {resp.status_code}")
             
             if resp.status_code == 403:
-                print("✅ Policy Firewall successfully blocked access (403 Forbidden).")
+                print("[SUCCESS] Policy Firewall successfully blocked access (403 Forbidden).")
             else:
-                print(f"❌ Policy Firewall failed to block access. Code: {resp.status_code}")
+                print(f"[FAILED] Policy Firewall failed to block access. Code: {resp.status_code}")
                 print(f"Response Body: {resp.json()}")
     except httpx.ConnectError:
-        print("❌ Could not connect to API. Is it running?")
+        print("[FAILED] Could not connect to API. Is it running?")
 
 if __name__ == "__main__":
     test_sos_flow()
