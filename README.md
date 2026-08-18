@@ -1,9 +1,12 @@
 # ORION: Planetary Resilience & Digital Twin Infrastructure
 
-> **🛑 PROPRIETARY AND CONFIDENTIAL**
+> **🛑 RESTRICTED ACCESS: PROPRIETARY & CONFIDENTIAL 🛑**
 > 
-> **Copyright (c) 2026 Team Auralis. All Rights Reserved.**
-> This repository, its architecture, and its source code are strictly proprietary. You may not copy, distribute, modify, or use this idea without explicit written permission from Team Auralis. Contact us for commercial or research licensing.
+> **COPYRIGHT (c) 2026 TEAM AURALIS / SHAURYA. ALL RIGHTS RESERVED.**
+> 
+> **ZERO TOLERANCE POLICY:** This is NOT open-source. This repository, its source code, and its underlying architectural concepts are the exclusive private property of Team Auralis. You are **STRICTLY PROHIBITED** from copying, duplicating, reverse-engineering, modifying, distributing, or using this code or idea for any purpose (including training AI models). 
+> 
+> Intellectual property theft will result in immediate, aggressive, and uncompromising legal action. If you wish to negotiate a commercial or research license, you must contact Team Auralis directly and obtain written consent. **DO NOT STEAL THIS.**
 
 ---
 
