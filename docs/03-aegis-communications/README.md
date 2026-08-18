@@ -1,37 +1,41 @@
-# 03 Aegis Communications
+# 04 Satellite & Communication Layer (AEGIS)
 
 ## 1. Purpose
-Defines the core functionality and vision for this module.
+AEGIS defines the physical and logical transport layers of ORION. While NEXUS defines the software architecture, AEGIS defines how bits actually move across a broken planet.
 
 ## 2. Scope
-What is included and explicitly excluded from this module.
+Included: Satellite/NTN integration, fallback protocols, mesh networking theory, traffic prioritization, and Edge Node uplinks.
+Excluded: Software application logic, database schemas.
 
 ## 3. Major Components
-Key sub-systems that make up this part of ORION.
+*   **Terrestrial Backhaul:** Fiber and 5G networks (Primary).
+*   **Non-Terrestrial Networks (NTN):** LEO satellite constellations (Fallback).
+*   **IoT & Mesh:** LoRaWAN and BLE store-and-carry (Deep Edge).
+*   **Traffic Shaper:** The QoS engine prioritizing critical SOS packets over general telemetry.
 
 ## 4. Architecture
-How this module is structured internally.
+AEGIS uses a **Graceful Degradation Model**. The system always attempts the highest-bandwidth route first. As infrastructure fails, the routing layer automatically shifts to slower, higher-latency mediums, culminating in completely asynchronous offline mesh networking.
 
 ## 5. Responsibilities
-What this module must guarantee.
+Ensure that if a NATS event needs to reach the Supercluster, AEGIS finds a physical route, even if it takes hours.
 
 ## 6. Relationships with other ORION parts
-How it interfaces with the other 11 modules.
+AEGIS provides the physical transport for **NEXUS** (the event mesh). **HAVEN** (civilian app) relies entirely on AEGIS's mesh and fallback protocols to function.
 
 ## 7. Future Roadmap
-Planned evolution.
+Direct-to-Device (D2D) satellite messaging (e.g., Apple SOS, AST SpaceMobile), allowing standard civilian smartphones to bypass the BLE mesh and hit satellites directly.
 
 ## 8. Trade-offs
-Architectural compromises made for resilience/speed.
+In degraded states, AEGIS trades bandwidth for reachability. Real-time video streams are aggressively killed in favor of kilobyte-sized JSON SOS payloads.
 
 ## 9. Risks
-Known vulnerabilities and points of failure.
+Weather (e.g., heavy rain) degrading Ku/Ka-band satellite uplinks precisely when emergency communications are needed most.
 
 ## 10. Research Questions
-Unresolved technical challenges.
+Can we use AI (SENTIENCE) to dynamically adjust traffic shaping based on real-time satellite constellation positioning and weather patterns?
 
 ## 11. Security Considerations
-Zero-trust implications for this module.
+All communication mediums (especially public 5G and open BLE meshes) are considered hostile. AEGIS assumes the physical layer is compromised; therefore, all payloads are secured via **VEIL** (mTLS and payload encryption).
 
 ## 12. Current Status
-Documentation / Architecture Phase. Implementation not started.
+**Phase 0:** Transport layers modeled and fallback sequences defined.
