@@ -14,14 +14,12 @@ ORION abandons traditional monolithic REST architectures in favor of an asynchro
 
 ```mermaid
 graph TD
-    A[Mobile Device / Tests] -->|1. POST /incident| B(FastAPI)
-    B -->|2. Check Policy| C{OPA}
-    C -->|DENY| D[403 Forbidden]
-    C -->|ALLOW| E[(PostgreSQL)]
-    E -->|3. Persist State| B
-    B -->|4. Publish| F((NATS Event Mesh))
-    F -->|incident.created| G[NATS Worker]
-    F -->|Polls State| H[Next.js Dashboard]
+    Client[Mobile Device / Tests] -->|POST /incident| API[FastAPI Gateway]
+    API <-->|1. Check Policy| OPA{OPA Firewall}
+    API -->|2. Persist State| DB[(PostgreSQL)]
+    API -->|3. Publish Event| NATS((NATS Event Mesh))
+    NATS -->|incident.created| Worker[NATS Worker]
+    Dashboard[Next.js Dashboard] -.->|Polls State| API
 ```
 
 ### Core Technologies
