@@ -57,7 +57,9 @@ export default function Home() {
               <tr>
                 <th className="px-6 py-4">INCIDENT ID</th>
                 <th className="px-6 py-4">TYPE</th>
+                <th className="px-6 py-4">AI SEVERITY</th>
                 <th className="px-6 py-4">STATUS</th>
+                <th className="px-6 py-4">AI TAGS</th>
                 <th className="px-6 py-4">MESSAGE</th>
                 <th className="px-6 py-4">TIMESTAMP</th>
               </tr>
@@ -65,20 +67,40 @@ export default function Home() {
             <tbody>
               {incidents.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500 italic">
+                  <td colSpan={7} className="px-6 py-8 text-center text-slate-500 italic">
                     NO ACTIVE INCIDENTS. SYSTEM NOMINAL.
                   </td>
                 </tr>
               ) : (
                 incidents.map((inc: any) => (
-                  <tr key={inc.incident_id} className="border-b border-slate-700 hover:bg-slate-700/50 transition-colors">
+                  <tr key={inc.incident_id} className={`border-b border-slate-700 hover:bg-slate-700/50 transition-colors ${inc.ai_severity === 'CRITICAL' ? 'bg-red-950/20' : ''}`}>
                     <td className="px-6 py-4 font-medium text-blue-300">{inc.incident_id}</td>
                     <td className="px-6 py-4">
-                        <span className="bg-red-900/50 text-red-400 border border-red-500/50 px-2 py-1 rounded text-xs font-bold">
+                        <span className="bg-slate-900 text-slate-300 border border-slate-500/50 px-2 py-1 rounded text-xs font-bold">
                             {inc.type}
                         </span>
                     </td>
+                    <td className="px-6 py-4">
+                        {inc.ai_severity ? (
+                          <span className={`px-2 py-1 rounded text-xs font-bold ${inc.ai_severity === 'CRITICAL' ? 'bg-red-900/80 text-red-100 border border-red-500 animate-pulse' : inc.ai_severity === 'HIGH' ? 'bg-orange-900/50 text-orange-400 border border-orange-500/50' : 'bg-green-900/50 text-green-400 border border-green-500/50'}`}>
+                              {inc.ai_severity}
+                          </span>
+                        ) : (
+                          <span className="text-slate-600 text-xs italic">Pending</span>
+                        )}
+                    </td>
                     <td className="px-6 py-4 text-amber-400">{inc.status}</td>
+                    <td className="px-6 py-4">
+                        <div className="flex flex-wrap gap-1">
+                          {inc.ai_tags ? inc.ai_tags.split(',').map((tag: string) => (
+                            <span key={tag} className="bg-blue-900/30 text-blue-300 border border-blue-500/30 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                              {tag.trim()}
+                            </span>
+                          )) : (
+                            <span className="text-slate-600 text-xs italic">-</span>
+                          )}
+                        </div>
+                    </td>
                     <td className="px-6 py-4 truncate max-w-xs">{inc.message}</td>
                     <td className="px-6 py-4 text-slate-400">{new Date(inc.created_at).toLocaleString()}</td>
                   </tr>
