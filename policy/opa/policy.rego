@@ -32,5 +32,13 @@ allow if {
     input.resource == "admin"
 }
 
+# Rule 3: Operators can update incidents
+allow if {
+    is_authenticated
+    is_operator
+    input.action == "incident:update"
+    input.resource == "incident"
+}
+
 # (The negative path / deny for citizen accessing admin is implicitly handled by default allow = false, 
 # but we can explicitly deny it or just let the default block it. The prompt's requirement is that a citizen is denied).
