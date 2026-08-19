@@ -89,6 +89,24 @@ async def message_handler(msg):
                         print(f"CRDT IGNORE: {new_status} (rank {new_rank}) is <= {current_status} (rank {current_rank}). Event discarded.")
                 else:
                     print(f"Warning: Received status change for unknown incident {incident_id}")
+                    
+            elif event_type == "incident.ai_triaged":
+                if incident:
+                    print(f"CRDT MERGE: Applying AI Triage data to {incident_id}")
+                    incident.ai_severity = event.get("ai_severity")
+                    incident.ai_tags = event.get("ai_tags")
+                    
+                    # Automatically bump status to TRIAGED if it's still CREATED or REPORTED
+                    current_rank = STATE_HIERARCHY.get(incident.status.upper(), -1)
+                    triage_rank = STATE_HIERARCHY.get("TRIAGED", -1)
+                    if triage_rank > current_rank:
+                        print(f"CRDT MERGE: AI Auto-Triaged status upgraded to TRIAGED")
+                        incident.status = "TRIAGED"
+                    
+                    incident.updated_at = datetime.fromisoformat(event.get("timestamp"))
+                    db.commit()
+                else:
+                    print(f"Warning: Received AI triage for unknown incident {incident_id}")
         
         processed_events.add(event_id)
         await msg.ack()

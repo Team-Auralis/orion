@@ -152,6 +152,7 @@ async def create_incident(
         "incident_id": response_data["incident_id"],
         "actor_id": user["subject"],
         "incident_type": incident.type,
+        "message": incident.message,
         "correlation_id": idempotency_key or f"req-{uuid.uuid4().hex[:6]}"
     }
     
@@ -207,7 +208,15 @@ async def list_incidents(
     db: Session = Depends(get_db)
 ):
     incidents = db.query(Incident).order_by(Incident.created_at.desc()).all()
-    return [{"incident_id": inc.id, "type": inc.type, "status": inc.status, "message": inc.message, "created_at": inc.created_at.isoformat()} for inc in incidents]
+    return [{
+        "incident_id": inc.id,
+        "type": inc.type,
+        "status": inc.status,
+        "message": inc.message,
+        "ai_severity": inc.ai_severity,
+        "ai_tags": inc.ai_tags,
+        "created_at": inc.created_at.isoformat()
+    } for inc in incidents]
 
 @app.get("/v1/admin")
 async def admin_dashboard(
