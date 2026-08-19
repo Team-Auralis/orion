@@ -5,7 +5,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 DATABASE_URL = os.environ.get(
     "DATABASE_URL", 
-    "postgresql://orion_admin:orion_password@localhost:5433/orion"
+    "postgresql://orion_admin:orion_password@localhost:5433/keycloak"
 )
 
 engine = create_engine(DATABASE_URL)

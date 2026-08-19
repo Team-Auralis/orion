@@ -166,6 +166,41 @@ async def create_incident(
         return JSONResponse(status_code=202, content=response_data)
     return response_data
 
+class StatusUpdate(BaseModel):
+    status: str
+
+@app.patch("/v1/incidents/{incident_id}/status")
+async def update_incident_status(
+    incident_id: str,
+    update: StatusUpdate,
+    user: Dict[str, Any] = Depends(check_policy(action="incident:update", resource="incident")),
+    db: Session = Depends(get_db)
+):
+    now = datetime.now(timezone.utc)
+    event = {
+        "event_id": f"evt-{uuid.uuid4()}",
+        "event_type": "incident.status_changed",
+        "version": 1,
+        "timestamp": now.isoformat(),
+        "incident_id": incident_id,
+        "actor_id": user["subject"],
+        "new_status": update.status
+    }
+    
+    # Publish to NATS first (Event Sourcing)
+    if nc.is_connected:
+        try:
+            js = nc.jetstream()
+            await js.publish("incident.status_changed", json.dumps(event).encode())
+        except Exception as e:
+            print(f"Failed to publish to JetStream: {e}")
+            await nc.publish("incident.status_changed", json.dumps(event).encode())
+    
+    # Note: We don't update the DB here! The Worker will process the event and 
+    # apply the CRDT logic to update the Read View in Postgres.
+    
+    return {"message": "Status update event accepted", "event_id": event["event_id"]}
+
 @app.get("/v1/incidents")
 async def list_incidents(
     user: Dict[str, Any] = Depends(check_policy(action="dashboard:view", resource="admin")),

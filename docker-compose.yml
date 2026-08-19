@@ -53,6 +53,7 @@ services:
   nats:
     image: nats:alpine
     container_name: orion-nats
+    command: "-js"
     ports:
       - "4222:4222"
       - "8222:8222" # monitoring
