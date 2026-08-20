@@ -70,13 +70,14 @@ async def message_handler(msg):
     except Exception as e:
         print(f"[SENTIENCE] Error processing message: {e}")
 
+NATS_URL = os.environ.get("NATS_URL", "nats://localhost:4222")
+
 async def main():
-    nats_url = os.environ.get("NATS_URL", "nats://localhost:4222")
     nc = nats.NATS()
     
     try:
-        await nc.connect(nats_url)
-        print(f"[SENTIENCE] Connected to NATS at {nats_url}")
+        await nc.connect(NATS_URL)
+        print(f"[SENTIENCE] Connected to NATS at {NATS_URL}")
     except Exception as e:
         print(f"Error connecting to NATS: {e}")
         return

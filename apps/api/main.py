@@ -27,11 +27,12 @@ app.add_middleware(
 # NATS Connection state
 nc = nats.NATS()
 
+NATS_URL = os.environ.get("NATS_URL", "nats://localhost:4222")
+
 @app.on_event("startup")
 async def startup_event():
-    nats_url = os.environ.get("NATS_URL", "nats://localhost:4222")
     try:
-        await nc.connect(nats_url)
+        await nc.connect(NATS_URL)
         print("Connected to NATS")
     except Exception as e:
         print(f"Warning: Could not connect to NATS: {e}")
@@ -57,19 +58,71 @@ class IncidentResponse(BaseModel):
     status: str
     created_at: str
 
-# --- Dependencies ---
+from jose import jwt
+import httpx
+import os
+
+JWKS_URL = os.environ.get("KEYCLOAK_JWKS_URL", "http://localhost:8080/realms/orion/protocol/openid-connect/certs")
+OPA_URL = os.environ.get("OPA_URL", "http://localhost:8181/v1/data/orion/authz/allow")
+
+def get_jwks():
+    try:
+        resp = httpx.get(JWKS_URL, timeout=5.0)
+        return resp.json()
+    except Exception as e:
+        print(f"Failed to fetch JWKS: {e}")
+        return {}
+
 async def get_current_user(request: Request) -> Dict[str, Any]:
-    # TODO: Verify real Keycloak JWT here
     auth = request.headers.get("Authorization", "")
-    role = "operator" if "MOCK_TOKEN" in auth else "citizen"
-    return {
-        "subject": "user-123",
-        "role": role
-    }
+    if not auth.startswith("Bearer "):
+        raise HTTPException(status_code=403, detail="Missing or invalid token")
+    
+    token = auth.split(" ")[1]
+    
+    # Fallback for E2E mocked tests that haven't been updated yet, until we clean them up
+    # Wait, the user specifically said "ELIMINATE MOCKS". I will NOT add a fallback.
+    
+    try:
+        jwks = get_jwks()
+        unverified_header = jwt.get_unverified_header(token)
+        rsa_key = {}
+        for key in jwks.get("keys", []):
+            if key["kid"] == unverified_header.get("kid"):
+                rsa_key = {
+                    "kty": key["kty"],
+                    "kid": key["kid"],
+                    "use": key["use"],
+                    "n": key["n"],
+                    "e": key["e"]
+                }
+                break
+        
+        if not rsa_key:
+            raise HTTPException(status_code=403, detail="Invalid Key")
+            
+        payload = jwt.decode(
+            token,
+            rsa_key,
+            algorithms=["RS256"],
+            audience="account",
+            issuer="http://localhost:8080/realms/orion"
+        )
+        
+        # Extract realm roles
+        realm_roles = payload.get("realm_access", {}).get("roles", [])
+        role = "operator" if "operator" in realm_roles else "citizen"
+        
+        return {
+            "subject": payload.get("sub", "unknown"),
+            "role": role,
+            "username": payload.get("preferred_username", "unknown")
+        }
+    except Exception as e:
+        raise HTTPException(status_code=403, detail=f"Token validation failed: {str(e)}")
 
 def check_policy(action: str, resource: str, resource_attributes: Dict[str, Any] = None):
     async def dependency(user: Dict[str, Any] = Depends(get_current_user)):
-        opa_url = os.environ.get("OPA_URL", "http://localhost:8181/v1/data/orion/authz/allow")
         input_data = {
             "input": {
                 "subject": user["subject"],
@@ -81,9 +134,11 @@ def check_policy(action: str, resource: str, resource_attributes: Dict[str, Any]
         if resource_attributes:
             input_data["input"].update(resource_attributes)
             
+        print(f"OPA Input: {input_data}")
         try:
             with httpx.Client() as client:
-                resp = client.post(opa_url, json=input_data, timeout=2.0)
+                resp = client.post(OPA_URL, json=input_data, timeout=2.0)
+                print(f"OPA Output: {resp.json()}")
                 if resp.status_code == 200 and resp.json().get("result") is True:
                     return user
         except Exception as e:
@@ -213,6 +268,8 @@ async def list_incidents(
         "type": inc.type,
         "status": inc.status,
         "message": inc.message,
+        "latitude": inc.latitude,
+        "longitude": inc.longitude,
         "ai_severity": inc.ai_severity,
         "ai_tags": inc.ai_tags,
         "created_at": inc.created_at.isoformat()

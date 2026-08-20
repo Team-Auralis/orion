@@ -1,106 +1,92 @@
 import httpx
 import uuid
+import sys
+import time
 
 API_URL = "http://localhost:8001/v1"
+KEYCLOAK_URL = "http://localhost:8080/realms/orion/protocol/openid-connect/token"
+
+def get_token(username, password):
+    data = {
+        "client_id": "orion-api",
+        "grant_type": "password",
+        "username": username,
+        "password": password
+    }
+    resp = httpx.post(KEYCLOAK_URL, data=data)
+    if resp.status_code != 200:
+        raise AssertionError(f"Failed to get token for {username}: {resp.status_code}")
+    return resp.json()["access_token"]
+
+CITIZEN_TOKEN = ""
+OPERATOR_TOKEN = ""
 
 def test_sos_flow():
     print("--- Testing Authorized SOS Flow ---")
-    
-    # We use a mocked user in the API for now, but this is the structure
     headers = {
-        "Idempotency-Key": f"test-idem-{uuid.uuid4().hex[:6]}"
+        "Idempotency-Key": f"test-idem-{uuid.uuid4().hex[:6]}",
+        "Authorization": f"Bearer {CITIZEN_TOKEN}"
     }
-    
     payload = {
         "type": "SOS",
-        "location": {
-            "latitude": 17.6868,
-            "longitude": 83.2185
-        },
+        "location": {"latitude": 17.6868, "longitude": 83.2185},
         "message": "Test emergency from Python script",
         "source": "mobile-test"
     }
-    
-    try:
-        with httpx.Client() as client:
-            resp = client.post(f"{API_URL}/incidents", json=payload, headers=headers)
-            print(f"Response Code: {resp.status_code}")
-            print(f"Response Body: {resp.json()}")
-            
-            if resp.status_code == 200:
-                if resp.json().get("status") == "ACCEPTED_DEGRADED_MODE":
-                    print("[SUCCESS] SOS accepted in DEGRADED MODE (Database Offline).")
-                else:
-                    print("[SUCCESS] SOS successfully created and authorized.")
-            else:
-                print("[FAILED] SOS creation failed.")
-    except httpx.ConnectError:
-        print("[FAILED] Could not connect to API. Is it running?")
-
-def test_negative_path():
-    print("\n--- Testing Negative Path (Citizen -> Admin) ---")
-    
-    try:
-        with httpx.Client() as client:
-            resp = client.get(f"{API_URL}/admin")
-            print(f"Response Code: {resp.status_code}")
-            
-            if resp.status_code == 403:
-                print("[SUCCESS] Policy Firewall successfully blocked access (403 Forbidden).")
-            else:
-                print(f"[FAILED] Policy Firewall failed to block access. Code: {resp.status_code}")
-                print(f"Response Body: {resp.json()}")
-    except httpx.ConnectError:
-        print("[FAILED] Could not connect to API. Is it running?")
-
-def test_negative_path():
-    print("\n--- Testing Negative Path (Citizen -> Admin) ---")
-    headers = {
-        "Authorization": "Bearer RANDOM_TOKEN_CITIZEN" # Not operator
-    }
-    try:
-        with httpx.Client() as client:
-            resp = client.get(f"{API_URL}/admin", headers=headers)
-            print(f"Response Code: {resp.status_code}")
-            
-            if resp.status_code == 403:
-                print("[SUCCESS] Policy Firewall successfully blocked access (403 Forbidden).")
-            else:
-                print("[FAILED] Firewall failed to block access.")
-    except httpx.ConnectError:
-        print("[FAILED] Could not connect to API. Is it running?")
-
-def test_crdt_flow():
-    print("\n--- Testing CRDT State Machine Sync ---")
-    # 1. Create incident
-    incident_payload = {
-        "type": "medical",
-        "location": {"latitude": 40.7128, "longitude": -74.0060},
-        "message": "CRDT Test",
-        "source": "citizen_app"
-    }
-    headers = {"Authorization": "Bearer MOCK_TOKEN_OPERATOR"}
-    
     with httpx.Client() as client:
-        resp = client.post(f"{API_URL}/incidents", json=incident_payload, headers=headers)
-        if resp.status_code not in [200, 202]:
-            print(f"[FAILED] Failed to create incident for CRDT test: {resp.status_code}")
-            return
-            
-        incident_id = resp.json().get("incident_id")
-        print(f"[SUCCESS] Created incident {incident_id}")
-        
-        # 2. Update to EVACUATING
+        resp = client.post(f"{API_URL}/incidents", json=payload, headers=headers)
+        assert resp.status_code in [200, 202], f"SOS creation failed: {resp.status_code}"
+        print("[SUCCESS] SOS successfully created and authorized.")
+        return resp.json().get("incident_id")
+
+def test_negative_path_no_auth():
+    print("\n--- Testing Negative Path (No Auth) ---")
+    with httpx.Client() as client:
+        resp = client.get(f"{API_URL}/admin")
+        assert resp.status_code == 403, f"Expected 403, got {resp.status_code}"
+        print("[SUCCESS] Policy Firewall blocked no-auth.")
+
+def test_negative_path_citizen():
+    print("\n--- Testing Negative Path (Citizen -> Admin) ---")
+    headers = {"Authorization": f"Bearer {CITIZEN_TOKEN}"}
+    with httpx.Client() as client:
+        resp = client.get(f"{API_URL}/admin", headers=headers)
+        assert resp.status_code == 403, f"Expected 403, got {resp.status_code}"
+        print("[SUCCESS] Policy Firewall blocked citizen access.")
+
+def test_crdt_flow(incident_id):
+    print("\n--- Testing CRDT State Machine Sync ---")
+    headers = {"Authorization": f"Bearer {OPERATOR_TOKEN}"}
+    with httpx.Client() as client:
+        # 1. Update to EVACUATING
         print("-> Simulating Command Center updating to EVACUATING...")
         resp = client.patch(f"{API_URL}/incidents/{incident_id}/status", json={"status": "evacuating"}, headers=headers)
-        print(f"Status update accepted: {resp.status_code}")
+        assert resp.status_code == 200, f"Status update failed: {resp.status_code}"
         
-        # 3. Update to TRIAGED (Delayed offline event)
+        # 2. Update to TRIAGED (Delayed offline event)
         print("-> Simulating delayed Responder event updating to TRIAGED (Should be ignored by CRDT)...")
         resp = client.patch(f"{API_URL}/incidents/{incident_id}/status", json={"status": "triaged"}, headers=headers)
-        print(f"Status update accepted: {resp.status_code}")
+        assert resp.status_code == 200, f"Status update failed: {resp.status_code}"
+
+        # 3. Verify Authoritative state
+        resp = client.get(f"{API_URL}/incidents", headers=headers)
+        assert resp.status_code == 200
+        incident = next((inc for inc in resp.json() if inc["incident_id"] == incident_id), None)
+        assert incident is not None, "Incident not found in DB"
 
 if __name__ == "__main__":
-    test_sos_flow()
-    test_negative_path()
-    test_crdt_flow()
+    try:
+        CITIZEN_TOKEN = get_token("citizen1", "citizenpass")
+        OPERATOR_TOKEN = get_token("operator1", "operatorpass")
+        
+        inc_id = test_sos_flow()
+        test_negative_path_no_auth()
+        test_negative_path_citizen()
+        test_crdt_flow(inc_id)
+        print("\n\033[92mALL TESTS PASSED\033[0m")
+    except AssertionError as e:
+        print(f"\n\033[91mTEST FAILED: {e}\033[0m")
+        sys.exit(1)
+    except Exception as e:
+        print(f"\n\033[91mERROR: {e}\033[0m")
+        sys.exit(1)
