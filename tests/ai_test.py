@@ -1,8 +1,22 @@
 import httpx
 import time
+import json
 
 API_URL = "http://localhost:8001/v1"
-HEADERS = {"Authorization": "Bearer MOCK_TOKEN_OPERATOR"}
+KEYCLOAK_URL = "http://localhost:8080/realms/orion/protocol/openid-connect/token"
+
+def get_token(username, password):
+    data = {
+        "client_id": "orion-api",
+        "grant_type": "password",
+        "username": username,
+        "password": password
+    }
+    resp = httpx.post(KEYCLOAK_URL, data=data)
+    return resp.json()["access_token"]
+
+OPERATOR_TOKEN = get_token("operator1", "operatorpass")
+HEADERS = {"Authorization": f"Bearer {OPERATOR_TOKEN}"}
 
 def test_ai_sentinel():
     print("\n--- Testing Phase 0.3: SENTIENCE AI Routing ---")

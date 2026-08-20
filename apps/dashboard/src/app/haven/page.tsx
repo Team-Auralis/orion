@@ -23,12 +23,24 @@ export default function HavenApp() {
         source: "haven_web_pwa"
       };
 
+      const tokenParams = new URLSearchParams();
+      tokenParams.append("client_id", "orion-api");
+      tokenParams.append("grant_type", "password");
+      tokenParams.append("username", "citizen1");
+      tokenParams.append("password", "citizenpass");
+      
+      const kcRes = await fetch("http://localhost:8080/realms/orion/protocol/openid-connect/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: tokenParams
+      });
+      const kcData = await kcRes.json();
+
       const res = await fetch("http://localhost:8001/v1/incidents", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Citizen mock token (No admin roles)
-          "Authorization": "Bearer MOCK_TOKEN_CITIZEN"
+          "Authorization": `Bearer ${kcData.access_token}`
         },
         body: JSON.stringify(payload)
       });
