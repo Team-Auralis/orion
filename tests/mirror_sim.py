@@ -46,7 +46,7 @@ def inject_mirror_data():
         incident_id = resp.json().get("incident_id")
         print(f"Injected: {incident_id} at ({lat:.4f}, {lon:.4f})")
         
-        # Simulate organic delay
+        # Execute organic delay
         time.sleep(0.5)
         
 if __name__ == "__main__":

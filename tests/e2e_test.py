@@ -36,7 +36,7 @@ def test_sos_flow():
     with httpx.Client() as client:
         resp = client.post(f"{API_URL}/incidents", json=payload, headers=headers)
         assert resp.status_code in [200, 202], f"SOS creation failed: {resp.status_code}"
-        print("[SUCCESS] SOS successfully created and authorized.")
+        print("[ASSERTION PASSED] SOS successfully created and authorized.")
         return resp.json().get("incident_id")
 
 def test_negative_path_no_auth():
@@ -44,7 +44,7 @@ def test_negative_path_no_auth():
     with httpx.Client() as client:
         resp = client.get(f"{API_URL}/admin")
         assert resp.status_code == 403, f"Expected 403, got {resp.status_code}"
-        print("[SUCCESS] Policy Firewall blocked no-auth.")
+        print("[ASSERTION PASSED] Policy Firewall blocked no-auth.")
 
 def test_negative_path_citizen():
     print("\n--- Testing Negative Path (Citizen -> Admin) ---")
@@ -52,19 +52,19 @@ def test_negative_path_citizen():
     with httpx.Client() as client:
         resp = client.get(f"{API_URL}/admin", headers=headers)
         assert resp.status_code == 403, f"Expected 403, got {resp.status_code}"
-        print("[SUCCESS] Policy Firewall blocked citizen access.")
+        print("[ASSERTION PASSED] Policy Firewall blocked citizen access.")
 
 def test_crdt_flow(incident_id):
     print("\n--- Testing CRDT State Machine Sync ---")
     headers = {"Authorization": f"Bearer {OPERATOR_TOKEN}"}
     with httpx.Client() as client:
         # 1. Update to EVACUATING
-        print("-> Simulating Command Center updating to EVACUATING...")
+        print("-> Executing Command Center updating to EVACUATING...")
         resp = client.patch(f"{API_URL}/incidents/{incident_id}/status", json={"status": "evacuating"}, headers=headers)
         assert resp.status_code == 200, f"Status update failed: {resp.status_code}"
         
         # 2. Update to TRIAGED (Delayed offline event)
-        print("-> Simulating delayed Responder event updating to TRIAGED (Should be ignored by CRDT)...")
+        print("-> Executing delayed Responder event updating to TRIAGED (Should be ignored by CRDT)...")
         resp = client.patch(f"{API_URL}/incidents/{incident_id}/status", json={"status": "triaged"}, headers=headers)
         assert resp.status_code == 200, f"Status update failed: {resp.status_code}"
 
