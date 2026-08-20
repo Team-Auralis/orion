@@ -56,7 +56,7 @@ def test_negative_path():
 def test_negative_path():
     print("\n--- Testing Negative Path (Citizen -> Admin) ---")
     headers = {
-        "Authorization": "Bearer MOCK_TOKEN" # Citizen token
+        "Authorization": "Bearer RANDOM_TOKEN_CITIZEN" # Not operator
     }
     try:
         with httpx.Client() as client:
