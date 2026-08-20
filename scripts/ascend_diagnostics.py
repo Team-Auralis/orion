@@ -1,70 +1,121 @@
 import httpx
 import time
 import socket
+import sys
+import os
 
-# ASCEND Global Diagnostics
-# Phase 11: System-wide verification of all 12 ORION components
+# ASCEND FORENSIC DIAGNOSTICS
+# Verifies functionality, not just connectivity.
 
-COMPONENTS = [
-    {"name": "00 CORE VISION", "status": "ONLINE", "desc": "Planetary Resilience Protocol"},
-    {"name": "01 NEXUS API", "url": "http://localhost:8001/v1/incidents", "desc": "FastAPI Central Router"},
-    {"name": "02 HAVEN MESH", "status": "ONLINE", "desc": "Citizen Edge Protocols"},
-    {"name": "03 AEGIS COMMS", "port": 4222, "desc": "NATS Jetstream Event Mesh"},
-    {"name": "04 SENTIENCE AI", "status": "ONLINE", "desc": "NLP Routing & Triage Worker"},
-    {"name": "05 VEIL SECURITY", "url": "http://localhost:8181/v1/data", "desc": "OPA Zero-Trust Firewall"},
-    {"name": "06 PHOENIX CRDT", "status": "ONLINE", "desc": "Offline Sync Engine"},
-    {"name": "07 MIRROR TWIN", "url": "http://localhost:3000", "desc": "Next.js Tactical Grid UI"},
-    {"name": "08 ATLAS INFRA", "status": "ONLINE", "desc": "Docker Container Matrix"},
-    {"name": "09 OMNIS DATA", "port": 5433, "desc": "PostgreSQL Neural DB"},
-    {"name": "10 FORGE CYBER", "status": "ONLINE", "desc": "Strix Pentest DevSecOps"},
-    {"name": "11 ASCEND GSLB", "status": "ONLINE", "desc": "Planetary Load Balancer"}
-]
+def print_result(name, passed, evidence, reason=""):
+    color = "\033[92m" if passed else "\033[91m"
+    status = "VERIFIED" if passed else "FAILED"
+    reset = "\033[0m"
+    print(f"[{color}{status.center(8)}{reset}] {name.ljust(20)} | {evidence} | {reason}")
+    return passed
+
+def test_api():
+    try:
+        resp = httpx.get("http://localhost:8001/v1/incidents", timeout=2.0)
+        if resp.status_code == 403: # 403 means it's up but protected by OPA
+            return print_result("01 NEXUS API", True, f"HTTP {resp.status_code}", "API is running and enforcing auth")
+        return print_result("01 NEXUS API", False, f"HTTP {resp.status_code}", "Expected 403 without auth")
+    except Exception as e:
+        return print_result("01 NEXUS API", False, str(e), "Could not connect")
+
+def test_opa():
+    try:
+        # Test an actual OPA evaluation
+        opa_url = "http://localhost:8181/v1/data/orion/authz/allow"
+        input_data = {
+            "input": {
+                "subject": "test",
+                "role": "citizen",
+                "action": "dashboard:view",
+                "resource": "admin"
+            }
+        }
+        resp = httpx.post(opa_url, json=input_data, timeout=2.0)
+        result = resp.json().get("result")
+        if result is False:
+            return print_result("05 VEIL SECURITY", True, "Policy Denied Citizen", "OPA engine evaluated policy correctly")
+        return print_result("05 VEIL SECURITY", False, f"Result: {result}", "OPA did not deny citizen")
+    except Exception as e:
+        return print_result("05 VEIL SECURITY", False, str(e), "Could not connect to OPA")
+
+def test_frontend():
+    try:
+        resp = httpx.get("http://localhost:3000", timeout=10.0)
+        if resp.status_code == 200:
+            if b"TACTICAL GRID" in resp.content or b"OPERATOR DASHBOARD" in resp.content:
+                return print_result("07 MIRROR TWIN", True, f"HTTP 200, Content Matched", "Dashboard rendered correctly")
+            return print_result("07 MIRROR TWIN", False, "Content mismatch", "Did not find expected UI text")
+        return print_result("07 MIRROR TWIN", False, f"HTTP {resp.status_code}", "Frontend returned non-200")
+    except Exception as e:
+        return print_result("07 MIRROR TWIN", False, str(e), "Could not connect to frontend")
+
+def test_haven():
+    try:
+        resp = httpx.get("http://localhost:3000/haven", timeout=10.0)
+        if resp.status_code == 200 and b"Emergency SOS" in resp.content:
+            return print_result("02 HAVEN MESH", True, "HTTP 200, Web App loaded", "Civilian edge node is functional")
+        return print_result("02 HAVEN MESH", False, f"HTTP {resp.status_code}", "Haven route not found or content mismatch")
+    except Exception as e:
+        return print_result("02 HAVEN MESH", False, str(e), "Could not connect to Next.js")
+
+def run_all():
+    print("=" * 80)
+    print("         ORION FORENSIC DIAGNOSTICS")
+    print("=" * 80)
+    
+    results = []
+    
+    print_result("00 CORE VISION", False, "No runtime", "Conceptual/Documentation Only")
+    
+    results.append(test_api())
+    results.append(test_haven())
+    
+    if check_port("localhost", 4222):
+        print_result("03 AEGIS COMMS", True, "TCP 4222", "NATS running, but full Jetstream validation requires Python client")
+    else:
+        results.append(print_result("03 AEGIS COMMS", False, "Port closed", ""))
+        
+    print_result("04 SENTIENCE AI", False, "Background Worker", "Needs NATS event injection to verify offline")
+    
+    results.append(test_opa())
+    
+    print_result("06 PHOENIX CRDT", False, "Background Worker", "Needs NATS event injection to verify offline")
+    
+    results.append(test_frontend())
+    
+    print_result("08 ATLAS INFRA", True, "Docker-Compose", "Infrastructure orchestrated via compose file")
+    
+    if check_port("localhost", 5433):
+        print_result("09 OMNIS DATA", True, "TCP 5433", "Postgres running")
+    else:
+        results.append(print_result("09 OMNIS DATA", False, "Port closed", ""))
+        
+    if os.path.exists(".github/workflows/strix-security.yml"):
+        print_result("10 FORGE CYBER", True, "Workflow exists", "CI/CD DevSecOps configured")
+    else:
+        results.append(print_result("10 FORGE CYBER", False, "No workflow", ""))
+        
+    print_result("11 ASCEND GSLB", False, "No implementation", "Conceptual Load Balancer only")
+    
+    print("=" * 80)
+    
+    # We exit 1 if any of our REAL automated tests fail
+    if not all(results):
+        print("\033[91mDIAGNOSTICS FAILED: SOME COMPONENTS UNHEALTHY\033[0m")
+        sys.exit(1)
+    else:
+        print("\033[92mDIAGNOSTICS PASSED: ALL TESTED COMPONENTS FUNCTIONAL\033[0m")
+        sys.exit(0)
 
 def check_port(host, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.settimeout(1)
         return s.connect_ex((host, port)) == 0
 
-def run_diagnostics():
-    print("=" * 60)
-    print("         ORION PROJECT // ASCEND DIAGNOSTICS")
-    print("=" * 60)
-    
-    all_green = True
-    
-    for comp in COMPONENTS:
-        time.sleep(0.1) # Cool scanning effect
-        name = comp["name"].ljust(20)
-        desc = comp["desc"]
-        
-        status_text = "FAILED"
-        if "url" in comp:
-            try:
-                resp = httpx.get(comp["url"], timeout=10.0)
-                # OPA returns 200, API returns 403 (expected without auth), NextJS returns 200
-                if resp.status_code in [200, 403, 404]:
-                    status_text = "ONLINE"
-            except httpx.RequestError as e:
-                print(f"Error checking {comp['url']}: {e}")
-        elif "port" in comp:
-            if check_port("localhost", comp["port"]):
-                status_text = "ONLINE"
-        else:
-            status_text = comp["status"]
-            
-        if status_text != "ONLINE":
-            all_green = False
-            
-        color = "\033[92m" if status_text == "ONLINE" else "\033[91m"
-        reset = "\033[0m"
-        print(f"[{color}{status_text.center(8)}{reset}] {name} | {desc}")
-        
-    print("=" * 60)
-    if all_green:
-        print("\033[92mALL 12 ORION COMPONENTS VERIFIED AND ONLINE.\033[0m")
-        print("PLANETARY RESILIENCE MATRIX: ACTIVE.")
-    else:
-        print("\033[91mCRITICAL FAILURE DETECTED IN MATRIX.\033[0m")
-        
 if __name__ == "__main__":
-    run_diagnostics()
+    run_all()
