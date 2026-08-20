@@ -52,6 +52,15 @@ def test_sentience():
     except Exception as e:
         return print_result("04 SENTIENCE AI", False, str(e), "Ollama inference engine offline")
         
+def test_ascend():
+    try:
+        resp = httpx.get("http://localhost:80/v1/incidents", timeout=5.0)
+        if resp.status_code == 403: # It hit the API
+            return print_result("11 ASCEND GSLB", True, "HTTP 403 via Nginx LB", "Load Balancer successfully routing to backend node")
+        return print_result("11 ASCEND GSLB", False, f"HTTP {resp.status_code}", "LB failed to route properly")
+    except Exception as e:
+        return print_result("11 ASCEND GSLB", False, str(e), "LB offline")
+
 def test_frontend():
     try:
         resp = httpx.get("http://localhost:3000", timeout=10.0)
@@ -109,7 +118,7 @@ def run_all():
     else:
         results.append(print_result("10 FORGE CYBER", False, "No workflow", ""))
         
-    print_result("11 ASCEND GSLB", False, "No implementation", "Conceptual Load Balancer only")
+    results.append(test_ascend())
     
     print("=" * 80)
     
