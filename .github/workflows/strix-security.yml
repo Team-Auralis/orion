@@ -1,0 +1,23 @@
+name: ORION Agentic Security (Strix)
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  strix-security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Strix Pentest
+        run: curl -sSL https://strix.ai/install | bash
+
+      - name: Run Autonomous Security Agent (Strix)
+        env:
+          STRIX_LLM: ${{ secrets.STRIX_LLM }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        # Run in headless mode to scan the FastAPI and Worker codebase for vulnerabilities
+        run: strix -n -t ./apps/api/ -t ./services/worker/ --scan-mode exhaustive
