@@ -43,6 +43,15 @@ def test_opa():
     except Exception as e:
         return print_result("05 VEIL SECURITY", False, str(e), "Could not connect to OPA")
 
+def test_sentience():
+    try:
+        resp = httpx.get("http://localhost:11434/api/tags", timeout=5.0)
+        if resp.status_code == 200 and "models" in resp.text:
+            return print_result("04 SENTIENCE AI", True, "HTTP 200 (Ollama API)", "Local LLM available for AI triage")
+        return print_result("04 SENTIENCE AI", False, f"HTTP {resp.status_code}", "Ollama not responding properly")
+    except Exception as e:
+        return print_result("04 SENTIENCE AI", False, str(e), "Ollama inference engine offline")
+        
 def test_frontend():
     try:
         resp = httpx.get("http://localhost:3000", timeout=10.0)
@@ -80,7 +89,7 @@ def run_all():
     else:
         results.append(print_result("03 AEGIS COMMS", False, "Port closed", ""))
         
-    print_result("04 SENTIENCE AI", False, "Background Worker", "Needs NATS event injection to verify offline")
+    results.append(test_sentience())
     
     results.append(test_opa())
     
