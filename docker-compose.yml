@@ -60,5 +60,15 @@ services:
       - "4222:4222"
       - "8222:8222" # monitoring
 
+  ascend-lb:
+    image: nginx:alpine
+    container_name: orion-ascend-lb
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
 volumes:
   orion_pgdata:
