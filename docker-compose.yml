@@ -1,12 +1,12 @@
-version: '3.8'
+﻿version: '3.8'
 
 services:
   postgres:
     image: postgres:15-alpine
     container_name: orion-postgres
     environment:
-      POSTGRES_USER: orion_admin
-      POSTGRES_PASSWORD: orion_password
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: keycloak
     volumes:
       - orion_pgdata:/var/lib/postgresql/data
@@ -14,7 +14,7 @@ services:
     ports:
       - "5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U orion_admin -d keycloak"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d keycloak"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -26,10 +26,10 @@ services:
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
-      KC_DB_USERNAME: orion_admin
-      KC_DB_PASSWORD: orion_password
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB_USERNAME: ${POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
     ports:
       - "8080:8080"
     volumes:
@@ -70,5 +70,114 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  orion-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    container_name: orion-api
+    command: uvicorn apps.api.main:app --host 0.0.0.0 --port 8001
+    environment:
+      - PYTHONPATH=/app/apps/api:/app
+      - DATABASE_URL=${DATABASE_URL}
+      - NATS_URL=nats://nats:4222
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - KEYCLOAK_JWKS_URL=http://keycloak:8080/realms/orion/protocol/openid-connect/certs
+      - OPA_URL=http://opa:8181/v1/data/orion/authz/allow
+    ports:
+      - "8001:8001"
+    depends_on:
+      - postgres
+      - nats
+      - keycloak
+      - opa
+
+  orion-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    container_name: orion-worker
+    command: python -u services/worker/main.py
+    environment:
+      - PYTHONPATH=/app/apps/api:/app
+      - DATABASE_URL=${DATABASE_URL}
+      - NATS_URL=nats://nats:4222
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+    depends_on:
+      - nats
+      - postgres
+
+  orion-sentinel:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    container_name: orion-sentinel
+    command: python -u services/ai_sentinel/main.py
+    environment:
+      - PYTHONPATH=/app/apps/api:/app
+      - NATS_URL=nats://nats:4222
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - OLLAMA_URL=http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - nats
+
+  orion-aegis:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    container_name: orion-aegis
+    command: python -u services/aegis/main.py
+    environment:
+      - PYTHONPATH=/app/apps/api:/app
+      - NATS_URL=nats://nats:4222
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+    depends_on:
+      - nats
+
+  orion-dashboard:
+    build:
+      context: ./apps/dashboard
+      dockerfile: Dockerfile
+    container_name: orion-dashboard
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8001
+      - NEXT_PUBLIC_KEYCLOAK_URL=http://localhost:8080
+
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: orion-prometheus
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - orion-api
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: orion-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=orion_admin
+    depends_on:
+      - prometheus
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: orion-jaeger
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+
+
+
+
 volumes:
   orion_pgdata:
+

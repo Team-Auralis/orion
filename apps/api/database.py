@@ -28,6 +28,16 @@ class Incident(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
+class Asset(Base):
+    __tablename__ = "assets"
+    
+    asset_id = Column(String, primary_key=True, index=True)
+    type = Column(String, nullable=False) # FIRE_TRUCK, AMBULANCE, POLICE
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    target_incident_id = Column(String, nullable=True)
+    status = Column(String, nullable=False, default="IDLE") # IDLE, DISPATCHED, ON_SCENE
+
 class IdempotencyKey(Base):
     __tablename__ = "idempotency_keys"
 
@@ -35,11 +45,17 @@ class IdempotencyKey(Base):
     response_body = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-# Ponytail: Let SQLAlchemy create tables for V1. In real prod, use Alembic.
-try:
-    Base.metadata.create_all(bind=engine)
-except Exception as e:
-    print(f"Warning: Could not create tables, database offline: {e}")
+class BreakGlassSession(Base):
+    __tablename__ = "break_glass_sessions"
+    
+    token = Column(String, primary_key=True, index=True)
+    user_id = Column(String, nullable=False)
+    reason = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+
+# Production: We now use Alembic for migrations instead of auto-creating.
+# Base.metadata.create_all(bind=engine) is removed to prevent schema collision.
 
 def get_db():
     db = SessionLocal()

@@ -1,0 +1,13 @@
+node_modules
+.next
+.git
+.system_generated
+.gemini
+logs
+*.log
+orion_pgdata
+policy/opa/data
+__pycache__
+*.pyc
+apps/dashboard/.next
+apps/dashboard/node_modules

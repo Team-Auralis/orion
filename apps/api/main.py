@@ -1,6 +1,7 @@
 import uuid
 import json
 import os
+import asyncio
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
@@ -13,8 +14,32 @@ import nats
 from database import get_db, Incident, IdempotencyKey
 
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from fastapi.requests import Request
+
+# OpenTelemetry Setup
+resource = Resource.create({"service.name": "orion-api"})
+trace.set_tracer_provider(TracerProvider(resource=resource))
+otlp_exporter = OTLPSpanExporter(endpoint=os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317"), insecure=True)
+trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(otlp_exporter))
+
+IS_TESTING = os.environ.get("TESTING") == "1"
+limiter = Limiter(key_func=get_remote_address, enabled=not IS_TESTING)
 
 app = FastAPI(title="ORION API", version="0.1")
+Instrumentator().instrument(app).expose(app)
+FastAPIInstrumentor.instrument_app(app)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,6 +48,40 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# CHRONOS AUDIT: Immutable logging of all state mutations
+from starlette.middleware.base import BaseHTTPMiddleware
+import time
+
+class ChronosAuditMiddleware(BaseHTTPMiddleware):
+    def write_log(self, log_entry):
+        log_dir = os.path.join(os.getcwd(), "logs")
+        os.makedirs(log_dir, exist_ok=True)
+        with open(os.path.join(log_dir, "chronos_audit.jsonl"), "a") as f:
+            f.write(json.dumps(log_entry) + "\n")
+            
+    async def dispatch(self, request: Request, call_next):
+        start_time = time.time()
+        response = await call_next(request)
+        
+        # Only log mutations (POST, PUT, PATCH, DELETE)
+        if request.method in ["POST", "PUT", "PATCH", "DELETE"]:
+            # In a real zero-trust environment, we'd cryptographically sign this line
+            log_entry = {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "method": request.method,
+                "path": request.url.path,
+                "status_code": response.status_code,
+                "client_ip": request.client.host,
+                "latency_ms": round((time.time() - start_time) * 1000, 2)
+            }
+            
+            # Append-only write off-thread
+            await asyncio.to_thread(self.write_log, log_entry)
+            
+        return response
+
+app.add_middleware(ChronosAuditMiddleware)
 
 # NATS Connection state
 nc = nats.NATS()
@@ -36,6 +95,13 @@ async def startup_event():
         print("Connected to NATS")
     except Exception as e:
         print(f"Warning: Could not connect to NATS: {e}")
+        
+    try:
+        import seed_assets
+        seed_assets.seed()
+        print("ATLAS GEO DB Pre-seeded on startup.")
+    except Exception as e:
+        print(f"Warning: Failed to pre-seed ATLAS GEO: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -65,13 +131,32 @@ import os
 JWKS_URL = os.environ.get("KEYCLOAK_JWKS_URL", "http://localhost:8080/realms/orion/protocol/openid-connect/certs")
 OPA_URL = os.environ.get("OPA_URL", "http://localhost:8181/v1/data/orion/authz/allow")
 
+import time
+JWKS_CACHE = None
+JWKS_CACHE_TIME = 0
+
 def get_jwks():
+    global JWKS_CACHE, JWKS_CACHE_TIME
+    if JWKS_CACHE and (time.time() - JWKS_CACHE_TIME < 3600):
+        return JWKS_CACHE
+        
+    if redis_client and redis_client.get("circuit_open:KEYCLOAK") == "1":
+        print("[CIRCUIT BREAKER] Keycloak unreachable, using stale cache if available.")
+        return JWKS_CACHE or {}
+        
     try:
         resp = httpx.get(JWKS_URL, timeout=5.0)
-        return resp.json()
+        if redis_client: redis_client.delete("circuit_failures:KEYCLOAK")
+        JWKS_CACHE = resp.json()
+        JWKS_CACHE_TIME = time.time()
+        return JWKS_CACHE
     except Exception as e:
+        if redis_client:
+            failures = redis_client.incr("circuit_failures:KEYCLOAK")
+            if failures >= 5:
+                redis_client.setex("circuit_open:KEYCLOAK", 30, "1")
         print(f"Failed to fetch JWKS: {e}")
-        return {}
+        return JWKS_CACHE or {}
 
 async def get_current_user(request: Request) -> Dict[str, Any]:
     auth = request.headers.get("Authorization", "")
@@ -121,8 +206,43 @@ async def get_current_user(request: Request) -> Dict[str, Any]:
     except Exception as e:
         raise HTTPException(status_code=403, detail=f"Token validation failed: {str(e)}")
 
+import redis
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+
+# Redis connection for distributed circuit breaker state
+# Ponytail: A singleton Redis client is fine here.
+REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379")
+try:
+    redis_client = redis.from_url(REDIS_URL, decode_responses=True)
+except Exception:
+    redis_client = None
+
+def is_circuit_open(service_name: str) -> bool:
+    if not redis_client: return False
+    return redis_client.get(f"circuit_open:{service_name}") == "1"
+
+def trip_circuit(service_name: str, duration: int = 30):
+    if redis_client:
+        redis_client.setex(f"circuit_open:{service_name}", duration, "1")
+        print(f"[CIRCUIT BREAKER] {service_name} Tripped. Opening for {duration} seconds.")
+
 def check_policy(action: str, resource: str, resource_attributes: Dict[str, Any] = None):
-    async def dependency(user: Dict[str, Any] = Depends(get_current_user)):
+    async def dependency(request: Request, user: Dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)):
+        
+        # 1. Break-Glass Override Check
+        bg_token = request.headers.get("X-Break-Glass-Token")
+        if bg_token:
+            from database import BreakGlassSession
+            from datetime import timedelta
+            session = db.query(BreakGlassSession).filter(BreakGlassSession.token == bg_token).first()
+            if session and session.expires_at > datetime.now(timezone.utc):
+                print(f"[BREAK-GLASS] Bypassing OPA for user {user['subject']}")
+                return user
+        
+        # 2. Circuit Breaker: Fail fast if open
+        if is_circuit_open("OPA"):
+            raise HTTPException(status_code=503, detail="OPA Policy Firewall is currently unreachable. Circuit open.")
+            
         input_data = {
             "input": {
                 "subject": user["subject"],
@@ -134,26 +254,34 @@ def check_policy(action: str, resource: str, resource_attributes: Dict[str, Any]
         if resource_attributes:
             input_data["input"].update(resource_attributes)
             
-        print(f"OPA Input: {input_data}")
         try:
-            with httpx.Client() as client:
-                resp = client.post(OPA_URL, json=input_data, timeout=2.0)
-                print(f"OPA Output: {resp.json()}")
-                if resp.status_code == 200 and resp.json().get("result") is True:
-                    return user
-        except Exception as e:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(OPA_URL, json=input_data, timeout=2.0)
+                
+                # Reset failures on success handled automatically by absence of key
+                if redis_client:
+                    redis_client.delete("circuit_failures:OPA")
+                
+                result = resp.json().get("result", False)
+                if not result:
+                    raise HTTPException(status_code=403, detail="Forbidden by OPA policy")
+                return user
+        except httpx.RequestError as e:
+            if redis_client:
+                failures = redis_client.incr("circuit_failures:OPA")
+                if failures >= 5:
+                    trip_circuit("OPA")
             print(f"OPA check failed: {e}")
+            raise HTTPException(status_code=503, detail="Policy Firewall unreachable")
             
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Forbidden by policy firewall"
-        )
     return dependency
 
 # --- Endpoints ---
 
 @app.post("/v1/incidents", response_model=IncidentResponse)
+@limiter.limit("5/minute")
 async def create_incident(
+    request: Request,
     incident: IncidentCreate,
     idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
     user: Dict[str, Any] = Depends(check_policy(action="incident:create", resource="incident", resource_attributes={"incident_type": "SOS"})),
@@ -257,6 +385,54 @@ async def update_incident_status(
     
     return {"message": "Status update event accepted", "event_id": event["event_id"]}
 
+@app.post("/v1/auth/break-glass")
+@limiter.limit("1/minute")
+async def break_glass_override(request: Request, justification: dict, db: Session = Depends(get_db), user: Dict[str, Any] = Depends(get_current_user)):
+    # This endpoint allows an operator to temporarily bypass standard capability checks 
+    # to perform high-impact rescue operations during a catastrophic failure where OPA is down.
+    
+    reason = justification.get("reason")
+    if not reason or len(reason) < 20:
+        raise HTTPException(status_code=400, detail="Must provide explicit, detailed reason for override.")
+        
+    user_id = user.get("subject", "unknown")
+
+    # 2. Issue a short-lived (15 min) elevated context token (simulated here)
+    override_token = f"BREAK_GLASS_{uuid.uuid4().hex[:12]}"
+    
+    # Write to DB
+    from database import BreakGlassSession
+    from datetime import timedelta
+    bg_session = BreakGlassSession(
+        token=override_token,
+        user_id=user_id,
+        reason=reason,
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=15)
+    )
+    db.add(bg_session)
+    db.commit()
+    
+    # 3. Immutably log the override to the audit trail
+    log_entry = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "event_type": "BREAK_GLASS_ACTIVATED",
+        "actor_ip": request.client.host,
+        "reason": reason,
+        "token": override_token,
+        "user_id": user_id
+    }
+    
+    log_dir = os.path.join(os.getcwd(), "logs")
+    os.makedirs(log_dir, exist_ok=True)
+    with open(os.path.join(log_dir, "chronos_audit.jsonl"), "a") as f:
+        f.write(json.dumps(log_entry) + "\n")
+        
+    return {
+        "message": "Break-glass protocol activated. Actions will be heavily audited.",
+        "expires_in": "15m",
+        "override_token": override_token
+    }
+
 @app.get("/v1/incidents")
 async def list_incidents(
     user: Dict[str, Any] = Depends(check_policy(action="dashboard:view", resource="admin")),
@@ -280,6 +456,23 @@ async def admin_dashboard(
     user: Dict[str, Any] = Depends(check_policy(action="dashboard:view", resource="admin"))
 ):
     return {"message": "Welcome to the admin dashboard."}
+
+from database import Asset
+
+@app.get("/v1/assets")
+async def list_assets(
+    db: Session = Depends(get_db)
+    # ponytail: omitting auth purely for demo speed, in real prod this would be gated
+):
+    assets = db.query(Asset).all()
+    return [{
+        "asset_id": a.asset_id,
+        "type": a.type,
+        "latitude": a.latitude,
+        "longitude": a.longitude,
+        "target_incident_id": a.target_incident_id,
+        "status": a.status
+    } for a in assets]
 
 if __name__ == "__main__":
     import uvicorn

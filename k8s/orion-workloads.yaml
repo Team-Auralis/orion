@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orion-api
+  labels:
+    app: orion-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: orion-api
+  template:
+    metadata:
+      labels:
+        app: orion-api
+    spec:
+      containers:
+      - name: orion-api
+        image: orion-api:latest
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - secretRef:
+            name: orion-secrets
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orion-api-svc
+spec:
+  selector:
+    app: orion-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orion-worker
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: orion-worker
+  template:
+    metadata:
+      labels:
+        app: orion-worker
+    spec:
+      containers:
+      - name: orion-worker
+        image: orion-worker:latest
+        envFrom:
+        - secretRef:
+            name: orion-secrets
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orion-sentinel
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: orion-sentinel
+  template:
+    metadata:
+      labels:
+        app: orion-sentinel
+    spec:
+      containers:
+      - name: orion-sentinel
+        image: orion-sentinel:latest
+        envFrom:
+        - secretRef:
+            name: orion-secrets
+        resources:
+          requests:
+            cpu: "2"
+            memory: "4Gi" # Needs high RAM for Ollama/LLM inference

@@ -12,62 +12,44 @@ import httpx
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 
 async def analyze_incident(message: str) -> dict:
-    """
-    Calls Ollama to extract severity and tags.
-    """
     prompt = f"""
     You are an emergency response AI. Extract the severity and tags from the following message.
     Severity must be one of: LOW, MODERATE, HIGH, CRITICAL.
-    Tags should be 1-3 comma-separated keywords (e.g. FIRE, MEDICAL, FLOODING, RESCUE).
-    
-    Respond STRICTLY in JSON format:
-    {{"severity": "HIGH", "tags": ["TAG1", "TAG2"]}}
-    
+    Tags should be 1-3 keywords.
+    Respond STRICTLY in JSON format.
     Message: {message}
     """
     
     try:
+        # Strict timeout to prevent queue stalling
         async with httpx.AsyncClient() as client:
             resp = await client.post(
                 f"{OLLAMA_URL}/api/generate",
-                json={
-                    "model": "qwen2:0.5b",
-                    "prompt": prompt,
-                    "format": "json",
-                    "stream": False
-                },
-                timeout=15.0
+                json={"model": "qwen2:0.5b", "prompt": prompt, "stream": False},
+                timeout=2.0
             )
-            
-            data = resp.json()
-            raw_response = data.get("response", "{}")
-            print(f"[SENTIENCE] Raw LLM Response: {raw_response}")
-            response_json = json.loads(raw_response)
-            
-            return {
-                "severity": response_json.get("severity", "LOW").upper(),
-                "tags": [t.upper().strip() for t in response_json.get("tags", ["GENERAL"])]
-            }
-    except Exception as e:
-        print(f"[SENTIENCE] LLM Error: {e}, falling back to heuristics")
-        message = message.lower()
-        severity = "LOW"
-        tags = ["GENERAL"]
         
-        if "flood" in message or "water" in message:
-            severity = "HIGH"
-            tags = ["FLOODING", "WATER_RESCUE"]
-        if "fire" in message or "smoke" in message:
-            severity = "CRITICAL"
-            tags = ["FIRE", "HAZMAT"]
-        if "trapped" in message or "help" in message:
-            severity = "CRITICAL"
-            tags.append("RESCUE_REQUIRED")
+        raw_output = resp.json().get("response", "{}")
+        import re
+        json_match = re.search(r'\{.*\}', raw_output, re.DOTALL)
+        if json_match:
+            raw_output = json_match.group(0)
             
+        data = json.loads(raw_output)
         return {
-            "severity": severity,
-            "tags": tags
+            "severity": data.get("severity", "MODERATE"),
+            "tags": data.get("tags", [])
         }
+    except Exception as e:
+        print(f"[!] AI Inference Failed/Timeout ({e}). Engaging Deterministic Fallback.")
+        msg_upper = message.upper()
+        severity = "MODERATE"
+        tags = []
+        if any(word in msg_upper for word in ["FIRE", "BURN", "SMOKE"]): tags.append("FIRE")
+        if any(word in msg_upper for word in ["HEART", "BREATH", "BLEED", "HELP"]): tags.append("MEDICAL")
+        if any(word in msg_upper for word in ["WATER", "FLOOD", "DROWN"]): tags.append("FLOODING")
+        if "CRITICAL" in msg_upper or "DIE" in msg_upper or "URGENT" in msg_upper: severity = "CRITICAL"
+        return {"severity": severity, "tags": tags}
 
 async def message_handler(msg):
     try:
