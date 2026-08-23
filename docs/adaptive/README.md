@@ -15,8 +15,14 @@ etwork.switch\, \
 otification.send\, \sset.locate\) registered in a central manifest. They are modeled as a dependency graph. The Planner traverses this graph to formulate strategies based on current environmental health.
 
 ## 4. Safety First: Method Adaptation vs Authority Expansion
+**Method adaptation ? authority adaptation.**
+
 - **ORION MAY Adapt Method:** The system can change routing, switch to local edge inference, select alternate communication paths, or retry failures.
-- **ORION MAY NOT Expand Authority:** The system cannot grant itself permissions, bypass the OPA engine (VEIL), ignore geofences, or autonomously authorize High/Critical risk actions. Uncertainty MUST fail-safe into Human Review.
+- **ORION MAY NOT Expand Authority:** The system cannot grant itself permissions, bypass the OPA engine (VEIL), ignore geofences, or autonomously authorize High/Critical risk actions.
 
 ## 5. Research Program (FORGE)
 The \experiments/adaptive/\ directory contains isolated, reproducible tests measuring ORION's capability to safely plan and recover from induced failures without violating static security protocols.
+
+- **ADAPT-001:** Demonstrates bounded method adaptation under tested failure scenarios while preserving the defined policy boundary. In the tested scenarios, policy denial and unavailable capabilities caused autonomy to decrease and the planner to enter a fail-safe human-review state rather than escalate authority.
+- **ADAPT-002:** Adversarial Capability Selection. Proves that TOCTOU (Time-of-Check to Time-of-Use) races and maliciously poisoned capability metadata cannot trick the planner into bypassing VEIL static policies.
+- **ADAPT-003:** Dynamic Capability Discovery. Proves the planner can dynamically ingest new capabilities at runtime and utilize them for recovery, achieving the "intent-driven" orchestration vision.
