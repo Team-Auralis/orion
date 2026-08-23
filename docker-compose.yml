@@ -1,4 +1,4 @@
-﻿version: '3.8'
+version: '3.8'
 
 services:
   postgres:
@@ -11,8 +11,7 @@ services:
     volumes:
       - orion_pgdata:/var/lib/postgresql/data
       - ./infra/docker/init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5433:5432"
+
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d keycloak"]
       interval: 5s
@@ -49,24 +48,23 @@ services:
       - "/policy"
     volumes:
       - ./policy/opa:/policy
-    ports:
-      - "8181:8181"
+
 
   nats:
     image: nats:alpine
     container_name: orion-nats
     command: "-js"
-    ports:
-      - "4222:4222"
-      - "8222:8222" # monitoring
+ # monitoring
 
   ascend-lb:
     image: nginx:alpine
     container_name: orion-ascend-lb
     volumes:
       - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/nginx/certs:/etc/nginx/certs:ro
     ports:
       - "80:80"
+      - "443:443"
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -83,8 +81,7 @@ services:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
       - KEYCLOAK_JWKS_URL=http://keycloak:8080/realms/orion/protocol/openid-connect/certs
       - OPA_URL=http://opa:8181/v1/data/orion/authz/allow
-    ports:
-      - "8001:8001"
+
     depends_on:
       - postgres
       - nats
@@ -152,8 +149,7 @@ services:
     container_name: orion-prometheus
     volumes:
       - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
+
     depends_on:
       - orion-api
 
@@ -170,14 +166,13 @@ services:
   jaeger:
     image: jaegertracing/all-in-one:latest
     container_name: orion-jaeger
-    ports:
-      - "16686:16686"
-      - "4317:4317"
-      - "4318:4318"
+
 
 
 
 
 volumes:
   orion_pgdata:
+
+
 
