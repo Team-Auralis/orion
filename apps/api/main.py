@@ -10,6 +10,8 @@ from fastapi import FastAPI, Depends, HTTPException, status, Header, Request
 from pydantic import BaseModel, Field
 import httpx
 from sqlalchemy.orm import Session
+import sqlalchemy
+import sqlalchemy.exc
 import nats
 
 from apps.api.database import get_db, Incident, IdempotencyKey, OutboxEvent
@@ -25,6 +27,7 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExport
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.propagate import inject
 from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fastapi.requests import Request
@@ -36,9 +39,10 @@ otlp_exporter = OTLPSpanExporter(endpoint=os.environ.get("OTEL_EXPORTER_OTLP_END
 trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(otlp_exporter))
 
 def get_real_ip(request: Request) -> str:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    # Strictly trust X-Real-IP from Nginx edge proxy
+    real_ip = request.headers.get("X-Real-IP")
+    if real_ip:
+        return real_ip.strip()
     return request.client.host if request.client else "127.0.0.1"
 
 limiter = Limiter(key_func=get_real_ip, enabled=True)
@@ -48,6 +52,7 @@ Instrumentator().instrument(app).expose(app)
 FastAPIInstrumentor.instrument_app(app)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -142,6 +147,9 @@ class Location(BaseModel):
     latitude: float
     longitude: float
 
+    class Config:
+        allow_inf_nan = False
+
 class IncidentCreate(BaseModel):
     type: str
     location: Location
@@ -192,15 +200,22 @@ def get_jwks():
         
     try:
         resp = httpx.get(JWKS_URL, timeout=5.0)
-        if redis_client: redis_client.delete("circuit_failures:KEYCLOAK")
+        if redis_client:
+            try:
+                redis_client.delete("circuit_failures:KEYCLOAK")
+            except Exception:
+                pass
         JWKS_CACHE = resp.json()
         JWKS_CACHE_TIME = time.time()
         return JWKS_CACHE
     except Exception as e:
         if redis_client:
-            failures = redis_client.incr("circuit_failures:KEYCLOAK")
-            if failures >= 5:
-                redis_client.setex("circuit_open:KEYCLOAK", 30, "1")
+            try:
+                failures = redis_client.incr("circuit_failures:KEYCLOAK")
+                if failures >= 5:
+                    redis_client.setex("circuit_open:KEYCLOAK", 30, "1")
+            except Exception:
+                pass
         print(f"Failed to fetch JWKS: {e}")
         return JWKS_CACHE or {}
 
@@ -255,6 +270,7 @@ async def get_current_user(request: Request) -> Dict[str, Any]:
         raise HTTPException(status_code=403, detail=f"Token validation failed: {str(e)}")
 
 import redis
+from apps.api.database import SessionLocal, OutboxEvent
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 # Redis connection for distributed circuit breaker state
@@ -267,7 +283,10 @@ except Exception:
 
 def is_circuit_open(service_name: str) -> bool:
     if not redis_client: return False
-    return redis_client.get(f"circuit_open:{service_name}") == "1"
+    try:
+        return redis_client.get(f"circuit_open:{service_name}") == "1"
+    except Exception:
+        return False
 
 def trip_circuit(service_name: str, duration: int = 30):
     if redis_client:
@@ -403,7 +422,14 @@ async def create_incident(
         db.add(outbox_event)
 
         db.commit()
-    except Exception as e:
+    except sqlalchemy.exc.IntegrityError as e:
+        db.rollback()
+        if namespaced_key:
+            cached = db.query(IdempotencyKey).filter(IdempotencyKey.key == namespaced_key).first()
+            if cached:
+                return json.loads(cached.response_body)
+        raise HTTPException(status_code=409, detail="Conflict")
+    except sqlalchemy.exc.OperationalError as e:
         # PHOENIX FALLBACK
         db.rollback()
         db_is_online = False
@@ -443,18 +469,15 @@ async def update_incident_status(
         "new_status": update.status
     }
     
-    # Publish to NATS first (Event Sourcing)
-    if nc.is_connected:
-        try:
-            js = nc.jetstream()
-            await js.publish("incident.status_changed", json.dumps(event).encode())
-        except Exception as e:
-            print(f"Failed to publish to JetStream: {e}")
-            await nc.publish("incident.status_changed", json.dumps(event).encode())
-    
-    # Note: We don't update the DB here! The Worker will process the event and 
-    # apply the CRDT logic to update the Read View in Postgres.
-    
+    # R-03: Route status updates through the outbox
+    outbox_event = OutboxEvent(
+        id=event["event_id"],
+        topic="incident.status_changed",
+        payload=json.dumps(event),
+        headers=json.dumps({"X-Correlation-ID": f"req-{uuid.uuid4().hex[:6]}"})
+    )
+    db.add(outbox_event)
+    db.commit()
     return {"message": "Status update event accepted", "event_id": event["event_id"]}
 
 @app.post("/v1/auth/break-glass")
@@ -721,6 +744,7 @@ async def update_asset_status(
     except StaleDataError:
         db.rollback()
         raise HTTPException(status_code=409, detail="Concurrency conflict. The asset state was modified by another transaction.")
+
 
 
 

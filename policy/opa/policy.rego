@@ -32,6 +32,14 @@ allow if {
     input.resource == "admin"
 }
 
+# Rule 2b: Operators can view assets (R-05 fix)
+allow if {
+    is_authenticated
+    is_operator
+    input.action == "dashboard:view"
+    input.resource == "assets"
+}
+
 # Rule 3: Operators can update incidents
 allow if {
     is_authenticated
