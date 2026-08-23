@@ -26,4 +26,4 @@ Legend — Safety boundary: the invariant that must hold if the scenario fails.
 
 - Scenarios 13–14 are **NOT EXECUTABLE**: no AEGIS hardware gateway exists (`services/aegis/` is empty).
 - Scenario 15 currently FAILS by code inspection: `apps/api/seed_assets.py` deletes all `Asset` rows and reseeds 648 nodes on every API startup.
-- Scenario 10 currently FAILS by live probe: dispatch approval succeeded while the pilot was suspended.
+- Scenario 10 was fixed at code level (kill switch now gates dispatch approval via `enforce_pilot_active()`; unit-tested). Live evidence still required.

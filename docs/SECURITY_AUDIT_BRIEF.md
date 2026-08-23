@@ -44,6 +44,7 @@ To prevent real-world chaos during the pilot:
 - **Secret Management:** The application currently relies on environment variables (\.env\) for component binding (PostgreSQL passwords, Keycloak admin credentials). Migration to a dynamic secret manager (e.g., HashiCorp Vault) is scheduled for Phase 2.
 
 ## 4. Execution Rules of Engagement
-1. All automated scanning must be throttled to respect the \SlowAPI\ rate limits (default: 5req/sec per IP on ingestion).
+1. All automated scanning must be throttled to respect the \SlowAPI\ rate limits (default: 5 req/minute per IP on ingestion).
 2. Report any findings related to complete system lockout (e.g., inadvertently triggering the Kill Switch globally via unauthenticated vectors) immediately as a Sev-1.
 3. Use the provided \scripts/security_probe.py\ script as a baseline reference for intended integration tests.
+

@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, Optional, List
 
 from fastapi import FastAPI, Depends, HTTPException, status, Header, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import httpx
 from sqlalchemy.orm import Session
 import nats
@@ -35,8 +35,13 @@ trace.set_tracer_provider(TracerProvider(resource=resource))
 otlp_exporter = OTLPSpanExporter(endpoint=os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317"), insecure=True)
 trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(otlp_exporter))
 
-IS_TESTING = os.environ.get("TESTING") == "1"
-limiter = Limiter(key_func=get_remote_address, enabled=not IS_TESTING)
+def get_real_ip(request: Request) -> str:
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "127.0.0.1"
+
+limiter = Limiter(key_func=get_real_ip, enabled=True)
 
 app = FastAPI(title="ORION API", version="0.1")
 Instrumentator().instrument(app).expose(app)
@@ -46,7 +51,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, restrict this to the dashboard URL
+    allow_origins=[os.environ.get("NEXT_PUBLIC_API_URL", "http://localhost:3000")],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -140,7 +145,7 @@ class Location(BaseModel):
 class IncidentCreate(BaseModel):
     type: str
     location: Location
-    message: str
+    message: str = Field(..., max_length=1000)
     source: str
 
 class IncidentResponse(BaseModel):
@@ -165,7 +170,7 @@ class AssetStatusUpdate(BaseModel):
     longitude: Optional[float] = None
 
 
-from jose import jwt
+import jwt
 import httpx
 import os
 
@@ -202,6 +207,8 @@ def get_jwks():
 async def get_current_user(request: Request) -> Dict[str, Any]:
     auth = request.headers.get("Authorization", "")
     if not auth.startswith("Bearer "):
+        if request.url.path == "/v1/incidents" and request.method == "POST":
+            return {"subject": "civilian", "role": "citizen"}
         raise HTTPException(status_code=403, detail="Missing or invalid token")
     
     token = auth.split(" ")[1]
@@ -275,12 +282,19 @@ def check_policy(action: str, resource: str, resource_attributes: Dict[str, Any]
         if bg_token:
             from apps.api.database import BreakGlassSession
             from datetime import timedelta
-            session = db.query(BreakGlassSession).filter(BreakGlassSession.token == bg_token).first()
+            session = db.query(BreakGlassSession).filter(
+                BreakGlassSession.token == bg_token,
+                BreakGlassSession.user_id == user["subject"]
+            ).first()
             if session:
                 expires_at = session.expires_at.replace(tzinfo=timezone.utc) if session.expires_at.tzinfo is None else session.expires_at
                 if expires_at > datetime.now(timezone.utc):
                     print(f"[BREAK-GLASS] Bypassing OPA for user {user['subject']}")
                     return user
+                else:
+                    raise HTTPException(status_code=403, detail="Break-glass token has expired.")
+            else:
+                raise HTTPException(status_code=403, detail="Invalid break-glass token or identity mismatch.")
         
         # 2. Circuit Breaker: Fail fast if open
         if is_circuit_open("OPA"):
@@ -355,8 +369,9 @@ async def create_incident(
     db_is_online = True
     try:
         # 1. Idempotency Check
-        if idempotency_key:
-            cached = db.query(IdempotencyKey).filter(IdempotencyKey.key == idempotency_key).first()
+        namespaced_key = f"{user['subject']}:{idempotency_key}" if idempotency_key else None
+        if namespaced_key:
+            cached = db.query(IdempotencyKey).filter(IdempotencyKey.key == namespaced_key).first()
             if cached:
                 return json.loads(cached.response_body)
 
@@ -375,8 +390,8 @@ async def create_incident(
         db.add(new_incident)
 
         # 3. Cache Idempotency
-        if idempotency_key:
-            db.add(IdempotencyKey(key=idempotency_key, response_body=json.dumps(response_data)))
+        if namespaced_key:
+            db.add(IdempotencyKey(key=namespaced_key, response_body=json.dumps(response_data)))
 
         # 4. Outbox Event
         outbox_event = OutboxEvent(
@@ -448,14 +463,20 @@ async def break_glass_override(request: Request, justification: dict, db: Sessio
     # This endpoint allows an operator to temporarily bypass standard capability checks 
     # to perform high-impact rescue operations during a catastrophic failure where OPA is down.
     
+    # Equivalent privileged authorization (since OPA might be down, we check identity role directly)
+    if user.get("role") not in ("operator", "admin") and "operator" not in user.get("roles", []) and "admin" not in user.get("roles", []):
+        raise HTTPException(status_code=403, detail="Unauthorized. Only emergency operators may activate break-glass.")
+        
     reason = justification.get("reason")
     if not reason or len(reason) < 20:
         raise HTTPException(status_code=400, detail="Must provide explicit, detailed reason for override.")
         
     user_id = user.get("subject", "unknown")
+    user_role = user.get("role", "unknown")
 
     # 2. Issue a short-lived (15 min) elevated context token (simulated here)
-    override_token = f"BREAK_GLASS_{uuid.uuid4().hex[:12]}"
+    import secrets
+    override_token = f"BREAK_GLASS_{secrets.token_hex(16)}"
     
     # Write to DB
     from apps.api.database import BreakGlassSession
@@ -469,14 +490,18 @@ async def break_glass_override(request: Request, justification: dict, db: Sessio
     db.add(bg_session)
     db.commit()
     
+    import hashlib
+    token_hash = hashlib.sha256(override_token.encode()).hexdigest()
+    
     # 3. Immutably log the override to the audit trail
     log_entry = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "event_type": "BREAK_GLASS_ACTIVATED",
         "actor_ip": request.client.host,
         "reason": reason,
-        "token": override_token,
-        "user_id": user_id
+        "token_hash": token_hash,
+        "user_id": user_id,
+        "user_role": user_role
     }
     
     log_dir = os.path.join(os.getcwd(), "logs")
@@ -549,8 +574,8 @@ from apps.api.database import Asset
 
 @app.get("/v1/assets")
 async def list_assets(
+    user: Dict[str, Any] = Depends(check_policy(action="dashboard:view", resource="assets")),
     db: Session = Depends(get_db)
-    # ponytail: omitting auth purely for demo speed, in real prod this would be gated
 ):
     assets = db.query(Asset).all()
     return [{
@@ -696,3 +721,5 @@ async def update_asset_status(
     except StaleDataError:
         db.rollback()
         raise HTTPException(status_code=409, detail="Concurrency conflict. The asset state was modified by another transaction.")
+
+

@@ -1,14 +1,15 @@
 {
   "realm": "orion",
+  "bruteForceProtected": true,
   "enabled": true,
   "clients": [
     {
       "clientId": "orion-api",
       "enabled": true,
-      "publicClient": true,
-      "directAccessGrantsEnabled": true,
+      "publicClient": false,
+      "directAccessGrantsEnabled": false,
       "redirectUris": ["http://localhost:3000/*", "http://localhost:8001/*"],
-      "webOrigins": ["*"]
+      "webOrigins": ["http://localhost:3000"]
     }
   ],
   "roles": {
@@ -32,3 +33,5 @@
     }
   ]
 }
+
+
