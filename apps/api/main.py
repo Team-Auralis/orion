@@ -2,6 +2,7 @@ from apps.api.security import mask_pii
 import uuid
 import json
 import os
+import hashlib
 import asyncio
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional, List
@@ -147,8 +148,7 @@ class Location(BaseModel):
     latitude: float
     longitude: float
 
-    class Config:
-        allow_inf_nan = False
+    model_config = {"allow_inf_nan": False}
 
 class IncidentCreate(BaseModel):
     type: str
@@ -181,6 +181,7 @@ class AssetStatusUpdate(BaseModel):
 import jwt
 import httpx
 import os
+import hashlib
 
 JWKS_URL = os.environ.get("KEYCLOAK_JWKS_URL", "http://localhost:8080/realms/orion/protocol/openid-connect/certs")
 OPA_URL = os.environ.get("OPA_URL", "http://localhost:8181/v1/data/orion/authz/allow")
@@ -302,7 +303,7 @@ def check_policy(action: str, resource: str, resource_attributes: Dict[str, Any]
             from apps.api.database import BreakGlassSession
             from datetime import timedelta
             session = db.query(BreakGlassSession).filter(
-                BreakGlassSession.token == bg_token,
+                BreakGlassSession.token == hashlib.sha256(bg_token.encode()).hexdigest(),
                 BreakGlassSession.user_id == user["subject"]
             ).first()
             if session:
@@ -390,9 +391,13 @@ async def create_incident(
         # 1. Idempotency Check
         namespaced_key = f"{user['subject']}:{idempotency_key}" if idempotency_key else None
         if namespaced_key:
-            cached = db.query(IdempotencyKey).filter(IdempotencyKey.key == namespaced_key).first()
-            if cached:
-                return json.loads(cached.response_body)
+            try:
+                cached = db.query(IdempotencyKey).filter(IdempotencyKey.key == namespaced_key).first()
+                if cached:
+                    return json.loads(cached.response_body)
+            except Exception as ex:
+                print(f"Idempotency cache lookup error: {ex}")
+                pass
 
         # 2. State Mutation
         dt_created = datetime.fromisoformat(response_data["created_at"])
@@ -425,9 +430,13 @@ async def create_incident(
     except sqlalchemy.exc.IntegrityError as e:
         db.rollback()
         if namespaced_key:
-            cached = db.query(IdempotencyKey).filter(IdempotencyKey.key == namespaced_key).first()
-            if cached:
-                return json.loads(cached.response_body)
+            try:
+                cached = db.query(IdempotencyKey).filter(IdempotencyKey.key == namespaced_key).first()
+                if cached:
+                    return json.loads(cached.response_body)
+            except Exception as ex:
+                print(f"Idempotency cache lookup error: {ex}")
+                pass
         raise HTTPException(status_code=409, detail="Conflict")
     except sqlalchemy.exc.OperationalError as e:
         # PHOENIX FALLBACK
@@ -505,7 +514,7 @@ async def break_glass_override(request: Request, justification: dict, db: Sessio
     from apps.api.database import BreakGlassSession
     from datetime import timedelta
     bg_session = BreakGlassSession(
-        token=override_token,
+        token=hashlib.sha256(override_token.encode()).hexdigest(),
         user_id=user_id,
         reason=reason,
         expires_at=datetime.now(timezone.utc) + timedelta(minutes=15)
@@ -513,7 +522,7 @@ async def break_glass_override(request: Request, justification: dict, db: Sessio
     db.add(bg_session)
     db.commit()
     
-    import hashlib
+    
     token_hash = hashlib.sha256(override_token.encode()).hexdigest()
     
     # 3. Immutably log the override to the audit trail
