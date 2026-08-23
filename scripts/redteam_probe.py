@@ -43,6 +43,7 @@ def override_get_db():
 m.app.dependency_overrides[m.get_db] = override_get_db
 
 OPA_CALLS = []
+OPA_ACTIONS = set()
 class _FakeResp:
     def __init__(self, data): self._d = data
     def json(self): return self._d
@@ -50,9 +51,8 @@ class _FakeResp:
 async def _fake_post(self, url, json=None, timeout=None, **kw):
     OPA_CALLS.append(json)
     inp = (json or {}).get("input", {})
-    role = inp.get("role"); action = inp.get("action")
-    allowed = role == "operator" or (role == "citizen" and action == "sos:create")
-    return _FakeResp({"result": allowed})
+    OPA_ACTIONS.add(f"{inp.get('role')}:{inp.get('action')}")
+    return _FakeResp({"result": True})   # permissive: probe focuses on app logic, OPA rules tested separately
 import httpx
 httpx.AsyncClient.post = _fake_post
 
@@ -64,11 +64,27 @@ def install_user(u):
 
 client = TestClient(m.app, raise_server_exceptions=False)
 
+# Mirror no-Redis environment (lazy client would otherwise raise ConnectionError
+# inside is_circuit_open -> 500 on every protected route; see REDTEAM finding R-REDIS-1)
+m.redis_client = None
+os.environ["PILOT_MODE"] = "0"   # default off; enabled only in dedicated pilot phases
+
+class EarlyDeadNC:
+    @property
+    def is_connected(self): return False
+    def publish(self, *a, **kw): raise RuntimeError("dead")
+    def jetstream(self): raise RuntimeError("dead")
+m.nc = EarlyDeadNC()
+
+def reset():
+    """Reset slowapi windows - also demonstrates shared-bucket behavior when NOT called."""
+    try: m.limiter.reset()
+    except Exception: pass
+
 def seed_world():
     db = TestSession()
     db.query(Incident).delete(); db.query(Asset).delete()
     db.query(DispatchRecommendation).delete(); db.query(OutboxEvent).delete()
-    db.query(BreakGlassSession).delete()
     now = __import__("datetime").datetime.now(__import__("datetime").timezone.utc)
     for aid in ("RT-A1", "RT-A2"):
         db.add(Asset(asset_id=aid, type="AMBULANCE",
@@ -94,25 +110,27 @@ record("RECON.route-map", "INFO", f"{len(routes)} routes enumerated")
 print("\n=== PHASE 4: BREAK-GLASS ===")
 seed_world()
 install_user(CITIZEN)
+reset()
 r = client.post("/v1/auth/break-glass", json={"reason": "redteam citizen mint attempt 1234"})
 record("BG.citizen-mint", "PASS(blocked)" if r.status_code == 403 else "VULN", f"status={r.status_code} body={r.text[:120]}")
 
 install_user(OPERATOR)
+reset()
 r = client.post("/v1/auth/break-glass", json={"reason": "legitimate operator drill reason here"})
-bg_token = None
-if r.status_code == 200:
-    bg_token = r.json().get("break_glass_token") or r.json().get("token")
+bg_token = r.json().get("override_token") if r.status_code == 200 else None
 record("BG.operator-mint", "INFO", f"status={r.status_code} keys={list(r.json().keys())[:6]}")
 
 if bg_token:
     # BG bypass scope: citizen-forbidden action with OPERATOR jwt + bg -> allowed (expected design)
     h = {"X-Break-Glass-Token": bg_token}
     before = len(OPA_CALLS)
+    reset()
     r2 = client.patch("/v1/incidents/RT-INC-1/status", json={"status": "RESOLVED"}, headers=h)
     used_opa = len(OPA_CALLS) > before
     record("BG.bypass-scope(operator)", "INFO", f"patch={r2.status_code} opa_consulted={used_opa}")
     # Identity binding: same token, different subject
     install_user({"subject": "attacker-other", "role": "citizen", "username": "x"})
+    reset()
     r3 = client.patch("/v1/incidents/RT-INC-1/status", json={"status": "RESOLVED"},
                       headers={"Authorization": "Bearer whatever", "X-Break-Glass-Token": bg_token})
     record("BG.identity-binding", "PASS" if r3.status_code == 403 else "VULN",
@@ -130,8 +148,10 @@ payload = {"type": "flood", "location": {"latitude": 34.05, "longitude": -118.24
            "message": "race sos", "source": "mobile_app"}
 
 # sequential replay
+reset()
 r1 = client.post("/v1/incidents", json=payload, headers=hdr)
 id1 = r1.json().get("incident_id")
+reset()
 r2 = client.post("/v1/incidents", json=payload, headers=hdr)
 id2 = r2.json().get("incident_id")
 record("IDEM.sequential-replay", "PASS" if id1 == id2 and r2.status_code == 200 else "FAIL",
@@ -140,6 +160,7 @@ record("IDEM.sequential-replay", "PASS" if id1 == id2 and r2.status_code == 200 
 # concurrent duplicate race (true parallelism)
 def fire(_):
     c = TestClient(m.app, raise_server_exceptions=False)
+    reset()
     return c.post("/v1/incidents", json=payload, headers=hdr).json().get("incident_id")
 with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
     ids = list(ex.map(fire, range(8)))
@@ -152,6 +173,7 @@ record("IDEM.concurrent-race",
 # cross-user leak
 hdr2 = {"Idempotency-Key": hdr["Idempotency-Key"]}
 install_user({"subject": "victim-B", "role": "citizen", "username": "b"})
+reset()
 r3 = client.post("/v1/incidents", json={**payload, "message": "victim B emergency"}, headers=hdr2)
 leaked_id = r3.status_code == 200 and r3.json().get("incident_id") == id1
 record("IDEM.cross-user-leak", "VULN(confirmed)" if leaked_id else "PASS",
@@ -161,7 +183,7 @@ record("IDEM.cross-user-leak", "VULN(confirmed)" if leaked_id else "PASS",
 print("\n=== PHASE 4b: BG TOKEN PLAINTEXT STORAGE ===")
 if bg_token:
     db = TestSession()
-    row = db.query(BreakGlassSession).filter(BreakGlassSession.user_id == "op-redteam").order_by(BreakGlassSession.id.desc()).first()
+    row = db.query(BreakGlassSession).filter(BreakGlassSession.user_id == "op-redteam").order_by(BreakGlassSession.created_at.desc()).first()
     stored_raw = bool(row) and row.token == bg_token
     db.close()
     record("BG.plaintext-in-db", "CONFIRMED" if stored_raw else "NOT CONFIRMED",
@@ -178,7 +200,8 @@ class DeadNC:
 m.nc = DeadNC()
 db = TestSession(); out_before = db.query(OutboxEvent).count(); db.close()
 t0 = time.time()
-r = client.post("/v1/incidents/RT-INC-1/status", json={"status": "RESOLVED"})
+reset()
+r = client.patch("/v1/incidents/RT-INC-1/status", json={"status": "RESOLVED"})
 dt = time.time() - t0
 db = TestSession(); out_after = db.query(OutboxEvent).count(); db.close()
 record("OUTBOX.false-ack-disconnected", 
@@ -201,7 +224,8 @@ class HalfDeadNC:
 hd = HalfDeadNC(); hd._js = ExplodingJS()
 m.nc = hd
 db = TestSession(); out_before = db.query(OutboxEvent).count(); db.close()
-r2 = client.post("/v1/incidents/RT-INC-1/status", json={"status": "RESOLVED"})
+reset()
+r2 = client.patch("/v1/incidents/RT-INC-1/status", json={"status": "RESOLVED"})
 db = TestSession(); out_after = db.query(OutboxEvent).count(); db.close()
 record("OUTBOX.js-fail-fallback",
        "INFO" if r2.status_code == 200 else f"FINDING({r2.status_code})",
@@ -227,24 +251,31 @@ mk_rec("RT-R3", "RT-A2"); mk_rec("RT-R4", "RT-A2")
 
 install_user(OPERATOR)
 # control: expired rec must be rejected
+reset()
 re_ = client.post("/v1/dispatch/recommendations/RT-REXP/action", json={"action": "APPROVE"})
 record("HITL.expired-blocked", "PASS" if re_.status_code == 400 else "VULN", f"status={re_.status_code}")
 
 # double-approve race on same rec
 def act(_):
     c = TestClient(m.app, raise_server_exceptions=False)
-    return c.post("/v1/dispatch/recommendations/RT-R1/action", json={"action": "APPROVE"}).status_code
+    reset()
+    rr = c.post("/v1/dispatch/recommendations/RT-R1/action", json={"action": "APPROVE"})
+    try: body = str(rr.json())[:80]
+    except Exception: body = "<no-json>"
+    return (rr.status_code, body)
 with concurrent.futures.ThreadPoolExecutor(max_workers=4) as ex:
-    codes = sorted(ex.map(act, range(4)))
+    pairs = sorted(ex.map(act, range(4)))
+codes = [p[0] for p in pairs]
 db = TestSession()
 dispatch_events = db.query(OutboxEvent).filter(OutboxEvent.topic == "asset.dispatched").count()
 rec_status = db.query(DispatchRecommendation).filter(DispatchRecommendation.id == "RT-R1").first().status
 db.close()
 record("HITL.double-approve-race",
        "PASS" if dispatch_events <= 1 and codes.count(200) <= 1 else "VULN",
-       f"codes={codes} dispatch_events={dispatch_events} rec_status={rec_status}")
+       f"codes={codes} bodies={pairs} dispatch_events={dispatch_events} rec_status={rec_status}")
 
 # two recs, same asset, sequential -> second must fail
+reset()
 ra = client.post("/v1/dispatch/recommendations/RT-R3/action", json={"action": "APPROVE"})
 rb = client.post("/v1/dispatch/recommendations/RT-R4/action", json={"action": "APPROVE"})
 record("HITL.same-asset-double-dispatch",
@@ -255,6 +286,7 @@ record("HITL.same-asset-double-dispatch",
 from apps.api import pilot as pilot_mod
 pilot_mod.redis_client = None
 os.environ["PILOT_MODE"] = "1"
+reset()
 rc = client.post("/v1/dispatch/recommendations/RT-R2/action", json={"action": "APPROVE"})
 record("HITL.pilot-misconfig-failclosed", "INFO" if rc.status_code == 503 else "NOTE",
        f"pilot ON, no redis -> {rc.status_code} (None=unknown treated fail-closed)")
@@ -263,6 +295,7 @@ record("HITL.pilot-misconfig-failclosed", "INFO" if rc.status_code == 503 else "
 print("\n=== PHASE 7: KILL SWITCH vs REDIS CONTROL ===")
 class DictRedis:
     def __init__(self): self.store = {}
+    def __setitem__(self, k, v): self.store[k] = v
     def get(self, k): return self.store.get(k)
     def setex(self, k, ttl, v): self.store[k] = v
     def set(self, k, v): self.store[k] = v
@@ -296,41 +329,59 @@ pilot_mod.redis_client = None
 # Redis write -> authorization plane DoS (fail-closed)
 m.redis_client = dr; dr.setex("circuit_open:OPA", 300, "1")
 install_user(CITIZEN)
+reset()
 rd = client.post("/v1/incidents", json=payload)
 record("KS.circuit-forge-dos",
        "CHAIN(redis-write => total authz outage)" if rd.status_code == 503 else f"NOTE({rd.status_code})",
        f"circuit_open:OPA forged -> SOS ingestion={rd.status_code}")
 m.redis_client = None
+os.environ["PILOT_MODE"] = "0"   # restore for input-abuse phases
 
 # =========================================================
 print("\n=== PHASE 6/8/9: INPUT ABUSE ===")
 seed_world(); install_user(CITIZEN)
 
-nan_payload = {"type": "quake", "location": {"latitude": float("nan"), "longitude": float("inf")},
-               "message": "nan sos", "source": "mobile_app"}
-rn = client.post("/v1/incidents", json=nan_payload)
+# attacker-controlled raw JSON with NaN/Infinity literals (httpx refuses to serialize
+# them, but a real attacker just sends the bytes; python json.loads accepts server-side)
+nan_raw = b'{"type":"quake","location":{"latitude":NaN,"longitude":1e400},"message":"nan sos","source":"web"}'
+reset()
+rn = client.post("/v1/incidents", content=nan_raw, headers={"Content-Type": "application/json"})
 geo_note = ""
 if rn.status_code == 200:
+    reset()
     rl = client.get("/v1/incidents")
-    geo_note = "NaN-in-response" if "NaN" in rl.text or "Infinity" in rl.text else "sanitized"
+    geo_note = "NaN/Infinity echoed in list response" if ("NaN" in rl.text or "Infinity" in rl.text) else "sanitized"
 record("INPUT.nan-inf-coords",
-       "BLOCKED" if rn.status_code in (400, 422) else f"FINDING(stored {rn.status_code}; {geo_note})",
+       f"STORED({rn.status_code}; {geo_note})" if rn.status_code == 200 else f"BLOCKED({rn.status_code})",
        f"status={rn.status_code} {geo_note}")
+
+# NaN vs active geofence (PILOT ON, healthy kill-switch state)
+os.environ["PILOT_MODE"] = "1"
+dr2 = DictRedis(); m.redis_client = dr2
+reset()
+rnan2 = client.post("/v1/incidents", content=nan_raw, headers={"Content-Type": "application/json"})
+m.redis_client = None
+os.environ["PILOT_MODE"] = "0"
+record("INPUT.nan-vs-geofence", "PASS(fail-closed)" if rnan2.status_code in (400,403,422) else f"CHECK({rnan2.status_code})",
+       f"PILOT ON -> {rnan2.status_code}")
 
 deep_body = '{"a":' * 15000 + "1" + "}" * 15000
 t0 = time.time()
 try:
+    reset()
     rdep = client.post("/v1/incidents", content=deep_body.encode(), headers={"Content-Type": "application/json"})
     dep_status = rdep.status_code
 except Exception as e:
     dep_status = f"exc:{type(e).__name__}"
 record("INPUT.deep-nesting-bomb", "INFO", f"~75KB depth-15k -> {dep_status} in {time.time()-t0:.2f}s")
 
+reset()
 rm = client.get("/v1/pilot/suspend")
 rp = client.patch("/v1/assets", json={})
 record("API.method-confusion", "PASS" if rm.status_code == 405 and rp.status_code == 405 else "CHECK",
        f"GET suspend={rm.status_code} PATCH assets={rp.status_code}")
 
+reset()
 r_noauth = client.get("/v1/dispatch/recommendations")
 r_assets = client.get("/v1/assets")
 record("API.anon-probes", "MIXED", f"anon recommendations={r_noauth.status_code}, anon ASSETS={r_assets.status_code}"
@@ -338,6 +389,7 @@ record("API.anon-probes", "MIXED", f"anon recommendations={r_noauth.status_code}
 
 big_msg = "@" + "x" * 100000
 t0 = time.time()
+reset()
 rbig = client.post("/v1/incidents", json={"type": "t", "location": {"latitude": 34.05, "longitude": -118.24},
                                           "message": big_msg, "source": "web"})
 record("DOS.mask_pii-100KB", "MEASURED", f"status={rbig.status_code} handler_time={time.time()-t0:.3f}s (quadratic regex)")
@@ -345,6 +397,7 @@ record("DOS.mask_pii-100KB", "MEASURED", f"status={rbig.status_code} handler_tim
 # =========================================================
 print("\n=== METRICS / PRIVACY SNIFF ===")
 try:
+    reset()
     rmet = client.get("/metrics")
     body = rmet.text[:200000]
     leaks = [w for w in ("Authorization", "password", "BREAK_GLASS", "phone", "@") if w.lower() in body.lower()]
@@ -354,6 +407,7 @@ except Exception as e:
 
 # =========================================================
 print("\n================ SUMMARY ================")
+print("OPA actions observed:", sorted(OPA_ACTIONS))
 counts = {}
 for _, v, _d in RESULTS:
     key = v.split("(")[0]
@@ -361,3 +415,4 @@ for _, v, _d in RESULTS:
 for name, verdict, detail in RESULTS:
     print(f"{verdict:<38} | {name}")
 print("\nCOUNTS:", json.dumps(counts))
+

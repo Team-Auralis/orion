@@ -22,8 +22,10 @@ Legend — Safety boundary: the invariant that must hold if the scenario fails.
 | 14 | Hardware link loss (LoRa/radio) | Buffer-and-forward on reconnect; duplicates suppressed by dedup | No silent loss, no double-count | Link metrics + dedup counter | ☐ |
 | 15 | Recovery after full outage | Services restart in order; **asset table NOT wiped/reseeded over live state**; outbox drains; pilot remains SUSPENDED until explicit resume | Restart cannot silently re-enable ingestion or destroy state | Startup logs, asset row continuity, pilot status | ☐ |
 
-## Blocking notes (as of this review)
+## Blocking notes (as of red-team review @ HEAD `3b1570c`)
 
 - Scenarios 13–14 are **NOT EXECUTABLE**: no AEGIS hardware gateway exists (`services/aegis/` is empty).
-- Scenario 15 currently FAILS by code inspection: `apps/api/seed_assets.py` deletes all `Asset` rows and reseeds 648 nodes on every API startup.
-- Scenario 10 was fixed at code level (kill switch now gates dispatch approval via `enforce_pilot_active()`; unit-tested). Live evidence still required.
+- Scenario 15 was MITIGATED at HEAD: `seed_assets.seed()` now skips unless `SEED_DB=1` AND skips when assets already exist. Live restart evidence still required.
+- Scenario 10 was fixed and unit-tested at HEAD (kill switch gates dispatch approval via `enforce_pilot_active()`). Live evidence still required.
+- NEW blocker found by red team: `/v1/assets` now requires OPA action `dashboard:view` on resource `assets`, but `policy/opa/policy.rego` only permits that action for resource `admin` — default-deny makes the endpoint 403 for everyone, including operators. Add the missing rule.
+

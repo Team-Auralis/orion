@@ -1,6 +1,11 @@
 version: '3.8'
 
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: orion-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+
   postgres:
     image: postgres:15-alpine
     container_name: orion-postgres
@@ -53,7 +58,7 @@ services:
   nats:
     image: nats:alpine
     container_name: orion-nats
-    command: "-js"
+    command: "-js --user ${NATS_USER} --pass ${NATS_PASSWORD}"
  # monitoring
 
   ascend-lb:
@@ -77,10 +82,11 @@ services:
     environment:
       - PYTHONPATH=/app/apps/api:/app
       - DATABASE_URL=${DATABASE_URL}
-      - NATS_URL=nats://nats:4222
+      - NATS_URL=nats://${NATS_USER}:${NATS_PASSWORD}@nats:4222
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
       - KEYCLOAK_JWKS_URL=http://keycloak:8080/realms/orion/protocol/openid-connect/certs
       - OPA_URL=http://opa:8181/v1/data/orion/authz/allow
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
 
     depends_on:
       - postgres
@@ -97,7 +103,7 @@ services:
     environment:
       - PYTHONPATH=/app/apps/api:/app
       - DATABASE_URL=${DATABASE_URL}
-      - NATS_URL=nats://nats:4222
+      - NATS_URL=nats://${NATS_USER}:${NATS_PASSWORD}@nats:4222
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
     depends_on:
       - nats
@@ -111,7 +117,7 @@ services:
     command: python -u services/ai_sentinel/main.py
     environment:
       - PYTHONPATH=/app/apps/api:/app
-      - NATS_URL=nats://nats:4222
+      - NATS_URL=nats://${NATS_USER}:${NATS_PASSWORD}@nats:4222
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
       - OLLAMA_URL=http://host.docker.internal:11434
     extra_hosts:
@@ -127,7 +133,7 @@ services:
     command: python -u services/aegis/main.py
     environment:
       - PYTHONPATH=/app/apps/api:/app
-      - NATS_URL=nats://nats:4222
+      - NATS_URL=nats://${NATS_USER}:${NATS_PASSWORD}@nats:4222
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
     depends_on:
       - nats
@@ -173,6 +179,10 @@ services:
 
 volumes:
   orion_pgdata:
+
+
+
+
 
 
 

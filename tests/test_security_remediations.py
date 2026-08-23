@@ -13,7 +13,9 @@ async def fake_opa_post(*args, **kwargs):
     return resp
 httpx.AsyncClient.post = fake_opa_post
 import apps.api.pilot as pilot_module
-pilot_module.redis_client = None
+import fakeredis
+pilot_module.redis_client = fakeredis.FakeRedis()
+pilot_module.GEOFENCE = {"latitude": 48.8, "longitude": 2.3, "radius_km": 50}
 import apps.api.main as main_module
 main_module.redis_client = None
 
@@ -98,6 +100,7 @@ def test_f13_tls_enabled():
 
 def test_f15_migrations_exist():
     assert len(os.listdir("alembic/versions")) > 0
+
 
 
 
