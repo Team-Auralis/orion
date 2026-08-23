@@ -723,3 +723,4 @@ async def update_asset_status(
         raise HTTPException(status_code=409, detail="Concurrency conflict. The asset state was modified by another transaction.")
 
 
+
