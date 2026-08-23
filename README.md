@@ -10,47 +10,21 @@
 
 ---
 
-**Status: Documentation / Architecture Phase**
-**Implementation status: Not started**
-**Current focus: Requirements, architecture, contracts, repository organization, and Phase 0/1 planning**
+## Current Project Status
 
-> **This repository currently contains documentation and architecture only. No implementation code is included.**
+Phase 1 - MVP Construction: COMPLETE
 
-> **ORION is not being built as a giant system on day one.**
-> It is being built as a sequence of verified architectural capabilities.
-> First:
-> **Input → Identity → Policy → State → Event → Response → Audit**
-> Then resilience. Then intelligence. Then simulation. Then scale.
-> Every new capability must strengthen the existing architecture rather than bypass it.
+Phase 1.5 - Software Hardening: COMPLETE
 
-## 1. What is ORION?
-ORION is a proposed resilient communication, emergency coordination, distributed infrastructure, simulation, data intelligence, and policy-governed AI decision-support platform.
+Phase 1.5 - Physical Pilot Gate: PENDING
 
-## 2. Vision
-To create an extensible infrastructure ecosystem capable of connecting people, communication networks, emergency systems, satellite/NTN connectivity, edge systems, and AI decision-support systems.
+Controlled Field Pilot: NOT YET EXECUTED
 
-## 3. Mission
-Provide a highly reliable, zero-trust infrastructure that ensures communications and operational coordination can survive degraded network states and planetary-scale emergencies.
+Phase 2 - Scale & Federation: PLANNED
 
-## 4. Core principle
-> **Do not build the ecosystem first. Build one complete ORION nervous-system reflex first.**
+Phase 3 - Global Mesh / Satellite Backhaul: LONG-TERM PLANNED
 
-## 5. 12-Part Architecture
-1. **01 ORION Core Vision (AURA)** - Mission, principles, identity
-2. **02 ORION Architecture (NEXUS)** - Complete system architecture
-3. **03 Civilian Platform (HAVEN)** - First real-world civilian product
-4. **04 Satellite & Comm Layer (AEGIS)** - Resilient connectivity
-5. **05 AI Orchestration Layer (SENTIENCE)** - AI reasoning and coordination
-6. **06 Security & Zero Trust (VEIL)** - Identity, authorization and protection
-7. **07 Resilience & Emergency (PHOENIX)** - Recovery and emergency operation
-8. **08 Digital Twin & Simulation (MIRROR)** - Simulation of infrastructure
-9. **09 Cloud, Edge & Infra (ATLAS)** - Distributed computing
-10. **10 Data & Intelligence (OMNIS)** - Data, telemetry, analytics
-11. **11 Research & Cyber Range (FORGE)** - Testing and experimentation
-12. **12 National/Planetary Expansion (ASCEND)** - Long-term large-scale coordination
-
-## 6. Current status
-Documentation / Architecture Phase. Implementation not started.
+ORION has completed its MVP construction and software hardening cycle and is now a technically hardened emergency-response prototype preparing for a controlled, geofenced field pilot. The platform is not yet a production emergency service; remaining validation, partner deployment, and operational evidence are explicit gates rather than implied capabilities.
 
 ## 7. Phase 0/1 objective
 > **Prove two devices can communicate through a simulated SOS workflow, with an independent policy engine validating the action.**
@@ -82,3 +56,20 @@ Out of scope: autonomous weapons, targeting systems, military control.
 
 ## 14. Repository status
 Official technical knowledge base and architectural source of truth for ORION.
+
+## Claim / Evidence Matrix
+
+| Capability | Evidence | Status | Confidence |
+|---|---|---|---|
+| API | 	ests/test_api_unit.py | Implemented | High |
+| JWT authentication | 	ests/test_api_unit.py | Validated | High |
+| OPA authorization | 	ests/test_api_unit.py | Validated | High |
+| API idempotency | 	ests/test_advanced_backend.py | Validated | High |
+| Event reliability | Transactional Outbox (API) | Implemented | Medium (chaos tests pending) |
+| AI fallback | Worker deterministic fallback | Validated | High |
+| Geospatial routing | 	ests/test_advanced_backend.py | Implemented/Validated | High |
+| AEGIS hardware | N/A | Pilot pending | N/A |
+| HITL Safety | tests/test_hitl_safety.py (Break-Glass Bypass) | Validated | High (Live OPA path pending) |
+| Backup/restore | scripts/dr_backup_restore.py | Validated | High (1.60s RTO on 0.21MB test DB) |
+| Observability | OpenTelemetry + Prometheus setup | Implemented | Medium (Live environment verification pending) |
+| Physical pilot | N/A | Pilot pending | N/A |

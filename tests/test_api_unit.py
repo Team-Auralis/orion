@@ -17,8 +17,19 @@ def override_check_policy(action: str, resource: str):
         return {"subject": "test-user-123", "role": "operator"}
     return dependency
 
-app.dependency_overrides[get_db] = override_get_db
-app.dependency_overrides[get_current_user] = override_get_current_user
+from apps.api.main import get_db as main_get_db
+
+
+@pytest.fixture(autouse=True)
+def api_dependencies():
+    # Snapshot/restore so this module never leaks overrides into other modules.
+    saved = dict(app.dependency_overrides)
+    app.dependency_overrides[main_get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    yield
+    app.dependency_overrides.clear()
+    app.dependency_overrides.update(saved)
+
 
 # For endpoints that use check_policy directly in router, we override it globally or patch
 # But check_policy is a function returning a dependency. 

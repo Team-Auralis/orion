@@ -1,9 +1,10 @@
+from apps.api.security import mask_pii
 import uuid
 import json
 import os
 import asyncio
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from fastapi import FastAPI, Depends, HTTPException, status, Header, Request
 from pydantic import BaseModel
@@ -11,16 +12,18 @@ import httpx
 from sqlalchemy.orm import Session
 import nats
 
-from database import get_db, Incident, IdempotencyKey
+from apps.api.database import get_db, Incident, IdempotencyKey, OutboxEvent
+from apps.api.pilot import enforce_pilot_constraints, suspend_pilot as pilot_suspend, resume_pilot as pilot_resume, pilot_status
 
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.propagate import inject
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -88,6 +91,25 @@ nc = nats.NATS()
 
 NATS_URL = os.environ.get("NATS_URL", "nats://localhost:4222")
 
+async def outbox_publisher_loop():
+    while True:
+        try:
+            if nc.is_connected:
+                db = SessionLocal()
+                try:
+                    events = db.query(OutboxEvent).filter(OutboxEvent.published == False).limit(100).all()
+                    for ev in events:
+                        headers = json.loads(ev.headers) if ev.headers else {}
+                        await nc.publish(ev.topic, ev.payload.encode(), headers=headers)
+                        ev.published = True
+                    if events:
+                        db.commit()
+                finally:
+                    db.close()
+        except Exception as e:
+            print(f"Outbox publisher error: {e}")
+        await asyncio.sleep(1)
+
 @app.on_event("startup")
 async def startup_event():
     try:
@@ -102,6 +124,8 @@ async def startup_event():
         print("ATLAS GEO DB Pre-seeded on startup.")
     except Exception as e:
         print(f"Warning: Failed to pre-seed ATLAS GEO: {e}")
+        
+    asyncio.create_task(outbox_publisher_loop())
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -123,6 +147,23 @@ class IncidentResponse(BaseModel):
     incident_id: str
     status: str
     created_at: str
+
+class RecommendationResponse(BaseModel):
+    id: str
+    incident_id: str
+    recommended_asset_id: str
+    reason: str
+    status: str
+    created_at: str
+
+class RecommendationAction(BaseModel):
+    action: str
+
+class AssetStatusUpdate(BaseModel):
+    status: str # IDLE, EN_ROUTE, ON_SCENE, RETURNING, OFFLINE, MAINTENANCE
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
 
 from jose import jwt
 import httpx
@@ -190,8 +231,8 @@ async def get_current_user(request: Request) -> Dict[str, Any]:
             token,
             rsa_key,
             algorithms=["RS256"],
-            audience="account",
-            issuer="http://localhost:8080/realms/orion"
+            audience=os.environ.get("JWT_AUDIENCE", "account"),
+            issuer=os.environ.get("JWT_ISSUER", "http://localhost:8080/realms/orion")
         )
         
         # Extract realm roles
@@ -232,12 +273,14 @@ def check_policy(action: str, resource: str, resource_attributes: Dict[str, Any]
         # 1. Break-Glass Override Check
         bg_token = request.headers.get("X-Break-Glass-Token")
         if bg_token:
-            from database import BreakGlassSession
+            from apps.api.database import BreakGlassSession
             from datetime import timedelta
             session = db.query(BreakGlassSession).filter(BreakGlassSession.token == bg_token).first()
-            if session and session.expires_at > datetime.now(timezone.utc):
-                print(f"[BREAK-GLASS] Bypassing OPA for user {user['subject']}")
-                return user
+            if session:
+                expires_at = session.expires_at.replace(tzinfo=timezone.utc) if session.expires_at.tzinfo is None else session.expires_at
+                if expires_at > datetime.now(timezone.utc):
+                    print(f"[BREAK-GLASS] Bypassing OPA for user {user['subject']}")
+                    return user
         
         # 2. Circuit Breaker: Fail fast if open
         if is_circuit_open("OPA"):
@@ -271,7 +314,7 @@ def check_policy(action: str, resource: str, resource_attributes: Dict[str, Any]
                 failures = redis_client.incr("circuit_failures:OPA")
                 if failures >= 5:
                     trip_circuit("OPA")
-            print(f"OPA check failed: {e}")
+            import traceback; traceback.print_exc()
             raise HTTPException(status_code=503, detail="Policy Firewall unreachable")
             
     return dependency
@@ -287,46 +330,14 @@ async def create_incident(
     user: Dict[str, Any] = Depends(check_policy(action="incident:create", resource="incident", resource_attributes={"incident_type": "SOS"})),
     db: Session = Depends(get_db)
 ):
+    enforce_pilot_constraints(incident.location.latitude, incident.location.longitude)
+    incident.message = mask_pii(incident.message)
     response_data = {
         "incident_id": f"INC-{uuid.uuid4().hex[:8].upper()}",
         "status": "CREATED",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
 
-    db_is_online = True
-    try:
-        # 1. Idempotency Check
-        if idempotency_key:
-            cached = db.query(IdempotencyKey).filter(IdempotencyKey.key == idempotency_key).first()
-            if cached:
-                return json.loads(cached.response_body)
-
-        # 2. State Mutation
-        new_incident = Incident(
-            id=response_data["incident_id"],
-            type=incident.type,
-            user_id=user["subject"],
-            latitude=incident.location.latitude,
-            longitude=incident.location.longitude,
-            message=incident.message,
-            created_at=response_data["created_at"],
-            updated_at=response_data["created_at"]
-        )
-        db.add(new_incident)
-
-        # 3. Cache Idempotency
-        if idempotency_key:
-            db.add(IdempotencyKey(key=idempotency_key, response_body=json.dumps(response_data)))
-
-        db.commit()
-    except Exception as e:
-        # PHOENIX FALLBACK
-        db.rollback()
-        db_is_online = False
-        print(f"DATABASE OFFLINE. Triggering NATS Fallback: {e}")
-        response_data["status"] = "ACCEPTED_DEGRADED_MODE"
-
-    # 4. Event Publication
     event = {
         "event_id": f"evt-{uuid.uuid4()}",
         "event_type": "incident.created",
@@ -338,13 +349,59 @@ async def create_incident(
         "message": incident.message,
         "correlation_id": idempotency_key or f"req-{uuid.uuid4().hex[:6]}"
     }
-    
-    if nc.is_connected:
-        await nc.publish("incident.created", json.dumps(event).encode())
-    else:
-        print("Warning: NATS not connected, event dropped.")
-        # In a real resilient system, we might use an outbox pattern here
-    
+    headers = {}
+    inject(headers)
+
+    db_is_online = True
+    try:
+        # 1. Idempotency Check
+        if idempotency_key:
+            cached = db.query(IdempotencyKey).filter(IdempotencyKey.key == idempotency_key).first()
+            if cached:
+                return json.loads(cached.response_body)
+
+        # 2. State Mutation
+        dt_created = datetime.fromisoformat(response_data["created_at"])
+        new_incident = Incident(
+            id=response_data["incident_id"],
+            type=incident.type,
+            user_id=user["subject"],
+            latitude=incident.location.latitude,
+            longitude=incident.location.longitude,
+            message=incident.message,
+            created_at=dt_created,
+            updated_at=dt_created
+        )
+        db.add(new_incident)
+
+        # 3. Cache Idempotency
+        if idempotency_key:
+            db.add(IdempotencyKey(key=idempotency_key, response_body=json.dumps(response_data)))
+
+        # 4. Outbox Event
+        outbox_event = OutboxEvent(
+            id=event["event_id"],
+            topic="incident.created",
+            payload=json.dumps(event),
+            headers=json.dumps(headers)
+        )
+        db.add(outbox_event)
+
+        db.commit()
+    except Exception as e:
+        # PHOENIX FALLBACK
+        db.rollback()
+        db_is_online = False
+        print(f"DATABASE OFFLINE. Triggering NATS Fallback: {e}")
+        response_data["status"] = "ACCEPTED_DEGRADED_MODE"
+        
+        # If DB is offline, we MUST rely on NATS.
+        if nc.is_connected:
+            await nc.publish("incident.created", json.dumps(event).encode(), headers=headers)
+        else:
+            # BOTH DB AND NATS ARE OFFLINE. DO NOT RETURN 202 ACCEPTED.
+            raise HTTPException(status_code=503, detail="CRITICAL: Storage and Message Bus are both unreachable. Cannot safely store SOS signal.")
+        
     from fastapi.responses import JSONResponse
     if not db_is_online:
         return JSONResponse(status_code=202, content=response_data)
@@ -401,7 +458,7 @@ async def break_glass_override(request: Request, justification: dict, db: Sessio
     override_token = f"BREAK_GLASS_{uuid.uuid4().hex[:12]}"
     
     # Write to DB
-    from database import BreakGlassSession
+    from apps.api.database import BreakGlassSession
     from datetime import timedelta
     bg_session = BreakGlassSession(
         token=override_token,
@@ -457,7 +514,38 @@ async def admin_dashboard(
 ):
     return {"message": "Welcome to the admin dashboard."}
 
-from database import Asset
+# --- P1.5-016: Controlled Pilot Constraints ---
+
+class PilotAction(BaseModel):
+    reason: str
+
+@app.get("/v1/pilot/status")
+async def get_pilot_status(
+    user: Dict[str, Any] = Depends(check_policy(action="pilot:status", resource="pilot"))
+):
+    return pilot_status()
+
+@app.post("/v1/pilot/suspend")
+async def suspend_pilot_endpoint(
+    request: Request,
+    action: PilotAction,
+    user: Dict[str, Any] = Depends(check_policy(action="pilot:suspend", resource="pilot"))
+):
+    if not action.reason or len(action.reason) < 20:
+        raise HTTPException(status_code=400, detail="Must provide an explicit, detailed suspension reason.")
+    pilot_suspend(user["subject"], action.reason)
+    print(f"[PILOT] Suspended by {user['subject']}: {action.reason}")
+    return {"status": "suspended", "reason": action.reason}
+
+@app.post("/v1/pilot/resume")
+async def resume_pilot_endpoint(
+    user: Dict[str, Any] = Depends(check_policy(action="pilot:resume", resource="pilot"))
+):
+    pilot_resume(user["subject"])
+    print(f"[PILOT] Resumed by {user['subject']}")
+    return {"status": "active"}
+
+from apps.api.database import Asset
 
 @app.get("/v1/assets")
 async def list_assets(
@@ -477,3 +565,130 @@ async def list_assets(
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
+@app.get("/v1/dispatch/recommendations", response_model=List[RecommendationResponse])
+async def get_recommendations(
+    user: Dict[str, Any] = Depends(check_policy(action="dispatch:read", resource="dispatch_recommendation")),
+    db: Session = Depends(get_db)
+):
+    from apps.api.database import DispatchRecommendation
+    recs = db.query(DispatchRecommendation).filter(DispatchRecommendation.status == "PENDING").all()
+    return [{
+        "id": r.id,
+        "incident_id": r.incident_id,
+        "recommended_asset_id": r.recommended_asset_id,
+        "reason": r.reason,
+        "status": r.status,
+        "created_at": r.created_at.isoformat()
+    } for r in recs]
+
+@app.post("/v1/dispatch/recommendations/{rec_id}/action")
+async def action_recommendation(
+    rec_id: str,
+    action_req: RecommendationAction,
+    user: Dict[str, Any] = Depends(check_policy(action="dispatch:action", resource="dispatch_recommendation")),
+    db: Session = Depends(get_db)
+):
+    from apps.api.database import DispatchRecommendation, Asset, OutboxEvent
+    from sqlalchemy.orm.exc import StaleDataError
+    
+    rec = db.query(DispatchRecommendation).filter(DispatchRecommendation.id == rec_id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail="Recommendation not found")
+    
+    if rec.status != "PENDING":
+        raise HTTPException(status_code=400, detail="Recommendation is already processed")
+        
+    # Check expiry (10 minutes)
+    created_at = rec.created_at.replace(tzinfo=timezone.utc) if rec.created_at.tzinfo is None else rec.created_at
+    time_diff = (datetime.now(timezone.utc) - created_at).total_seconds()
+    if time_diff > 600:
+        rec.status = "EXPIRED"
+        rec.resolved_by = "SYSTEM"
+        rec.resolved_at = datetime.now(timezone.utc)
+        db.commit()
+        raise HTTPException(status_code=400, detail="Recommendation expired. State may have changed.")
+        
+    action = action_req.action.upper()
+    try:
+        if action == "APPROVE":
+            rec.status = "APPROVED"
+            rec.resolved_by = user.get("subject", "unknown")
+            rec.resolved_at = datetime.now(timezone.utc)
+            
+            asset = db.query(Asset).filter(Asset.asset_id == rec.recommended_asset_id).first()
+            if asset and asset.status == "IDLE":
+                asset.target_incident_id = rec.incident_id
+                asset.status = "DISPATCHED"
+                
+                # Emit asset dispatched event
+                event = {
+                    "event_id": f"evt-{uuid.uuid4()}",
+                    "event_type": "asset.dispatched",
+                    "asset_id": asset.asset_id,
+                    "incident_id": rec.incident_id,
+                    "actor_id": user.get("subject", "unknown"),
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+                db.add(OutboxEvent(id=event["event_id"], topic="asset.dispatched", payload=json.dumps(event)))
+            else:
+                raise HTTPException(status_code=400, detail="Asset is no longer IDLE.")
+        elif action == "REJECT":
+            rec.status = "REJECTED"
+            rec.resolved_by = user.get("subject", "unknown")
+            rec.resolved_at = datetime.now(timezone.utc)
+        else:
+            raise HTTPException(status_code=400, detail="Invalid action. Must be APPROVE or REJECT")
+            
+        db.commit()
+        return {"status": "success", "recommendation_status": rec.status}
+    except StaleDataError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Concurrency conflict. Recommendation or Asset was modified.")
+
+@app.put("/v1/assets/{asset_id}/status")
+async def update_asset_status(
+    asset_id: str,
+    update: AssetStatusUpdate,
+    user: Dict[str, Any] = Depends(check_policy(action="asset:update", resource="asset")),
+    db: Session = Depends(get_db)
+):
+    from apps.api.database import Asset, OutboxEvent
+    from sqlalchemy.orm.exc import StaleDataError
+    import uuid
+    import json
+    
+    asset = db.query(Asset).filter(Asset.asset_id == asset_id).first()
+    if not asset:
+        raise HTTPException(status_code=404, detail="Asset not found")
+        
+    new_status = update.status.upper()
+    valid_states = {"OFFLINE", "IDLE", "EN_ROUTE", "ON_SCENE", "RETURNING", "MAINTENANCE"}
+    if new_status not in valid_states:
+        raise HTTPException(status_code=400, detail=f"Invalid state. Must be one of {valid_states}")
+        
+    try:
+        asset.status = new_status
+        if update.latitude is not None:
+            asset.latitude = update.latitude
+        if update.longitude is not None:
+            asset.longitude = update.longitude
+            
+        if new_status in ("IDLE", "OFFLINE", "MAINTENANCE"):
+            asset.target_incident_id = None # Clear current target if any
+            
+        # Emit state change event for CRDT mesh/clients
+        event = {
+            "event_id": f"evt-{uuid.uuid4()}",
+            "event_type": "asset.status_changed",
+            "asset_id": asset.asset_id,
+            "new_status": new_status,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        db.add(OutboxEvent(id=event["event_id"], topic="asset.status", payload=json.dumps(event)))
+        
+        db.commit()
+        return {"status": "success", "asset_id": asset.asset_id, "new_status": new_status}
+    except StaleDataError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Concurrency conflict. The asset state was modified by another transaction.")

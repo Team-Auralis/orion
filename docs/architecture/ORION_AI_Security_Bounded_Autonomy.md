@@ -17,7 +17,7 @@ ORION does not attempt to build a perfectly secure, un-hackable LLM. Instead, it
 ### 2. Escalation Matrix & Human-in-the-Loop
 For high-impact actions (e.g., shifting 50% of regional traffic), OPA will automatically return `REVIEW` instead of `ALLOW`. The system halts the execution and forwards the AI's recommendation (along with its reasoning and confidence score) to a human operator for cryptographic sign-off.
 
-### 3. Immutable Audit Trails
+### 3. append-oriented audit Trails
 Every recommendation made by the AI, whether approved, denied, or modified by a human, is hashed and written to a secure append-only log. This ensures forensic accountability. If an AI was poisoned by telemetry, the exact payload and the resulting OPA denial are permanently recorded.
 
 **Summary:** In ORION, the AI is a brilliant, untrusted intern. It can draft the plans, but the deterministic OPA firewall and human operators hold the keys.

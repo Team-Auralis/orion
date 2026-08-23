@@ -1,0 +1,23 @@
+.aura { display:block; overflow:visible; --aura:#63d8ff; --muted:color-mix(in srgb,var(--aura) 28%,transparent); --strong:color-mix(in srgb,var(--aura) 72%,white); }
+.themelight { --aura:#086d9b; --strong:#034d70; }
+.themedark { --aura:#63d8ff; --strong:#d5f5ff; }
+.themmono { --aura:currentColor; --strong:currentColor; }
+.outer,.inner,.axis,.core path,.reviewMark path,.offlineMark path,.degradedGap path { fill:none; stroke:var(--aura); vector-effect:non-scaling-stroke; }
+.outer { stroke-width:1.6; } .inner { stroke-width:1; opacity:.62; } .axis { stroke-width:.7; opacity:.36; stroke-dasharray:2 4; }
+.core path { stroke-width:1.25; fill:color-mix(in srgb,var(--aura) 9%,transparent); } .heart { fill:var(--strong); }
+.navigatorA,.navigatorB { fill:var(--strong); } .navigatorB { transform-origin:60px 60px; }
+.reviewMark,.offlineMark,.degradedGap { display:none; } .reviewMark path,.offlineMark path { stroke-width:2.4; stroke-linecap:round; } .degradedGap path { stroke-width:3.2; stroke:var(--background, #0f172a); }
+.animated .field { transform-origin:60px 60px; animation:auraDrift 9s ease-in-out infinite; }.animated .core { transform-origin:60px 60px; animation:auraBreathe 4.8s ease-in-out infinite; }.animated .navigatorA { transform-origin:60px 60px; animation:auraOrbit 9s linear infinite; }.animated .navigatorB { animation:auraCounterOrbit 9s linear infinite; }
+.intensitylow { opacity:.75; }.intensityhigh .outer { stroke-width:2.2; }.intensityhigh .heart { filter:drop-shadow(0 0 5px var(--aura)); }
+.stateLISTENING .axis { stroke-dasharray:1 2; }.stateLISTENING.animated .field { animation:auraListen 2.4s ease-in-out infinite; }
+.stateANALYZING .inner { stroke-dasharray:3 2; }.stateANALYZING.animated .core { animation:auraAnalyze 1.25s ease-in-out infinite; }
+.stateCOORDINATING .inner { stroke-width:1.6; }.stateCOORDINATING.animated .navigatorA,.stateCOORDINATING.animated .navigatorB { animation-duration:2.8s; }
+.stateALERT { --aura:#ff795e; --strong:#ffe3d8; }.stateALERT .outer { stroke-width:2.6; }.stateALERT.animated .field { animation:auraAlert .9s cubic-bezier(.45,0,.55,1) infinite; }
+.stateDEGRADED { --aura:#dba94d; }.stateDEGRADED .degradedGap { display:block; }.stateDEGRADED .inner { stroke-dasharray:7 5; }.stateDEGRADED.animated .field { animation:auraDegrade 3.4s ease-in-out infinite; }
+.stateRECOVERING { --aura:#64d8b0; }.stateRECOVERING .inner { stroke-dasharray:14 2; }.stateRECOVERING.animated .field { animation:auraRecover 3.5s ease-out infinite; }
+.stateSAFE { --aura:#72d99d; }.stateSAFE .axis { opacity:.65; }.stateSAFE.animated .core { animation:auraBreathe 6.5s ease-in-out infinite; }
+.stateHUMAN_REVIEW { --aura:#d3a8ff; }.stateHUMAN_REVIEW .reviewMark { display:block; }.stateHUMAN_REVIEW .heart { display:none; }.stateHUMAN_REVIEW.animated .reviewMark { transform-origin:60px 60px; animation:auraReview 1.8s ease-in-out infinite; }
+.stateOFFLINE { --aura:#9aa8b5; }.stateOFFLINE .offlineMark { display:block; }.stateOFFLINE .outer,.stateOFFLINE .inner { stroke-dasharray:3 3; }.stateOFFLINE .heart,.stateOFFLINE .navigatorA,.stateOFFLINE .navigatorB { display:none; }.stateOFFLINE.animated .field { animation:none; }
+.frozen * { animation:none !important; }
+@media (prefers-reduced-motion:reduce) { .aura * { animation:none !important; } }
+@keyframes auraDrift { 50% { transform:rotate(3deg); } } @keyframes auraBreathe { 50% { transform:scale(1.08); } } @keyframes auraOrbit { to { transform:rotate(360deg); } } @keyframes auraCounterOrbit { to { transform:rotate(-360deg); } } @keyframes auraListen { 50% { transform:translateX(2px); } } @keyframes auraAnalyze { 50% { transform:scale(.86) rotate(12deg); } } @keyframes auraAlert { 50% { transform:scale(1.06); } } @keyframes auraDegrade { 50% { transform:translate(-2px,2px) rotate(-2deg); } } @keyframes auraRecover { 50% { transform:scale(1.06) rotate(2deg); } } @keyframes auraReview { 50% { transform:translateY(-2px); } }

@@ -1,11 +1,11 @@
 import os
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Float, DateTime, Text, Boolean, create_engine
+from sqlalchemy import Column, String, Float, DateTime, Text, Boolean, Integer, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 DATABASE_URL = os.environ.get(
     "DATABASE_URL", 
-    "postgresql://orion_admin:orion_password@localhost:5433/keycloak"
+    "postgresql://orion_admin:LOCAL_DEV_SECRET@localhost:5433/keycloak"
 )
 
 engine = create_engine(DATABASE_URL)
@@ -36,7 +36,12 @@ class Asset(Base):
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
     target_incident_id = Column(String, nullable=True)
-    status = Column(String, nullable=False, default="IDLE") # IDLE, DISPATCHED, ON_SCENE
+    status = Column(String, nullable=False, default="OFFLINE") # OFFLINE, IDLE, DISPATCHED, EN_ROUTE, ON_SCENE, RETURNING, MAINTENANCE
+    version = Column(Integer, nullable=False, default=1)
+    
+    __mapper_args__ = {
+        "version_id_col": version
+    }
 
 class IdempotencyKey(Base):
     __tablename__ = "idempotency_keys"
@@ -54,8 +59,30 @@ class BreakGlassSession(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     expires_at = Column(DateTime(timezone=True), nullable=False)
 
-# Production: We now use Alembic for migrations instead of auto-creating.
-# Base.metadata.create_all(bind=engine) is removed to prevent schema collision.
+class OutboxEvent(Base):
+    __tablename__ = 'outbox_events'
+    id = Column(String, primary_key=True)
+    topic = Column(String, nullable=False)
+    payload = Column(Text, nullable=False)
+    headers = Column(Text, nullable=True)
+    published = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class DispatchRecommendation(Base):
+    __tablename__ = 'dispatch_recommendations'
+    id = Column(String, primary_key=True)
+    incident_id = Column(String, nullable=False)
+    recommended_asset_id = Column(String, nullable=False)
+    reason = Column(String, nullable=True)
+    status = Column(String, default='PENDING')
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
+    resolved_by = Column(String, nullable=True)
+    version = Column(Integer, nullable=False, default=1)
+
+    __mapper_args__ = {
+        "version_id_col": version
+    }
 
 def get_db():
     db = SessionLocal()

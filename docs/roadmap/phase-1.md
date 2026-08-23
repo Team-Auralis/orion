@@ -6,7 +6,7 @@ Phase 1 brought the Core Vision to a functional reality.
 
 ### Delivered Modules:
 - **01 AEGIS COMMS:** LoRaWAN hardware decoder translates physical RF packets into JSON for the event mesh.
-- **02 PHOENIX CRDT:** Network Chaos simulation confirmed offline-edge mathematical state reconciliation.
+- **02 PHOENIX CRDT:** Network Chaos simulation confirmed offline-edge deterministic state merge strategy.
 - **03 SHIELD IDENTITY:** Keycloak JWT verification established across the boundary.
 - **04 SENTIENCE AI:** Qwen2 LLM correctly extracting NLP severity/tags from human SOS strings.
 - **05 ATLAS GEO:** 703 planetary nodes procedurally seeded. Haversine distance autonomously routes closest physical asset.

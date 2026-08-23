@@ -10,3 +10,309 @@
 {"timestamp": "2026-08-21T10:55:38.966912+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 422, "client_ip": "testclient", "latency_ms": 100.52}
 {"timestamp": "2026-08-21T10:57:52.029017+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 422, "client_ip": "testclient", "latency_ms": 74.11}
 {"timestamp": "2026-08-21T10:58:34.206140+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 422, "client_ip": "testclient", "latency_ms": 84.66}
+{"timestamp": "2026-08-22T06:23:46.374006+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 4.68}
+{"timestamp": "2026-08-22T06:23:46.388079+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Emergency network partition active, overriding safely.", "token": "BREAK_GLASS_0c9bbd167fe1", "user_id": "test-user-123"}
+{"timestamp": "2026-08-22T06:23:46.389126+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 6.11}
+{"timestamp": "2026-08-22T06:25:29.028576+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 3.37}
+{"timestamp": "2026-08-22T06:25:29.043000+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Emergency network partition active, overriding safely.", "token": "BREAK_GLASS_ae311a598b66", "user_id": "test-user-123"}
+{"timestamp": "2026-08-22T06:25:29.043939+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 6.36}
+{"timestamp": "2026-08-22T06:27:36.950045+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 3.18}
+{"timestamp": "2026-08-22T06:27:36.964940+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Emergency network partition active, overriding safely.", "token": "BREAK_GLASS_508b142c7cee", "user_id": "test-user-123"}
+{"timestamp": "2026-08-22T06:27:36.966427+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 9.17}
+{"timestamp": "2026-08-22T06:35:47.099829+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 5.34}
+{"timestamp": "2026-08-22T06:35:47.114983+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Emergency network partition active, overriding safely.", "token": "BREAK_GLASS_24d9ab81d5c8", "user_id": "test-user-123"}
+{"timestamp": "2026-08-22T06:35:47.116217+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 6.55}
+{"timestamp": "2026-08-22T06:35:47.248345+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 202, "client_ip": "testclient", "latency_ms": 16.66}
+{"timestamp": "2026-08-22T06:52:14.282098+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 4.61}
+{"timestamp": "2026-08-22T06:52:28.817156+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 202, "client_ip": "testclient", "latency_ms": 4134.66}
+{"timestamp": "2026-08-22T07:20:45.403795+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 5.25}
+{"timestamp": "2026-08-22T07:20:47.314315+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 202, "client_ip": "testclient", "latency_ms": 18.25}
+{"timestamp": "2026-08-22T07:22:35.409856+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 10.48}
+{"timestamp": "2026-08-22T07:22:35.439652+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Emergency network partition active, overriding safely.", "token": "BREAK_GLASS_7ba6738e2cad", "user_id": "test-user-123"}
+{"timestamp": "2026-08-22T07:22:35.440749+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 14.28}
+{"timestamp": "2026-08-22T07:22:35.759890+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 202, "client_ip": "testclient", "latency_ms": 28.72}
+{"timestamp": "2026-08-22T07:23:50.415744+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 4.2}
+{"timestamp": "2026-08-22T07:23:50.435992+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Emergency network partition active, overriding safely.", "token": "BREAK_GLASS_233807d091ca", "user_id": "test-user-123"}
+{"timestamp": "2026-08-22T07:23:50.437106+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 8.75}
+{"timestamp": "2026-08-22T07:23:50.577222+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 20.34}
+{"timestamp": "2026-08-22T07:23:50.594706+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 11.98}
+{"timestamp": "2026-08-22T09:09:17.943962+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 3.83}
+{"timestamp": "2026-08-22T09:09:17.960972+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Emergency network partition active, overriding safely.", "token": "BREAK_GLASS_7a0c32cc4b9a", "user_id": "test-user-123"}
+{"timestamp": "2026-08-22T09:09:17.961988+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 9.24}
+{"timestamp": "2026-08-22T09:09:18.095397+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 22.44}
+{"timestamp": "2026-08-22T09:09:18.113335+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 11.76}
+{"timestamp": "2026-08-22T09:19:59.577235+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 3.99}
+{"timestamp": "2026-08-22T09:19:59.604484+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Emergency network partition active, overriding safely.", "token": "BREAK_GLASS_87433fb8268e", "user_id": "test-user-123"}
+{"timestamp": "2026-08-22T09:19:59.605553+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 17.78}
+{"timestamp": "2026-08-22T09:19:59.705649+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 18.06}
+{"timestamp": "2026-08-22T09:19:59.722633+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 11.73}
+{"timestamp": "2026-08-22T09:22:26.632632+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 4.81}
+{"timestamp": "2026-08-22T09:22:26.648910+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Emergency network partition active, overriding safely.", "token": "BREAK_GLASS_eac5626ae9ad", "user_id": "test-user-123"}
+{"timestamp": "2026-08-22T09:22:26.650043+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 8.27}
+{"timestamp": "2026-08-22T09:22:26.761765+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 24.98}
+{"timestamp": "2026-08-22T09:22:26.780849+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 12.5}
+{"timestamp": "2026-08-22T09:28:31.722514+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 3.83}
+{"timestamp": "2026-08-22T09:28:31.746312+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Emergency network partition active, overriding safely.", "token": "BREAK_GLASS_9a8de685150e", "user_id": "test-user-123"}
+{"timestamp": "2026-08-22T09:28:31.747490+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 8.12}
+{"timestamp": "2026-08-22T09:29:38.790186+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 4.41}
+{"timestamp": "2026-08-22T09:29:38.806275+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Emergency network partition active, overriding safely.", "token": "BREAK_GLASS_bee1695e81cc", "user_id": "test-user-123"}
+{"timestamp": "2026-08-22T09:29:38.807229+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 8.01}
+{"timestamp": "2026-08-22T09:29:38.915329+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 20.17}
+{"timestamp": "2026-08-22T09:29:38.932423+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 11.07}
+{"timestamp": "2026-08-22T15:41:47.678228+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 202, "client_ip": "testclient", "latency_ms": 71.45}
+{"timestamp": "2026-08-22T15:41:47.904852+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 3.15}
+{"timestamp": "2026-08-22T15:41:47.911942+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 1.86}
+{"timestamp": "2026-08-22T15:42:12.388092+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 202, "client_ip": "testclient", "latency_ms": 75.97}
+{"timestamp": "2026-08-22T15:42:12.411253+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 4.33}
+{"timestamp": "2026-08-22T15:42:12.423307+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 2.79}
+{"timestamp": "2026-08-22T15:43:00.808738+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 202, "client_ip": "testclient", "latency_ms": 68.72}
+{"timestamp": "2026-08-22T15:43:00.826197+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 2.72}
+{"timestamp": "2026-08-22T15:43:00.834612+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 2.42}
+{"timestamp": "2026-08-22T15:44:23.745542+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 88.9}
+{"timestamp": "2026-08-22T15:44:23.764040+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 12.35}
+{"timestamp": "2026-08-22T15:44:40.042178+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 3.34}
+{"timestamp": "2026-08-22T15:44:40.050967+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 2.8}
+{"timestamp": "2026-08-22T15:54:36.736382+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 25.86}
+{"timestamp": "2026-08-22T15:54:36.757895+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 14.38}
+{"timestamp": "2026-08-22T15:54:42.880801+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 8.16}
+{"timestamp": "2026-08-22T15:54:42.912892+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Emergency network partition active, overriding safely.", "token": "BREAK_GLASS_0bbe4e97c85f", "user_id": "test-user-123"}
+{"timestamp": "2026-08-22T15:54:42.914957+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 8.82}
+{"timestamp": "2026-08-22T15:56:58.509622+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 25.17}
+{"timestamp": "2026-08-22T15:56:58.529627+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 12.55}
+{"timestamp": "2026-08-22T15:57:04.636347+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 4.64}
+{"timestamp": "2026-08-22T15:57:04.647630+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Emergency network partition active, overriding safely.", "token": "BREAK_GLASS_e5381f359877", "user_id": "test-user-123"}
+{"timestamp": "2026-08-22T15:57:04.648837+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 4.79}
+{"timestamp": "2026-08-22T16:10:52.953969+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 6.32}
+{"timestamp": "2026-08-22T16:10:52.980093+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Emergency network partition active, overriding safely.", "token": "BREAK_GLASS_439aedec1d67", "user_id": "test-user-123"}
+{"timestamp": "2026-08-22T16:10:52.981701+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 10.83}
+{"timestamp": "2026-08-22T16:11:39.290928+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 28.28}
+{"timestamp": "2026-08-22T16:11:39.309028+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 12.03}
+{"timestamp": "2026-08-22T16:11:45.426967+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 7.39}
+{"timestamp": "2026-08-22T16:11:45.443041+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Emergency network partition active, overriding safely.", "token": "BREAK_GLASS_53e94155c065", "user_id": "test-user-123"}
+{"timestamp": "2026-08-22T16:11:45.444300+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 4.35}
+{"timestamp": "2026-08-22T16:17:33.343475+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 40.7, "longitude": -74.0}
+{"timestamp": "2026-08-22T16:17:33.346569+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "test-operator", "reason": "Drill: simulated integrity failure"}
+{"timestamp": "2026-08-22T16:17:33.348404+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "test-operator", "reason": "Kill switch engaged during incident"}
+{"timestamp": "2026-08-22T16:19:13.468832+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 40.7, "longitude": -74.0}
+{"timestamp": "2026-08-22T16:19:13.483683+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "test-operator", "reason": "Drill: simulated integrity failure"}
+{"timestamp": "2026-08-22T16:19:13.490711+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "test-operator", "reason": "Kill switch engaged during incident"}
+{"timestamp": "2026-08-22T16:19:13.851240+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 330.57}
+{"timestamp": "2026-08-22T16:19:13.900486+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 48.85, "longitude": 2.35}
+{"timestamp": "2026-08-22T16:19:13.904878+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 30.15}
+{"timestamp": "2026-08-22T16:19:14.114717+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "op-123", "reason": "Anomaly detected: dispatch loop suspected in sector 7"}
+{"timestamp": "2026-08-22T16:19:14.117871+00:00", "method": "POST", "path": "/v1/pilot/suspend", "status_code": 200, "client_ip": "testclient", "latency_ms": 90.94}
+{"timestamp": "2026-08-22T16:19:14.239038+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 28.17}
+{"timestamp": "2026-08-22T16:19:14.280224+00:00", "event_type": "PILOT_RESUMED", "actor_id": "op-123", "previous": {"by": "op-123", "reason": "Anomaly detected: dispatch loop suspected in sector 7"}}
+{"timestamp": "2026-08-22T16:19:14.287388+00:00", "method": "POST", "path": "/v1/pilot/resume", "status_code": 200, "client_ip": "testclient", "latency_ms": 38.4}
+{"timestamp": "2026-08-22T16:19:14.403184+00:00", "method": "POST", "path": "/v1/pilot/suspend", "status_code": 400, "client_ip": "testclient", "latency_ms": 34.73}
+{"timestamp": "2026-08-22T16:27:27.462997+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 82.7}
+{"timestamp": "2026-08-22T16:27:27.522842+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 41.44}
+{"timestamp": "2026-08-22T16:27:33.836564+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 7.7}
+{"timestamp": "2026-08-22T16:27:33.864025+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Emergency network partition active, overriding safely.", "token": "BREAK_GLASS_e612f9ef64d1", "user_id": "test-user-123"}
+{"timestamp": "2026-08-22T16:27:33.865499+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 6.19}
+{"timestamp": "2026-08-22T16:27:33.960916+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 40.7, "longitude": -74.0}
+{"timestamp": "2026-08-22T16:27:33.969622+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "test-operator", "reason": "Drill: simulated integrity failure"}
+{"timestamp": "2026-08-22T16:27:33.974171+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "test-operator", "reason": "Kill switch engaged during incident"}
+{"timestamp": "2026-08-22T16:27:34.056524+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 67.57}
+{"timestamp": "2026-08-22T16:27:34.224235+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 48.85, "longitude": 2.35}
+{"timestamp": "2026-08-22T16:27:34.227927+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 94.24}
+{"timestamp": "2026-08-22T16:27:34.369641+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "op-123", "reason": "Anomaly detected: dispatch loop suspected in sector 7"}
+{"timestamp": "2026-08-22T16:27:34.376541+00:00", "method": "POST", "path": "/v1/pilot/suspend", "status_code": 200, "client_ip": "testclient", "latency_ms": 92.72}
+{"timestamp": "2026-08-22T16:27:34.559635+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 47.25}
+{"timestamp": "2026-08-22T16:27:34.639104+00:00", "event_type": "PILOT_RESUMED", "actor_id": "op-123", "previous": {"by": "op-123", "reason": "Anomaly detected: dispatch loop suspected in sector 7"}}
+{"timestamp": "2026-08-22T16:27:34.642610+00:00", "method": "POST", "path": "/v1/pilot/resume", "status_code": 200, "client_ip": "testclient", "latency_ms": 59.62}
+{"timestamp": "2026-08-22T16:27:34.763000+00:00", "method": "POST", "path": "/v1/pilot/suspend", "status_code": 400, "client_ip": "testclient", "latency_ms": 41.62}
+{"timestamp": "2026-08-22T17:01:05.438677+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 4093.17}
+{"timestamp": "2026-08-22T17:13:55.162917+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 4104.51}
+{"timestamp": "2026-08-22T17:13:59.258980+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 4088.03}
+{"timestamp": "2026-08-22T17:14:03.366696+00:00", "method": "POST", "path": "/v1/pilot/suspend", "status_code": 403, "client_ip": "testclient", "latency_ms": 4101.63}
+{"timestamp": "2026-08-22T17:14:07.447838+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 4076.52}
+{"timestamp": "2026-08-22T17:16:26.765586+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 2083.75}
+{"timestamp": "2026-08-22T17:16:28.793894+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 2021.54}
+{"timestamp": "2026-08-22T17:16:30.824319+00:00", "method": "POST", "path": "/v1/pilot/suspend", "status_code": 503, "client_ip": "testclient", "latency_ms": 2023.16}
+{"timestamp": "2026-08-22T17:16:32.865017+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 2020.94}
+{"timestamp": "2026-08-22T17:17:05.776432+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 2066.7}
+{"timestamp": "2026-08-22T17:17:07.808181+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 2025.89}
+{"timestamp": "2026-08-22T17:17:09.846714+00:00", "method": "POST", "path": "/v1/pilot/suspend", "status_code": 503, "client_ip": "testclient", "latency_ms": 2032.29}
+{"timestamp": "2026-08-22T17:17:11.875561+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 2021.74}
+{"timestamp": "2026-08-22T17:18:04.387145+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 2066.57}
+{"timestamp": "2026-08-22T17:18:06.419809+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 2024.17}
+{"timestamp": "2026-08-22T17:18:08.453321+00:00", "method": "POST", "path": "/v1/pilot/suspend", "status_code": 503, "client_ip": "testclient", "latency_ms": 2024.23}
+{"timestamp": "2026-08-22T17:18:10.494551+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 2033.42}
+{"timestamp": "2026-08-22T17:18:47.547771+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 2137.58}
+{"timestamp": "2026-08-22T17:18:49.582360+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 2026.09}
+{"timestamp": "2026-08-22T17:18:51.634002+00:00", "method": "POST", "path": "/v1/pilot/suspend", "status_code": 503, "client_ip": "testclient", "latency_ms": 2039.13}
+{"timestamp": "2026-08-22T17:18:53.684580+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 2040.9}
+{"timestamp": "2026-08-22T17:20:14.574794+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 55.2}
+{"timestamp": "2026-08-22T17:20:14.596466+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 40.71, "longitude": -74.0}
+{"timestamp": "2026-08-22T17:20:14.597575+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 13.77}
+{"timestamp": "2026-08-22T17:20:14.612810+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "mock", "reason": "Emergency abort triggered by operator"}
+{"timestamp": "2026-08-22T17:20:14.613542+00:00", "method": "POST", "path": "/v1/pilot/suspend", "status_code": 200, "client_ip": "testclient", "latency_ms": 10.92}
+{"timestamp": "2026-08-22T17:20:14.628039+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 10.44}
+{"timestamp": "2026-08-23T05:21:29.580132+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 6.96}
+{"timestamp": "2026-08-23T05:21:29.611268+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Emergency network partition active, overriding safely.", "token": "BREAK_GLASS_02218afe90ce", "user_id": "test-user-123"}
+{"timestamp": "2026-08-23T05:21:29.612643+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 18.29}
+{"timestamp": "2026-08-23T05:21:29.830297+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 33.43}
+{"timestamp": "2026-08-23T05:21:29.850431+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 13.46}
+{"timestamp": "2026-08-23T05:24:27.680183+00:00", "method": "PUT", "path": "/v1/assets/TEST-AMB-01/status", "status_code": 503, "client_ip": "testclient", "latency_ms": 2174.02}
+{"timestamp": "2026-08-23T05:24:29.907550+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-expired/action", "status_code": 503, "client_ip": "testclient", "latency_ms": 2020.94}
+{"timestamp": "2026-08-23T05:24:31.955443+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-active/action", "status_code": 503, "client_ip": "testclient", "latency_ms": 2027.3}
+{"timestamp": "2026-08-23T05:25:54.474027+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 2.06}
+{"timestamp": "2026-08-23T05:25:54.480552+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-x/action", "status_code": 403, "client_ip": "testclient", "latency_ms": 1.72}
+{"timestamp": "2026-08-23T05:26:49.886371+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 6.25}
+{"timestamp": "2026-08-23T05:26:49.904041+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-x/action", "status_code": 403, "client_ip": "testclient", "latency_ms": 4.57}
+{"timestamp": "2026-08-23T05:27:11.393185+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Citizen requesting emergency override access now", "token": "BREAK_GLASS_976ad68e8155", "user_id": "cit-1"}
+{"timestamp": "2026-08-23T05:27:11.395683+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 23.77}
+{"timestamp": "2026-08-23T05:27:11.426855+00:00", "method": "PATCH", "path": "/v1/incidents/X/status", "status_code": 200, "client_ip": "testclient", "latency_ms": 10.86}
+{"timestamp": "2026-08-23T05:27:11.462847+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 19.08}
+{"timestamp": "2026-08-23T05:27:11.484840+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 8.95}
+{"timestamp": "2026-08-23T05:27:11.504647+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 6.84}
+{"timestamp": "2026-08-23T05:27:11.521753+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 5.99}
+{"timestamp": "2026-08-23T05:27:13.625031+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 2046.4}
+{"timestamp": "2026-08-23T05:27:13.641689+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 422, "client_ip": "testclient", "latency_ms": 2.39}
+{"timestamp": "2026-08-23T05:28:33.201801+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 2.69}
+{"timestamp": "2026-08-23T05:28:33.209542+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-x/action", "status_code": 403, "client_ip": "testclient", "latency_ms": 1.65}
+{"timestamp": "2026-08-23T05:28:56.223703+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Citizen requesting emergency override access now", "token": "BREAK_GLASS_25cc99bc50ba", "user_id": "cit-1"}
+{"timestamp": "2026-08-23T05:28:56.224662+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 9.25}
+{"timestamp": "2026-08-23T05:28:56.234307+00:00", "method": "PATCH", "path": "/v1/incidents/X/status", "status_code": 200, "client_ip": "testclient", "latency_ms": 3.52}
+{"timestamp": "2026-08-23T05:28:56.243065+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 2.37}
+{"timestamp": "2026-08-23T05:28:56.251306+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 2.89}
+{"timestamp": "2026-08-23T05:28:56.267118+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 4.0}
+{"timestamp": "2026-08-23T05:28:56.281127+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 4.6}
+{"timestamp": "2026-08-23T05:29:14.723415+00:00", "method": "PUT", "path": "/v1/assets/TEST-AMB-01/status", "status_code": 403, "client_ip": "testclient", "latency_ms": 2.29}
+{"timestamp": "2026-08-23T05:29:15.224988+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-expired/action", "status_code": 403, "client_ip": "testclient", "latency_ms": 2.17}
+{"timestamp": "2026-08-23T05:29:15.248784+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-active/action", "status_code": 403, "client_ip": "testclient", "latency_ms": 1.2}
+{"timestamp": "2026-08-23T05:30:37.019668+00:00", "method": "PUT", "path": "/v1/assets/TEST-AMB-01/status", "status_code": 403, "client_ip": "testclient", "latency_ms": 5.74}
+{"timestamp": "2026-08-23T05:30:37.479447+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-expired/action", "status_code": 403, "client_ip": "testclient", "latency_ms": 3.18}
+{"timestamp": "2026-08-23T05:30:37.513175+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-active/action", "status_code": 403, "client_ip": "testclient", "latency_ms": 2.24}
+{"timestamp": "2026-08-23T05:31:44.449424+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 4.09}
+{"timestamp": "2026-08-23T05:31:44.460266+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-x/action", "status_code": 403, "client_ip": "testclient", "latency_ms": 3.04}
+{"timestamp": "2026-08-23T05:32:07.512307+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Citizen requesting emergency override access now", "token": "BREAK_GLASS_13d7a9248167", "user_id": "cit-1"}
+{"timestamp": "2026-08-23T05:32:07.513558+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 10.96}
+{"timestamp": "2026-08-23T05:32:07.525844+00:00", "method": "PATCH", "path": "/v1/incidents/X/status", "status_code": 200, "client_ip": "testclient", "latency_ms": 5.23}
+{"timestamp": "2026-08-23T05:32:07.537169+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 3.68}
+{"timestamp": "2026-08-23T05:32:07.547657+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 3.56}
+{"timestamp": "2026-08-23T05:32:07.556073+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 3.02}
+{"timestamp": "2026-08-23T05:32:07.563646+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 2.23}
+{"timestamp": "2026-08-23T05:35:11.645519+00:00", "method": "PUT", "path": "/v1/assets/TEST-AMB-01/status", "status_code": 400, "client_ip": "testclient", "latency_ms": 10.09}
+{"timestamp": "2026-08-23T05:35:11.681331+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-expired/action", "status_code": 400, "client_ip": "testclient", "latency_ms": 12.42}
+{"timestamp": "2026-08-23T05:35:11.710109+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-active/action", "status_code": 200, "client_ip": "testclient", "latency_ms": 9.05}
+{"timestamp": "2026-08-23T05:35:52.794358+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 1.94}
+{"timestamp": "2026-08-23T05:35:52.799915+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-x/action", "status_code": 403, "client_ip": "testclient", "latency_ms": 1.37}
+{"timestamp": "2026-08-23T05:36:17.254627+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Citizen requesting emergency override access now", "token": "BREAK_GLASS_da48132b1962", "user_id": "cit-1"}
+{"timestamp": "2026-08-23T05:36:17.255381+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 7.07}
+{"timestamp": "2026-08-23T05:36:17.263591+00:00", "method": "PATCH", "path": "/v1/incidents/X/status", "status_code": 200, "client_ip": "testclient", "latency_ms": 3.61}
+{"timestamp": "2026-08-23T05:36:17.276141+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 2.97}
+{"timestamp": "2026-08-23T05:36:17.283874+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 3.35}
+{"timestamp": "2026-08-23T05:36:17.290746+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 1.81}
+{"timestamp": "2026-08-23T05:36:17.298275+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 2.47}
+{"timestamp": "2026-08-23T05:36:18.664576+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 1361.31}
+{"timestamp": "2026-08-23T05:36:18.670353+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 422, "client_ip": "testclient", "latency_ms": 0.58}
+{"timestamp": "2026-08-23T05:36:18.696210+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 18.01}
+{"timestamp": "2026-08-23T05:36:18.712480+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 10.92}
+{"timestamp": "2026-08-23T05:36:18.730542+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 12.99}
+{"timestamp": "2026-08-23T05:36:18.747443+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 33.99999, "longitude": -118.3}
+{"timestamp": "2026-08-23T05:36:18.748560+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 12.43}
+{"timestamp": "2026-08-23T05:36:18.765063+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 429, "client_ip": "testclient", "latency_ms": 11.59}
+{"timestamp": "2026-08-23T05:36:18.769866+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "security-probe", "reason": "Adversarial probe suspension drill"}
+{"timestamp": "2026-08-23T05:36:18.788537+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-x/action", "status_code": 400, "client_ip": "testclient", "latency_ms": 15.5}
+{"timestamp": "2026-08-23T05:36:18.805827+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 429, "client_ip": "testclient", "latency_ms": 12.0}
+{"timestamp": "2026-08-23T05:37:50.928120+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 4.26}
+{"timestamp": "2026-08-23T05:37:50.943465+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-x/action", "status_code": 403, "client_ip": "testclient", "latency_ms": 3.45}
+{"timestamp": "2026-08-23T05:38:13.222435+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Citizen requesting emergency override access now", "token": "BREAK_GLASS_ebf1ffe7b7e5", "user_id": "cit-1"}
+{"timestamp": "2026-08-23T05:38:13.223719+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 12.24}
+{"timestamp": "2026-08-23T05:38:13.236611+00:00", "method": "PATCH", "path": "/v1/incidents/X/status", "status_code": 200, "client_ip": "testclient", "latency_ms": 6.23}
+{"timestamp": "2026-08-23T05:38:13.255563+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "burst probe burst probe burst probe ", "token": "BREAK_GLASS_94ee995c31b2", "user_id": "cit-1"}
+{"timestamp": "2026-08-23T05:38:13.257070+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 8.74}
+{"timestamp": "2026-08-23T05:38:13.290462+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 7.49}
+{"timestamp": "2026-08-23T05:38:13.306309+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 2.86}
+{"timestamp": "2026-08-23T05:38:13.320185+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 4.87}
+{"timestamp": "2026-08-23T05:38:14.873643+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 1543.61}
+{"timestamp": "2026-08-23T05:38:14.879911+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 422, "client_ip": "testclient", "latency_ms": 0.73}
+{"timestamp": "2026-08-23T05:38:14.910630+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 15.8}
+{"timestamp": "2026-08-23T05:38:14.930791+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 13.35}
+{"timestamp": "2026-08-23T05:38:14.951863+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 13.92}
+{"timestamp": "2026-08-23T05:38:14.969380+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 33.99999, "longitude": -118.3}
+{"timestamp": "2026-08-23T05:38:14.970657+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 13.65}
+{"timestamp": "2026-08-23T05:38:14.988746+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 12.83}
+{"timestamp": "2026-08-23T05:38:14.995061+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "security-probe", "reason": "Adversarial probe suspension drill"}
+{"timestamp": "2026-08-23T05:38:15.014848+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-x/action", "status_code": 400, "client_ip": "testclient", "latency_ms": 16.79}
+{"timestamp": "2026-08-23T05:38:15.047454+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 14.36}
+{"timestamp": "2026-08-23T05:38:52.277537+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 2.12}
+{"timestamp": "2026-08-23T05:38:52.283395+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-x/action", "status_code": 403, "client_ip": "testclient", "latency_ms": 1.44}
+{"timestamp": "2026-08-23T05:39:13.489445+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Citizen requesting emergency override access now", "token": "BREAK_GLASS_0b75f54ad693", "user_id": "cit-1"}
+{"timestamp": "2026-08-23T05:39:13.490255+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 9.23}
+{"timestamp": "2026-08-23T05:39:13.499470+00:00", "method": "PATCH", "path": "/v1/incidents/X/status", "status_code": 200, "client_ip": "testclient", "latency_ms": 3.33}
+{"timestamp": "2026-08-23T05:39:13.506279+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "burst probe burst probe burst probe ", "token": "BREAK_GLASS_9685fbec294a", "user_id": "cit-1"}
+{"timestamp": "2026-08-23T05:39:13.507148+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 2.85}
+{"timestamp": "2026-08-23T05:39:13.514972+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 2.31}
+{"timestamp": "2026-08-23T05:39:13.521432+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 1.77}
+{"timestamp": "2026-08-23T05:39:13.528915+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 2.55}
+{"timestamp": "2026-08-23T05:39:14.900714+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 1367.38}
+{"timestamp": "2026-08-23T05:39:14.905944+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 422, "client_ip": "testclient", "latency_ms": 0.55}
+{"timestamp": "2026-08-23T05:39:14.922271+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 11.62}
+{"timestamp": "2026-08-23T05:39:14.939153+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 11.53}
+{"timestamp": "2026-08-23T05:39:14.955367+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 11.0}
+{"timestamp": "2026-08-23T05:39:14.971000+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 33.99999, "longitude": -118.3}
+{"timestamp": "2026-08-23T05:39:14.972040+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 11.51}
+{"timestamp": "2026-08-23T05:39:14.988638+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 11.66}
+{"timestamp": "2026-08-23T05:39:14.993341+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "security-probe", "reason": "Adversarial probe suspension drill"}
+{"timestamp": "2026-08-23T05:39:25.417680+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 1.51}
+{"timestamp": "2026-08-23T05:39:25.423647+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-x/action", "status_code": 403, "client_ip": "testclient", "latency_ms": 1.56}
+{"timestamp": "2026-08-23T05:39:45.458404+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Citizen requesting emergency override access now", "token": "BREAK_GLASS_33a11ef5ea0f", "user_id": "cit-1"}
+{"timestamp": "2026-08-23T05:39:45.459267+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 7.64}
+{"timestamp": "2026-08-23T05:39:45.467027+00:00", "method": "PATCH", "path": "/v1/incidents/X/status", "status_code": 200, "client_ip": "testclient", "latency_ms": 2.86}
+{"timestamp": "2026-08-23T05:39:45.474091+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "burst probe burst probe burst probe ", "token": "BREAK_GLASS_509a72d571fd", "user_id": "cit-1"}
+{"timestamp": "2026-08-23T05:39:45.474870+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 2.96}
+{"timestamp": "2026-08-23T05:39:45.484996+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 4.13}
+{"timestamp": "2026-08-23T05:39:45.498582+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 3.21}
+{"timestamp": "2026-08-23T05:39:45.506543+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 2.32}
+{"timestamp": "2026-08-23T05:39:46.938800+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 1425.89}
+{"timestamp": "2026-08-23T05:39:46.946822+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 422, "client_ip": "testclient", "latency_ms": 0.77}
+{"timestamp": "2026-08-23T05:39:46.963239+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 12.07}
+{"timestamp": "2026-08-23T05:39:46.979351+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 11.44}
+{"timestamp": "2026-08-23T05:39:46.997686+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 12.51}
+{"timestamp": "2026-08-23T05:39:47.014183+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 33.99999, "longitude": -118.3}
+{"timestamp": "2026-08-23T05:39:47.015311+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 12.24}
+{"timestamp": "2026-08-23T05:39:47.032045+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 11.66}
+{"timestamp": "2026-08-23T05:39:47.037724+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "security-probe", "reason": "Adversarial probe suspension drill"}
+{"timestamp": "2026-08-23T05:40:02.657159+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 2.63}
+{"timestamp": "2026-08-23T05:40:02.665005+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-x/action", "status_code": 403, "client_ip": "testclient", "latency_ms": 2.76}
+{"timestamp": "2026-08-23T05:40:14.055019+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Citizen requesting emergency override access now", "token": "BREAK_GLASS_7775bf4e0a02", "user_id": "cit-1"}
+{"timestamp": "2026-08-23T05:40:14.056190+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 9.56}
+{"timestamp": "2026-08-23T05:40:14.066956+00:00", "method": "PATCH", "path": "/v1/incidents/X/status", "status_code": 200, "client_ip": "testclient", "latency_ms": 3.3}
+{"timestamp": "2026-08-23T05:40:14.073961+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "burst probe burst probe burst probe ", "token": "BREAK_GLASS_456ab1aa30a5", "user_id": "cit-1"}
+{"timestamp": "2026-08-23T05:40:14.074781+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 3.02}
+{"timestamp": "2026-08-23T05:40:14.081069+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 1.71}
+{"timestamp": "2026-08-23T05:40:14.087213+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 1.77}
+{"timestamp": "2026-08-23T05:40:14.093034+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 1.91}
+{"timestamp": "2026-08-23T05:40:15.478064+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 1380.88}
+{"timestamp": "2026-08-23T05:40:15.484493+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 422, "client_ip": "testclient", "latency_ms": 0.62}
+{"timestamp": "2026-08-23T05:40:15.501299+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 12.31}
+{"timestamp": "2026-08-23T05:40:15.517162+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 11.18}
+{"timestamp": "2026-08-23T05:40:15.534089+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 11.46}
+{"timestamp": "2026-08-23T05:40:15.549738+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 33.99999, "longitude": -118.3}
+{"timestamp": "2026-08-23T05:40:15.550895+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 12.2}
+{"timestamp": "2026-08-23T05:40:15.568093+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 11.84}
+{"timestamp": "2026-08-23T05:40:15.572669+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "security-probe", "reason": "Adversarial probe suspension drill"}
+{"timestamp": "2026-08-23T05:40:56.996268+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 1.52}
+{"timestamp": "2026-08-23T05:40:57.002519+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-x/action", "status_code": 403, "client_ip": "testclient", "latency_ms": 1.47}
+{"timestamp": "2026-08-23T05:41:15.951688+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Citizen requesting emergency override access now", "token": "BREAK_GLASS_cd3414b6e951", "user_id": "cit-1"}
+{"timestamp": "2026-08-23T05:41:15.952734+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 7.55}
+{"timestamp": "2026-08-23T05:41:15.961227+00:00", "method": "PATCH", "path": "/v1/incidents/X/status", "status_code": 200, "client_ip": "testclient", "latency_ms": 2.97}
+{"timestamp": "2026-08-23T05:41:15.970462+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "burst probe burst probe burst probe ", "token": "BREAK_GLASS_bae6690af920", "user_id": "cit-1"}
+{"timestamp": "2026-08-23T05:41:15.971194+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 3.46}
+{"timestamp": "2026-08-23T05:41:15.978967+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 2.19}
+{"timestamp": "2026-08-23T05:41:15.985999+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 2.09}
+{"timestamp": "2026-08-23T05:41:15.992389+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 1.97}
+{"timestamp": "2026-08-23T05:41:17.380920+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 1384.11}
+{"timestamp": "2026-08-23T05:41:17.386659+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 422, "client_ip": "testclient", "latency_ms": 0.78}
+{"timestamp": "2026-08-23T05:41:17.403509+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 11.28}
+{"timestamp": "2026-08-23T05:41:17.419471+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 10.71}
+{"timestamp": "2026-08-23T05:41:17.435719+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 10.9}
+{"timestamp": "2026-08-23T05:41:17.452479+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 33.99999, "longitude": -118.3}
+{"timestamp": "2026-08-23T05:41:17.453560+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 11.6}
+{"timestamp": "2026-08-23T05:41:17.469618+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 11.28}
+{"timestamp": "2026-08-23T05:41:17.474128+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "security-probe", "reason": "Adversarial probe suspension drill"}
+{"timestamp": "2026-08-23T05:41:17.493518+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-x/action", "status_code": 200, "client_ip": "testclient", "latency_ms": 16.97}
+{"timestamp": "2026-08-23T05:41:17.511305+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 11.86}

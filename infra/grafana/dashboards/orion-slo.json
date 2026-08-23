@@ -1,0 +1,45 @@
+{
+  "title": "ORION Pilot SLOs",
+  "panels": [
+    {
+      "title": "API Availability (SLO: 99.99%)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m])) * 100",
+          "legendFormat": "Error Rate %"
+        }
+      ]
+    },
+    {
+      "title": "SOS Latency (SLO: < 200ms)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{path=\"/v1/incidents\"}[5m])) by (le))",
+          "legendFormat": "p99 Latency (s)"
+        }
+      ]
+    },
+    {
+      "title": "Worker Processing Latency",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(worker_processing_latency_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95 Worker Latency (s)"
+        }
+      ]
+    },
+    {
+      "title": "Duplicate Incident Drop Rate",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(worker_duplicates_dropped_total[1m])",
+          "legendFormat": "Duplicates Dropped / sec"
+        }
+      ]
+    }
+  ]
+}

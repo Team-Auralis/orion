@@ -9,6 +9,13 @@ def haversine(lat1, lon1, lat2, lon2):
     return R * c
 import asyncio
 import json
+from prometheus_client import start_http_server, Counter, Histogram
+import time
+
+WORKER_LATENCY = Histogram('worker_processing_latency_seconds', 'Time spent processing event')
+WORKER_DUPLICATES = Counter('worker_duplicates_dropped_total', 'Events dropped due to idempotency mesh')
+WORKER_SUCCESS = Counter('worker_events_processed_total', 'Events successfully processed')
+
 import os
 import signal
 from datetime import datetime
@@ -18,10 +25,10 @@ import nats
 
 # Ponytail: We're going to interact directly with the DB here for the Read View projection.
 # In prod, extract DB setup to a shared lib.
-DB_URL = os.environ.get("DATABASE_URL", "postgresql://orion_admin:orion_password@localhost:5433/keycloak")
+DB_URL = os.environ.get("DATABASE_URL", "postgresql://orion_admin:LOCAL_DEV_SECRET@localhost:5433/keycloak")
 engine = create_engine(DB_URL)
 
-from database import Incident, IdempotencyKey, Asset
+from apps.api.database import Incident, IdempotencyKey, Asset, DispatchRecommendation
 
 # CRDT State Hierarchy (Max-State CRDT)
 STATE_HIERARCHY = {
@@ -34,9 +41,8 @@ STATE_HIERARCHY = {
 }
 
 # Bounded LRU cache for deduplication
-from collections import OrderedDict
-processed_events = OrderedDict()
-MAX_CACHE_SIZE = 10000
+import redis
+redis_client = redis.Redis.from_url(os.environ.get("REDIS_URL", "redis://localhost:6379"), decode_responses=True)
 
 def process_db_event(event, event_type):
     with Session(engine) as db:
@@ -112,9 +118,16 @@ def process_db_event(event, event_type):
                             closest_asset = asset
                     
                     if closest_asset:
-                        print(f"ATLAS GEO: Routing closest asset {closest_asset.asset_id} to {incident_id} (Distance: {min_distance:.2f} km)")
-                        closest_asset.target_incident_id = incident_id
-                        closest_asset.status = "DISPATCHED"
+                        print(f"ATLAS GEO: Recommending asset {closest_asset.asset_id} to {incident_id} (Distance: {min_distance:.2f} km)")
+                        import uuid
+                        rec = DispatchRecommendation(
+                            id=f"rec-{uuid.uuid4().hex[:8]}",
+                            incident_id=incident_id,
+                            recommended_asset_id=closest_asset.asset_id,
+                            reason=f"Closest available asset ({min_distance:.2f} km). AI Severity: {severity}",
+                            status="PENDING"
+                        )
+                        db.add(rec)
                     else:
                         print(f"ATLAS GEO WARNING: No available assets to dispatch for {incident_id}!")
                 
@@ -123,34 +136,50 @@ def process_db_event(event, event_type):
             else:
                 print(f"Warning: Received AI triage for unknown incident {incident_id}")
 
+from opentelemetry import trace
+from opentelemetry.propagate import extract
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+
+trace.set_tracer_provider(TracerProvider())
+otlp_exporter = OTLPSpanExporter(endpoint=os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317"), insecure=True)
+trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(otlp_exporter))
+tracer = trace.get_tracer(__name__)
+
 async def message_handler(msg):
-    data = msg.data.decode()
-    
-    try:
-        event = json.loads(data)
-        event_id = event.get('event_id')
-        event_type = event.get('event_type')
+    ctx = extract(msg.headers if msg.headers else {})
+    with tracer.start_as_current_span("process_nats_message", context=ctx) as span:
+        data = msg.data.decode()
+        span.set_attribute("nats.subject", msg.subject)
+        start_time = time.time()
         
-        if event_id in processed_events:
-            print(f"Skipping already processed event: {event_id}")
+        try:
+            event = json.loads(data)
+            event_id = event.get('event_id')
+            event_type = event.get('event_type')
+            
+            # Ponytail: Redis SETNX for atomic distributed deduplication.
+            if redis_client:
+                # 24 hour expiration to prevent memory leak, but long enough for any duplicate retries
+                if not redis_client.set(f"processed:{event_id}", "1", nx=True, ex=86400):
+                    print(f"Skipping already processed event: {event_id}")
+                    WORKER_DUPLICATES.inc()
+                    await msg.ack()
+                    return
+                
+            print(f"Processing event {event_type} for incident {event.get('incident_id')}")
+            
+            # Offload synchronous DB work to a separate thread to prevent blocking the asyncio event loop
+            await asyncio.to_thread(process_db_event, event, event_type)
+                
+            WORKER_SUCCESS.inc()
+            WORKER_LATENCY.observe(time.time() - start_time)
             await msg.ack()
-            return
-            
-        print(f"Processing event {event_type} for incident {event.get('incident_id')}")
-        
-        # Offload synchronous DB work to a separate thread to prevent blocking the asyncio event loop
-        await asyncio.to_thread(process_db_event, event, event_type)
-        
-        # Bounded LRU eviction
-        processed_events[event_id] = True
-        if len(processed_events) > MAX_CACHE_SIZE:
-            processed_events.popitem(last=False)
-            
-        await msg.ack()
-        
-    except Exception as e:
-        print(f"Worker Error: {e}")
-        # Not acking message so it gets redelivered
+        except Exception as e:
+            print(f"Error processing message: {e}")
+            # In production, we might want to NAK or move to dead-letter queue
+            await msg.term()
 
 NATS_URL = os.environ.get("NATS_URL", "nats://localhost:4222")
 
@@ -167,6 +196,7 @@ async def network_handler(msg):
     await msg.ack()
 
 async def main():
+    start_http_server(8002)
     nc = nats.NATS()
     
     try:

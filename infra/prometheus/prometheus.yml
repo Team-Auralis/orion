@@ -1,6 +1,9 @@
-﻿global:
+global:
   scrape_interval: 5s
 scrape_configs:
   - job_name: 'orion-api'
     static_configs:
       - targets: ['orion-api:8001']
+  - job_name: 'orion-worker'
+    static_configs:
+      - targets: ['orion-worker:8002']

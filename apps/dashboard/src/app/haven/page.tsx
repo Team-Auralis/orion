@@ -52,9 +52,9 @@ export default function HavenApp() {
       setStatus("SENT");
       setMessage("");
       setTimeout(() => setStatus("IDLE"), 5000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus("ERROR");
-      setErrorMsg(err.message);
+      setErrorMsg(err instanceof Error ? err.message : "Transmission failed");
       setTimeout(() => setStatus("IDLE"), 5000);
     }
   };

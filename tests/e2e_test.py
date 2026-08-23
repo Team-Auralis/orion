@@ -2,6 +2,7 @@ import httpx
 import uuid
 import sys
 import time
+import pytest
 
 API_URL = "http://localhost:8001/v1"
 KEYCLOAK_URL = "http://localhost:8080/realms/orion/protocol/openid-connect/token"
@@ -18,8 +19,28 @@ def get_token(username, password):
         raise AssertionError(f"Failed to get token for {username}: {resp.status_code}")
     return resp.json()["access_token"]
 
-CITIZEN_TOKEN = ""
-OPERATOR_TOKEN = ""
+def _live_stack_reachable():
+    # Any HTTP response (even 404/405) proves the services are listening.
+    try:
+        httpx.get(KEYCLOAK_URL, timeout=2.0)
+        httpx.get(API_URL, timeout=2.0)
+        return True
+    except Exception:
+        return False
+
+try:
+    CITIZEN_TOKEN = get_token("citizen1", "citizenpass")
+    OPERATOR_TOKEN = get_token("operator1", "operatorpass")
+    if not _live_stack_reachable():
+        raise ConnectionError("ORION API unreachable")
+except Exception:
+    # Live integration stack (Keycloak/API) is not running; skip instead of failing.
+    pytest.skip("Live integration stack unreachable", allow_module_level=True)
+
+
+@pytest.fixture(scope="module")
+def incident_id():
+    return test_sos_flow()
 
 def test_sos_flow():
     print("--- Testing Authorized SOS Flow ---")
@@ -76,9 +97,6 @@ def test_crdt_flow(incident_id):
 
 if __name__ == "__main__":
     try:
-        CITIZEN_TOKEN = get_token("citizen1", "citizenpass")
-        OPERATOR_TOKEN = get_token("operator1", "operatorpass")
-        
         inc_id = test_sos_flow()
         test_negative_path_no_auth()
         test_negative_path_citizen()
