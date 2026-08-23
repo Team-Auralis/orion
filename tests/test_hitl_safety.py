@@ -26,8 +26,14 @@ def override_get_db():
 def override_get_current_user():
     return {"subject": "test-operator", "role": "operator"}
 
-app.dependency_overrides[get_db] = override_get_db
-app.dependency_overrides[get_current_user] = override_get_current_user
+@pytest.fixture(autouse=True)
+def isolated_overrides():
+    saved = dict(app.dependency_overrides)
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    yield
+    app.dependency_overrides.clear()
+    app.dependency_overrides.update(saved)
 
 client = TestClient(app)
 

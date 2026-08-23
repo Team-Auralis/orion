@@ -33,7 +33,7 @@ While Phase 1 successfully established the functional core of the ORION platform
 - [x] **Data Minimization (PII Masking)**: Implemented regex engine to scrub SSN, Phone, and Emails from SOS messages before ingestion. *(Completed: P1.5-013)*
 - [x] **Secret Stripping**: Stripped local developer passwords from codebase defaults. *(Completed: P1.5-013)*
 - [ ] Migrate from .env files to a production Secret Manager with automated credential rotation.
-- [ ] Execute an independent, third-party penetration test.
+- [ ] Execute an independent, third-party penetration test. *(Scope + acceptance criteria defined: docs/governance/pentest-scope.md — STATUS: PENDING, no tester engaged)*
 
 ### 5. Hardware Integration & Infrastructure
 - [x] Implement AEGIS Hardware Gateway for LoRaWAN / Radio ingestion. *(P1.5-014: normalized adapters, validation, radio HMAC, and tests)*

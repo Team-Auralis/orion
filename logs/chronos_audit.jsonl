@@ -316,3 +316,76 @@
 {"timestamp": "2026-08-23T05:41:17.474128+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "security-probe", "reason": "Adversarial probe suspension drill"}
 {"timestamp": "2026-08-23T05:41:17.493518+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-x/action", "status_code": 200, "client_ip": "testclient", "latency_ms": 16.97}
 {"timestamp": "2026-08-23T05:41:17.511305+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 11.86}
+{"timestamp": "2026-08-23T05:43:36.823105+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 23.41}
+{"timestamp": "2026-08-23T05:43:36.845230+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 16.05}
+{"timestamp": "2026-08-23T05:43:42.955757+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 5.34}
+{"timestamp": "2026-08-23T05:43:42.968083+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Emergency network partition active, overriding safely.", "token": "BREAK_GLASS_752b9cc68fc0", "user_id": "test-user-123"}
+{"timestamp": "2026-08-23T05:43:42.969440+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 3.5}
+{"timestamp": "2026-08-23T05:43:47.261701+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 40.7, "longitude": -74.0}
+{"timestamp": "2026-08-23T05:43:47.263910+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "test-operator", "reason": "Drill: simulated integrity failure"}
+{"timestamp": "2026-08-23T05:43:47.265127+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "test-operator", "reason": "Kill switch engaged during incident"}
+{"timestamp": "2026-08-23T05:43:47.284517+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 14.99}
+{"timestamp": "2026-08-23T05:43:47.304677+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 48.85, "longitude": 2.35}
+{"timestamp": "2026-08-23T05:43:47.305833+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 14.26}
+{"timestamp": "2026-08-23T05:43:47.327132+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "op-123", "reason": "Anomaly detected: dispatch loop suspected in sector 7"}
+{"timestamp": "2026-08-23T05:43:47.327955+00:00", "method": "POST", "path": "/v1/pilot/suspend", "status_code": 200, "client_ip": "testclient", "latency_ms": 14.12}
+{"timestamp": "2026-08-23T05:43:47.359017+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 11.53}
+{"timestamp": "2026-08-23T05:43:47.375029+00:00", "event_type": "PILOT_RESUMED", "actor_id": "op-123", "previous": {"by": "op-123", "reason": "Anomaly detected: dispatch loop suspected in sector 7"}}
+{"timestamp": "2026-08-23T05:43:47.376038+00:00", "method": "POST", "path": "/v1/pilot/resume", "status_code": 200, "client_ip": "testclient", "latency_ms": 12.37}
+{"timestamp": "2026-08-23T05:43:47.410410+00:00", "method": "POST", "path": "/v1/pilot/suspend", "status_code": 400, "client_ip": "testclient", "latency_ms": 12.55}
+{"timestamp": "2026-08-23T05:45:29.489917+00:00", "method": "PUT", "path": "/v1/assets/TEST-AMB-01/status", "status_code": 400, "client_ip": "testclient", "latency_ms": 7.73}
+{"timestamp": "2026-08-23T05:45:29.510603+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-expired/action", "status_code": 400, "client_ip": "testclient", "latency_ms": 6.9}
+{"timestamp": "2026-08-23T05:45:29.531229+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-active/action", "status_code": 200, "client_ip": "testclient", "latency_ms": 6.09}
+{"timestamp": "2026-08-23T05:46:56.846133+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 4190.56}
+{"timestamp": "2026-08-23T05:47:00.966892+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 4092.09}
+{"timestamp": "2026-08-23T05:47:06.396683+00:00", "method": "POST", "path": "/v1/pilot/suspend", "status_code": 400, "client_ip": "testclient", "latency_ms": 18.16}
+{"timestamp": "2026-08-23T05:47:36.004720+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 40.7, "longitude": -74.0}
+{"timestamp": "2026-08-23T05:47:36.009554+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "test-operator", "reason": "Drill: simulated integrity failure"}
+{"timestamp": "2026-08-23T05:47:36.011894+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "test-operator", "reason": "Kill switch engaged during incident"}
+{"timestamp": "2026-08-23T05:47:36.101476+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 77.09}
+{"timestamp": "2026-08-23T05:47:36.133168+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 48.85, "longitude": 2.35}
+{"timestamp": "2026-08-23T05:47:36.134685+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 19.42}
+{"timestamp": "2026-08-23T05:47:36.158729+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "op-123", "reason": "Anomaly detected: dispatch loop suspected in sector 7"}
+{"timestamp": "2026-08-23T05:47:36.160066+00:00", "method": "POST", "path": "/v1/pilot/suspend", "status_code": 200, "client_ip": "testclient", "latency_ms": 14.83}
+{"timestamp": "2026-08-23T05:47:36.200072+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 15.53}
+{"timestamp": "2026-08-23T05:47:36.215295+00:00", "event_type": "PILOT_RESUMED", "actor_id": "op-123", "previous": {"by": "op-123", "reason": "Anomaly detected: dispatch loop suspected in sector 7"}}
+{"timestamp": "2026-08-23T05:47:36.216070+00:00", "method": "POST", "path": "/v1/pilot/resume", "status_code": 200, "client_ip": "testclient", "latency_ms": 11.26}
+{"timestamp": "2026-08-23T05:47:36.250328+00:00", "method": "POST", "path": "/v1/pilot/suspend", "status_code": 400, "client_ip": "testclient", "latency_ms": 13.02}
+{"timestamp": "2026-08-23T05:47:36.285688+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "op-123", "reason": "Kill switch engaged"}
+{"timestamp": "2026-08-23T05:47:36.305164+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-123/action", "status_code": 503, "client_ip": "testclient", "latency_ms": 15.2}
+{"timestamp": "2026-08-23T05:47:55.790393+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 4124.66}
+{"timestamp": "2026-08-23T05:48:02.204934+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 400, "client_ip": "testclient", "latency_ms": 10.58}
+{"timestamp": "2026-08-23T05:48:02.252244+00:00", "event_type": "BREAK_GLASS_ACTIVATED", "actor_ip": "testclient", "reason": "Emergency network partition active, overriding safely.", "token": "BREAK_GLASS_21ddee32da80", "user_id": "test-user-123"}
+{"timestamp": "2026-08-23T05:48:02.254445+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 200, "client_ip": "testclient", "latency_ms": 31.21}
+{"timestamp": "2026-08-23T05:48:02.354169+00:00", "method": "PUT", "path": "/v1/assets/TEST-AMB-01/status", "status_code": 400, "client_ip": "testclient", "latency_ms": 11.17}
+{"timestamp": "2026-08-23T05:48:06.473792+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-expired/action", "status_code": 503, "client_ip": "testclient", "latency_ms": 4097.72}
+{"timestamp": "2026-08-23T05:48:10.585501+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-active/action", "status_code": 503, "client_ip": "testclient", "latency_ms": 4094.91}
+{"timestamp": "2026-08-23T05:48:13.887160+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 40.7, "longitude": -74.0}
+{"timestamp": "2026-08-23T05:48:13.894941+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "test-operator", "reason": "Drill: simulated integrity failure"}
+{"timestamp": "2026-08-23T05:48:13.899122+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "test-operator", "reason": "Kill switch engaged during incident"}
+{"timestamp": "2026-08-23T05:48:13.998769+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 88.54}
+{"timestamp": "2026-08-23T05:48:14.021627+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 48.85, "longitude": 2.35}
+{"timestamp": "2026-08-23T05:48:14.023219+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 15.2}
+{"timestamp": "2026-08-23T05:48:14.050184+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "op-123", "reason": "Anomaly detected: dispatch loop suspected in sector 7"}
+{"timestamp": "2026-08-23T05:48:14.051349+00:00", "method": "POST", "path": "/v1/pilot/suspend", "status_code": 200, "client_ip": "testclient", "latency_ms": 16.5}
+{"timestamp": "2026-08-23T05:48:14.085932+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 14.64}
+{"timestamp": "2026-08-23T05:48:14.101379+00:00", "event_type": "PILOT_RESUMED", "actor_id": "op-123", "previous": {"by": "op-123", "reason": "Anomaly detected: dispatch loop suspected in sector 7"}}
+{"timestamp": "2026-08-23T05:48:14.102222+00:00", "method": "POST", "path": "/v1/pilot/resume", "status_code": 200, "client_ip": "testclient", "latency_ms": 11.26}
+{"timestamp": "2026-08-23T05:48:14.144649+00:00", "method": "POST", "path": "/v1/pilot/suspend", "status_code": 400, "client_ip": "testclient", "latency_ms": 20.43}
+{"timestamp": "2026-08-23T05:48:14.176906+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "op-123", "reason": "Kill switch engaged"}
+{"timestamp": "2026-08-23T05:48:14.196921+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-123/action", "status_code": 503, "client_ip": "testclient", "latency_ms": 15.53}
+{"timestamp": "2026-08-23T05:48:14.713864+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 4112.27}
+{"timestamp": "2026-08-23T05:48:14.725717+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 40.7, "longitude": -74.0}
+{"timestamp": "2026-08-23T05:48:14.727966+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "test-operator", "reason": "Drill: simulated integrity failure"}
+{"timestamp": "2026-08-23T05:48:14.729993+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "test-operator", "reason": "Kill switch engaged during incident"}
+{"timestamp": "2026-08-23T05:48:14.754090+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 200, "client_ip": "testclient", "latency_ms": 19.2}
+{"timestamp": "2026-08-23T05:48:14.774847+00:00", "event_type": "PILOT_GEOFENCE_REJECTED", "latitude": 48.85, "longitude": 2.35}
+{"timestamp": "2026-08-23T05:48:14.776503+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 14.11}
+{"timestamp": "2026-08-23T05:48:14.806040+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "op-123", "reason": "Anomaly detected: dispatch loop suspected in sector 7"}
+{"timestamp": "2026-08-23T05:48:14.807420+00:00", "method": "POST", "path": "/v1/pilot/suspend", "status_code": 200, "client_ip": "testclient", "latency_ms": 20.76}
+{"timestamp": "2026-08-23T05:48:14.843798+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 12.69}
+{"timestamp": "2026-08-23T05:48:14.861863+00:00", "event_type": "PILOT_RESUMED", "actor_id": "op-123", "previous": {"by": "op-123", "reason": "Anomaly detected: dispatch loop suspected in sector 7"}}
+{"timestamp": "2026-08-23T05:48:14.863278+00:00", "method": "POST", "path": "/v1/pilot/resume", "status_code": 200, "client_ip": "testclient", "latency_ms": 13.41}
+{"timestamp": "2026-08-23T05:48:14.925716+00:00", "method": "POST", "path": "/v1/pilot/suspend", "status_code": 400, "client_ip": "testclient", "latency_ms": 18.07}
+{"timestamp": "2026-08-23T05:48:14.963797+00:00", "event_type": "PILOT_SUSPENDED", "actor_id": "op-123", "reason": "Kill switch engaged"}
+{"timestamp": "2026-08-23T05:48:14.983744+00:00", "method": "POST", "path": "/v1/dispatch/recommendations/rec-123/action", "status_code": 503, "client_ip": "testclient", "latency_ms": 16.04}

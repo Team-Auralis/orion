@@ -591,7 +591,11 @@ async def action_recommendation(
 ):
     from apps.api.database import DispatchRecommendation, Asset, OutboxEvent
     from sqlalchemy.orm.exc import StaleDataError
-    
+    from apps.api.pilot import enforce_pilot_active
+
+    # Kill Switch Check
+    enforce_pilot_active()
+
     rec = db.query(DispatchRecommendation).filter(DispatchRecommendation.id == rec_id).first()
     if not rec:
         raise HTTPException(status_code=404, detail="Recommendation not found")
