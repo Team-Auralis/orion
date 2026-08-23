@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   description: "Emergency response system operations dashboard.",
 };
 
+import { Providers } from "./providers";
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
@@ -27,3 +28,4 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     </html>
   );
 }
+
