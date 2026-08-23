@@ -439,3 +439,5 @@
 {"timestamp": "2026-08-23T06:27:58.970438+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 403, "client_ip": "testclient", "latency_ms": 1.69}
 {"timestamp": "2026-08-23T06:31:32.749817+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 422, "client_ip": "testclient", "latency_ms": 155.71}
 {"timestamp": "2026-08-23T06:31:32.854780+00:00", "method": "POST", "path": "/v1/incidents", "status_code": 503, "client_ip": "testclient", "latency_ms": 95.24}
+{"timestamp": "2026-08-23T06:45:51.813682+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 403, "client_ip": "testclient", "latency_ms": 13.63}
+{"timestamp": "2026-08-23T06:45:51.830391+00:00", "method": "POST", "path": "/v1/auth/break-glass", "status_code": 429, "client_ip": "testclient", "latency_ms": 5.21}
