@@ -1,8 +1,10 @@
-fastapi[all]==0.103.1
+fastapi[all]>=0.109.2
+starlette>=0.40.0
 uvicorn==0.23.2
 asyncpg==0.28.0
 SQLAlchemy==2.0.20
 nats-py==2.4.0
 httpx==0.25.0
-python-jose[cryptography]==3.3.0
+PyJWT>=2.8.0
+cryptography>=42.0.0
 pydantic-settings==2.0.3

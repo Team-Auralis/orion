@@ -13,7 +13,7 @@ def print_result(check: str, passed: bool, details: str = ""):
 def run_probes(base_url: str):
     print(f"=== ORION SECURITY PROBE (Target: {base_url}) ===\n")
     
-    with httpx.Client(base_url=base_url) as client:
+    with httpx.Client(verify=False, base_url=base_url) as client:
         # 1. Authentication Boundary
         resp = client.post("/v1/dispatch/recommendations/rec-123/action", json={"action": "APPROVE"})
         print_result(
@@ -66,6 +66,7 @@ if __name__ == '__main__':
     
     try:
         run_probes(args.url)
-    except httpx.ConnectError:
+    except httpx.ConnectError as e:
+        print(e)
         print(f"[-] Could not connect to target {args.url}")
         sys.exit(1)

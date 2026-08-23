@@ -159,9 +159,14 @@ record("IDEM.sequential-replay", "PASS" if id1 == id2 and r2.status_code == 200 
 
 # concurrent duplicate race (true parallelism)
 def fire(_):
-    c = TestClient(m.app, raise_server_exceptions=False)
+    c = TestClient(m.app, raise_server_exceptions=True)
     reset()
-    return c.post("/v1/incidents", json=payload, headers=hdr).json().get("incident_id")
+    r = c.post("/v1/incidents", json=payload, headers=hdr)
+    try:
+        return r.json().get("incident_id")
+    except:
+        print("FAIL:", r.status_code, r.text)
+        return None
 with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
     ids = list(ex.map(fire, range(8)))
 uniq = set(x for x in ids if x)
@@ -257,7 +262,7 @@ record("HITL.expired-blocked", "PASS" if re_.status_code == 400 else "VULN", f"s
 
 # double-approve race on same rec
 def act(_):
-    c = TestClient(m.app, raise_server_exceptions=False)
+    c = TestClient(m.app, raise_server_exceptions=True)
     reset()
     rr = c.post("/v1/dispatch/recommendations/RT-R1/action", json={"action": "APPROVE"})
     try: body = str(rr.json())[:80]
