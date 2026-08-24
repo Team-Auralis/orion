@@ -3,6 +3,7 @@ import re
 import random
 import asyncio
 import subprocess
+from rich.markup import escape
 from textual.app import App, ComposeResult
 from textual.containers import VerticalScroll
 from textual.widgets import Header, Footer, Static, Input, Label
@@ -86,19 +87,20 @@ class ChatMessage(Static):
     def __init__(self, role: str, content: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.role = role
-        self.content = content
+        # ALWAYS escape user-generated content so Rich doesn't crash on tags
+        self.content = escape(content)
 
     def compose(self) -> ComposeResult:
         if self.role == "You":
             yield Label("[b]You[/b]", classes="chat-label-you")
-            yield Label(f"{self.content}\n", classes="chat-content", markup=False)
+            yield Label(f"{self.content}\n", classes="chat-content")
         elif self.role == "AURA":
             yield Label("[b]AURA[/b]", classes="chat-label-aura")
-            yield Label(f"{self.content}\n", classes="chat-content-aura", markup=False)
+            yield Label(f"{self.content}\n", classes="chat-content-aura")
         elif self.role == "Tool":
-            yield Label(f"> {self.content}\n", classes="chat-tool", markup=False)
+            yield Label(f"> {self.content}\n", classes="chat-tool")
         elif self.role == "Error":
-            yield Label(f"[X] {self.content}\n", classes="chat-error", markup=False)
+            yield Label(f"[X] {self.content}\n", classes="chat-error")
 
 class AuraTUI(App):
     CSS = """
@@ -182,8 +184,6 @@ class AuraTUI(App):
             onnx_inputs = {}
             for node in self.onnx_session.get_inputs():
                 if node.type == 'tensor(int64)':
-                    # Some tensors expect shapes like (batch, sequence), others just (1)
-                    # For gpt-2, input_ids and attention_mask are (1, N)
                     onnx_inputs[node.name] = np.array([[50256]], dtype=np.int64)
                 elif node.type == 'tensor(float)':
                     onnx_inputs[node.name] = np.zeros((1, 10), dtype=np.float32)
@@ -200,7 +200,6 @@ class AuraTUI(App):
                 else:
                     chat_response = self.nlp.fallback(text)
             
-            # Use result[-1].shape to log something about the output without assuming index 0 contains nested dimensions
             out_shape = result[0].shape if hasattr(result[0], 'shape') else len(result[0])
             await self.append_message("Tool", f"[ONNX] Forward pass successful. Generated output shape: {out_shape}")
             await self.append_message("AURA", chat_response)
