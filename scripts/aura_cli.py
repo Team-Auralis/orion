@@ -1,15 +1,13 @@
 import time
 import json
+import random
 import re
-import os
-import urllib.request
-import urllib.error
 
 print("==================================================")
 print("     A U R A  |  ORION Conversational Interface   ")
 print("==================================================\n")
 
-# --- MOCK CAPABILITY REGISTRY ---
+# --- MOCK REGISTRY ---
 REGISTRY = {
     "comm.cloud": {"status": "OFFLINE", "cost": 1, "requires_hitl": False},
     "comm.edge": {"status": "OFFLINE", "cost": 2, "requires_hitl": False},
@@ -17,7 +15,6 @@ REGISTRY = {
     "surveillance.drone": {"status": "ONLINE", "cost": 5, "requires_hitl": True},
 }
 
-# --- MOCK OPA (VEIL) ---
 def check_opa_policy(user, action, hitl_approved=False):
     policy = {
         "comm.cloud": True,
@@ -27,49 +24,83 @@ def check_opa_policy(user, action, hitl_approved=False):
     }
     return policy.get(action, False)
 
-# --- AURA LLM INTENT PARSER ---
-# A robust conversational parser. In production, this calls a live LLM.
-# Here we use an advanced heuristic engine that mimics an LLM's conversational abilities.
-def parse_conversation(text):
-    text_lower = text.lower()
-    
-    # 1. Chit-chat & Status Queries
-    if text_lower in ["hello", "hi", "hey", "aura"]:
-         return {"type": "chat", "response": "Hello Operator. I am online and monitoring the ORION mesh. The Cloud and Edge nodes are currently offline. How can I assist you?"}
-    if "status" in text_lower or "how are things" in text_lower or "health" in text_lower:
-         return {"type": "chat", "response": "[AURA DIAGNOSTIC]: Cloud Node is OFFLINE. Edge Node is OFFLINE. Satellite Link is ONLINE. Drone Fleet is ONLINE."}
-    if "who are you" in text_lower:
-         return {"type": "chat", "response": "I am AURA, the Conversational Intent and Visualization Interface for Project ORION. I translate your natural language requests into structured capabilities."}
-    if "thanks" in text_lower or "thank you" in text_lower:
-         return {"type": "chat", "response": "You are welcome, Operator. Standing by."}
-         
-    # 2. Intent Extraction (Actionable Commands)
-    print("? [AURA STATE: PARSING INTENT VIA NLP...]")
-    time.sleep(0.4)
-    intent = {"type": "intent", "goal": "UNKNOWN", "priority": "NORMAL", "raw": text, "target_capability": "unknown"}
-    
-    # Comms routing
-    if any(word in text_lower for word in ["comm", "broadcast", "message", "network", "connect"]):
-        intent["goal"] = "Maintain Communication"
-        intent["target_capability"] = "comm"
-    
-    # Surveillance / Drones
-    elif any(word in text_lower for word in ["drone", "scout", "survey", "look", "camera"]):
-        intent["goal"] = "Deploy Surveillance"
-        intent["target_capability"] = "surveillance"
+# --- CONVERSATIONAL MEMORY & NLP ENGINE ---
+class AuraNLP:
+    def __init__(self):
+        self.memory = {"last_topic": None, "last_intent": None}
         
-    if any(word in text_lower for word in ["critical", "emergency", "urgent", "now", "fast"]):
-        intent["priority"] = "CRITICAL"
+        self.greetings = [
+            "Hey! AURA here. All systems are being monitored. What's on your mind?",
+            "Hello! I'm online and ready. Need me to check the infrastructure or deploy something?",
+            "Hi there. Things are a bit chaotic in the mesh today (Cloud is down), but I'm ready to help. What do you need?",
+            "Hey Operator, AURA standing by. How can I assist you today?"
+        ]
         
-    if intent["goal"] == "UNKNOWN":
-         return {"type": "chat", "response": "I'm sorry, I didn't understand that intent. You can ask me for a status update, or give me a directive like 'maintain critical comms' or 'deploy surveillance drones'."}
-         
-    return intent
+        self.acknowledgements = [
+            "Got it. Let me look into that.",
+            "Understood. Parsing your request now...",
+            "Sure thing. Give me a second to figure out the best approach.",
+            "I hear you. Let me check the capability registry."
+        ]
+        
+    def generate_human_response(self, text):
+        text_lower = text.lower()
+        
+        # 1. Greetings
+        if re.search(r'\b(hello|hi|hey|sup|morning|afternoon)\b', text_lower):
+            return {"type": "chat", "response": random.choice(self.greetings)}
+            
+        # 2. Identity / Capabilities
+        if "who are you" in text_lower or "what can you do" in text_lower:
+            return {"type": "chat", "response": "I'm AURA! I'm essentially the conversational brain for Project ORION. You can chat with me naturally, and if you need something done - like deploying drones or fixing communications - I'll translate that into code and execute it safely through VEIL."}
+            
+        # 3. Status
+        if any(word in text_lower for word in ["status", "health", "how are things", "what's up with the system"]):
+            self.memory["last_topic"] = "infrastructure"
+            return {"type": "chat", "response": "Honestly, the primary mesh is struggling a bit. Both the Cloud and Edge communication nodes are currently OFFLINE. However, our Satellite links and Drone fleets are fully operational. Need me to route something through them?"}
+            
+        # 4. Gratitude / Chit-Chat
+        if re.search(r'\b(thanks|thank you|awesome|good job|nice)\b', text_lower):
+            return {"type": "chat", "response": random.choice(["You're very welcome!", "Happy to help!", "Anytime. That's what I'm here for.", "No problem at all."])}
+            
+        if "how are you" in text_lower:
+            return {"type": "chat", "response": "I'm doing great, thanks for asking! Just hanging out in the matrix, keeping an eye on the ORION cluster. How are you holding up?"}
+            
+        # 5. Intent Extraction (Context-Aware)
+        intent = {"type": "intent", "goal": "UNKNOWN", "priority": "NORMAL", "raw": text, "target_capability": "unknown"}
+        
+        # Handle contextual "fix it"
+        if "fix it" in text_lower or "do it" in text_lower:
+            if self.memory["last_topic"] == "infrastructure":
+                 intent["goal"] = "Maintain Communication"
+                 intent["target_capability"] = "comm"
+                 
+        if any(word in text_lower for word in ["comm", "broadcast", "message", "network", "connect", "internet", "route"]):
+            intent["goal"] = "Maintain Communication"
+            intent["target_capability"] = "comm"
+            self.memory["last_topic"] = "comm"
+            
+        elif any(word in text_lower for word in ["drone", "scout", "survey", "look", "camera", "fly"]):
+            intent["goal"] = "Deploy Surveillance"
+            intent["target_capability"] = "surveillance"
+            self.memory["last_topic"] = "surveillance"
+            
+        if any(word in text_lower for word in ["critical", "emergency", "urgent", "now", "fast", "hurry"]):
+            intent["priority"] = "CRITICAL"
+            
+        if intent["goal"] != "UNKNOWN":
+            print(f"? AURA: {random.choice(self.acknowledgements)}")
+            time.sleep(0.6)
+            return intent
+            
+        # Fallback
+        return {"type": "chat", "response": "I'm not entirely sure what you mean by that. We can just chat, or you can ask me to do something specific like 'deploy a surveillance drone' or 'check the system status'."}
 
-# --- ADAPTIVE PLANNER ---
+nlp = AuraNLP()
+
 def generate_plans(intent):
-    print("?? [AURA STATE: ANALYZING CAPABILITIES...]")
-    time.sleep(0.5)
+    print("?? [AURA INTERNAL: Analyzing capability graph...]")
+    time.sleep(0.8)
     target = intent.get("target_capability", "unknown")
     plans = [{"action": k, **v} for k, v in REGISTRY.items() if target in k]
     return sorted(plans, key=lambda x: x["cost"])
@@ -78,85 +109,81 @@ def execute_with_aura(intent):
     plans = generate_plans(intent)
     
     if not plans:
-        print(f"? [AURA] I could not find any capabilities matching your intent.")
+        print(f"? AURA: Hmm, I couldn't find any tools in my registry to handle that specific request.")
         return False
         
     for plan in plans:
-        print(f"\n?? [AURA STATE: ATTEMPTING '{plan['action']}']")
         time.sleep(0.5)
         
-        # 1. Environment Check
         if plan['status'] != "ONLINE":
-            print(f"? [ENVIRONMENT] Capability '{plan['action']}' is OFFLINE. Replanning...")
+            print(f"?? AURA: I tried to use '{plan['action']}', but it looks like it's offline. Let me try a fallback...")
             continue
             
-        # 2. VEIL Check & HITL
         hitl_approved = False
         if plan['requires_hitl']:
-            print(f"?? [VEIL] ACTION RESTRICTED: '{plan['action']}' requires human authorization.")
-            auth = input(f"   AURA: Do you authorize the use of {plan['action']}? (Y/N): ").strip().upper()
+            print(f"\n?? AURA: Hold up. The only available path is '{plan['action']}', which requires strict human authorization under VEIL policies.")
+            auth = input(f"   Do you authorize me to proceed with {plan['action']}? (Y/N): ").strip().upper()
             if auth == 'Y':
                 hitl_approved = True
-                print("   [AURA] Authorization captured and cryptographically signed.")
+                print("   [Cryptographic Signature Captured]")
+                print("? AURA: Great, authorization confirmed. Executing now...")
             else:
-                print("   [AURA] Authorization denied by operator. Replanning...")
+                print("? AURA: No worries, I've aborted that action. Let me see if there's another way...")
                 continue
                 
         if not check_opa_policy("operator_1", plan['action'], hitl_approved):
-             print(f"? [VEIL] FATAL DENY: Unauthorized to use {plan['action']}.")
+             print(f"? AURA: VEIL rejected my execution attempt for {plan['action']}. We don't have the privileges for that.")
              continue
              
-        print(f"? [AURA STATE: EXECUTING -> SAFE]")
-        print(f"   Target '{plan['action']}' executed successfully.")
+        time.sleep(0.5)
+        print(f"? AURA: All done! Target '{plan['action']}' was executed successfully and the operation is SAFE.")
         return True
         
-    print("\n?? [AURA STATE: FAIL-SAFE]")
-    print("   AURA: I have exhausted all safe, available capabilities. Manual intervention required.")
+    print("\n?? AURA: I'm really sorry, but I've exhausted all safe and available options. I can't complete this request autonomously.")
     return False
 
-# --- MAIN CHAT LOOP ---
 def main():
-    print("AURA: Online. I am monitoring ORION infrastructure. How can I assist you?")
+    print("AURA: Online. Type 'quit' to exit.")
     while True:
          try:
-             user_input = input("\nOperator> ")
+             user_input = input("\nYou: ")
              if user_input.lower() in ['exit', 'quit']:
+                 print("AURA: Catch you later! Shutting down.")
                  break
              if not user_input.strip():
                  continue
                  
-             parsed = parse_conversation(user_input)
+             parsed = nlp.generate_human_response(user_input)
              
              if parsed["type"] == "chat":
                  print(f"AURA: {parsed['response']}")
              else:
-                 print(f"   [Parsed Intent JSON] -> {json.dumps(parsed)}")
                  execute_with_aura(parsed)
              
          except KeyboardInterrupt:
+             print("\nAURA: Shutting down.")
              break
 
 if __name__ == "__main__":
     import sys
     if len(sys.argv) > 1 and sys.argv[1] == "--test":
         test_inputs = [
-            "Hello",
-            "What is the system status?",
-            "Deploy drones to survey the area urgently",
-            "Maintain emergency comms"
+            "Hey there!",
+            "How are you doing today?",
+            "What's up with the system status?",
+            "Oh wow, fix the comms immediately please",
+            "Thanks AURA!"
         ]
         
-        # Mocking the HITL input for the test
         original_input = __builtins__.input
         __builtins__.input = lambda _: "Y"
         
         for msg in test_inputs:
-            print(f"\nOperator> {msg}")
-            parsed = parse_conversation(msg)
+            print(f"\nYou: {msg}")
+            parsed = nlp.generate_human_response(msg)
             if parsed["type"] == "chat":
                 print(f"AURA: {parsed['response']}")
             else:
-                print(f"   [Parsed Intent JSON] -> {json.dumps(parsed)}")
                 execute_with_aura(parsed)
                 
         __builtins__.input = original_input
