@@ -15,7 +15,6 @@ class LocalCodebaseAgent:
         self.build_index()
 
     def build_index(self):
-        # Scan the codebase to build a simple keyword-to-file index
         for root, _, files in os.walk(self.root_dir):
             if '.git' in root or '__pycache__' in root or 'node_modules' in root:
                 continue
@@ -35,7 +34,6 @@ class LocalCodebaseAgent:
                         pass
 
     def query(self, text):
-        # Find the most relevant file based on user keywords
         keywords = set(re.findall(r'\b\w+\b', text.lower()))
         scores = {}
         for kw in keywords:
@@ -49,11 +47,10 @@ class LocalCodebaseAgent:
         best_match = max(scores, key=scores.get)
         rel_path = os.path.relpath(best_match, self.root_dir)
         
-        # Extract a snippet from the file
         try:
             with open(best_match, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
-                snippet = "".join(lines[:10]) # First 10 lines as context
+                snippet = "".join(lines[:10])
         except:
             snippet = "Could not read file."
             
@@ -75,9 +72,9 @@ class ChatMessage(Static):
             yield Label("[b]AURA[/b]", classes="chat-label-aura")
             yield Label(f"{self.content}\n", classes="chat-content-aura")
         elif self.role == "Tool":
-            yield Label(f"[dim]? {self.content}[/dim]\n", classes="chat-tool")
+            yield Label(f"[dim]> {self.content}[/dim]\n", classes="chat-tool")
         elif self.role == "Error":
-            yield Label(f"[red]× {self.content}[/red]\n", classes="chat-error")
+            yield Label(f"[red][X] {self.content}[/red]\n", classes="chat-error")
 
 class AuraTUI(App):
     CSS = """
@@ -110,7 +107,6 @@ class AuraTUI(App):
         self.title = "ORION Workspace"
         self.sub_title = "AURA-Local - indexing codebase..."
         self.chat_container = self.query_one("#chat-container")
-        # Build the local agent
         self.agent = LocalCodebaseAgent(os.getcwd())
         self.sub_title = "AURA-Local - ready"
 
@@ -126,17 +122,14 @@ class AuraTUI(App):
             self.action_clear()
             return
             
-        # REAL SHELL EXECUTION
         if user_text.startswith("!"):
             await self.process_shell(user_text[1:].strip())
             return
             
-        # REAL FILE READING
         if user_text.startswith("@"):
             await self.process_file(user_text[1:].strip())
             return
         
-        # REAL CODEBASE SEARCH (No if/else)
         await self.process_search(user_text)
 
     async def append_message(self, role: str, content: str):
@@ -148,7 +141,6 @@ class AuraTUI(App):
         self.sub_title = "AURA-Local - running command..."
         await self.append_message("Tool", f"Shell\n$ {command}")
         try:
-            # Run the command genuinely
             result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=10)
             if result.returncode == 0:
                 output = result.stdout.strip()
@@ -169,7 +161,6 @@ class AuraTUI(App):
             else:
                 with open(filename, 'r', encoding='utf-8') as f:
                     content = f.read()
-                    # Truncate if massive
                     if len(content) > 1000:
                         content = content[:1000] + "\n\n...[Truncated]"
                 await self.append_message("AURA", content)
