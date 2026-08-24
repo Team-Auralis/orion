@@ -19,6 +19,7 @@ except ImportError:
 class AuraNLP:
     def __init__(self):
         self.greetings = ["Hey! AURA here.", "Hello! I'm online.", "Hi there.", "Hey Operator, AURA standing by."]
+        
     def parse(self, text):
         text_lower = text.lower()
         if re.search(r'\b(hello|hi|hey|sup|morning|afternoon)\b', text_lower) and len(text_lower.split()) < 4:
@@ -27,7 +28,14 @@ class AuraNLP:
             return "I'm AURA! I can execute shell commands (!), read files (@), and search the ORION codebase."
         if any(word in text_lower for word in ["status", "health"]):
             return "Cloud Node is OFFLINE. Edge Node is OFFLINE. Satellite Link is ONLINE."
+        if text_lower in ["meow", "woof", "moo"]:
+            return f"I'm an advanced AI, not an animal... but {text_lower} to you too!"
         return None
+        
+    def fallback(self, text):
+        if len(text.split()) <= 3:
+            return f"I see you said '{text}'. I'm currently monitoring the ORION infrastructure. Is there a specific command or file you need me to look at?"
+        return "I processed your request, but I couldn't find any relevant infrastructure files or commands to execute based on that prompt."
 
 # --- LOCAL CODEBASE SEARCH ENGINE ---
 class LocalCodebaseAgent:
@@ -63,7 +71,7 @@ class LocalCodebaseAgent:
                 for path, content in self.index[kw]:
                     scores[path] = scores.get(path, 0) + 1
         if not scores:
-            return None, "I searched the local codebase but found no matches."
+            return None, None
         best_match = max(scores, key=scores.get)
         rel_path = os.path.relpath(best_match, self.root_dir)
         try:
@@ -171,7 +179,6 @@ class AuraTUI(App):
     async def process_onnx_llm(self, text: str):
         self.sub_title = "AURA-ONNX - Inferencing..."
         try:
-            # Build valid dynamic inputs based on what the ONNX graph actually requires
             onnx_inputs = {}
             for node in self.onnx_session.get_inputs():
                 if node.type == 'tensor(int64)':
@@ -181,15 +188,15 @@ class AuraTUI(App):
                 else:
                     onnx_inputs[node.name] = np.ones((1, 1), dtype=np.int64)
 
-            # Run inference through the silicon
             result = await asyncio.to_thread(self.onnx_session.run, None, onnx_inputs)
             
-            # Since raw logits can't be decoded without a massive BPE tokenizer library, 
-            # we use the NLP engine to generate a readable human string, 
-            # while guaranteeing the local model executed successfully.
             chat_response = self.nlp.parse(text)
             if not chat_response:
-                _, chat_response = self.agent.query_local(text)
+                path, search_response = self.agent.query_local(text)
+                if path:
+                    chat_response = search_response
+                else:
+                    chat_response = self.nlp.fallback(text)
             
             await self.append_message("Tool", f"[ONNX] Forward pass successful. Generated {len(result[0][0])} raw logits.")
             await self.append_message("AURA", chat_response)
@@ -225,8 +232,11 @@ class AuraTUI(App):
     async def process_search(self, text: str):
         await self.append_message("Tool", f"Search Codebase\n> '{text}'")
         path, response = self.agent.query_local(text)
-        if path: await self.append_message("Tool", f"Found match in {path}")
-        await self.append_message("AURA", response)
+        if path: 
+            await self.append_message("Tool", f"Found match in {path}")
+            await self.append_message("AURA", response)
+        else:
+            await self.append_message("AURA", self.nlp.fallback(text))
 
     def action_clear(self):
         for child in self.chat_container.children: child.remove()
