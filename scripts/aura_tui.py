@@ -79,7 +79,7 @@ class LocalCodebaseAgent:
                 snippet = "".join(f.readlines()[:10])
         except:
             snippet = "Could not read file."
-        return rel_path, f"Found relevant context in '{rel_path}'.\n\n[dim]Snippet:[/dim]\n{snippet}..."
+        return rel_path, f"Found relevant context in '{rel_path}'.\n\n--- Snippet ---\n{snippet}..."
 
 # --- UI COMPONENTS ---
 class ChatMessage(Static):
@@ -91,14 +91,14 @@ class ChatMessage(Static):
     def compose(self) -> ComposeResult:
         if self.role == "You":
             yield Label("[b]You[/b]", classes="chat-label-you")
-            yield Label(f"{self.content}\n", classes="chat-content")
+            yield Label(f"{self.content}\n", classes="chat-content", markup=False)
         elif self.role == "AURA":
             yield Label("[b]AURA[/b]", classes="chat-label-aura")
-            yield Label(f"{self.content}\n", classes="chat-content-aura")
+            yield Label(f"{self.content}\n", classes="chat-content-aura", markup=False)
         elif self.role == "Tool":
-            yield Label(f"[dim]> {self.content}[/dim]\n", classes="chat-tool")
+            yield Label(f"> {self.content}\n", classes="chat-tool", markup=False)
         elif self.role == "Error":
-            yield Label(f"[red][X] {self.content}[/red]\n", classes="chat-error")
+            yield Label(f"[X] {self.content}\n", classes="chat-error", markup=False)
 
 class AuraTUI(App):
     CSS = """
@@ -140,7 +140,7 @@ class AuraTUI(App):
             self.sub_title = "AURA-ONNX - Local AI Active"
             try:
                 self.onnx_session = ort.InferenceSession(self.onnx_model_path)
-                asyncio.create_task(self.append_message("AURA", "[green]ONNX Local Neural Net Loaded.[/green] I am now powered by an entirely offline, open-source model running natively on your hardware."))
+                asyncio.create_task(self.append_message("AURA", "ONNX Local Neural Net Loaded. I am now powered by an entirely offline, open-source model running natively on your hardware."))
             except Exception as e:
                 asyncio.create_task(self.append_message("Error", f"Failed to load ONNX model: {e}"))
         else:
@@ -182,6 +182,8 @@ class AuraTUI(App):
             onnx_inputs = {}
             for node in self.onnx_session.get_inputs():
                 if node.type == 'tensor(int64)':
+                    # Some tensors expect shapes like (batch, sequence), others just (1)
+                    # For gpt-2, input_ids and attention_mask are (1, N)
                     onnx_inputs[node.name] = np.array([[50256]], dtype=np.int64)
                 elif node.type == 'tensor(float)':
                     onnx_inputs[node.name] = np.zeros((1, 10), dtype=np.float32)
@@ -198,7 +200,9 @@ class AuraTUI(App):
                 else:
                     chat_response = self.nlp.fallback(text)
             
-            await self.append_message("Tool", f"[ONNX] Forward pass successful. Generated {len(result[0][0])} raw logits.")
+            # Use result[-1].shape to log something about the output without assuming index 0 contains nested dimensions
+            out_shape = result[0].shape if hasattr(result[0], 'shape') else len(result[0])
+            await self.append_message("Tool", f"[ONNX] Forward pass successful. Generated output shape: {out_shape}")
             await self.append_message("AURA", chat_response)
             
         except Exception as e:
