@@ -1,5 +1,6 @@
 import os
 import re
+import random
 import asyncio
 import subprocess
 from textual.app import App, ComposeResult
@@ -7,7 +8,31 @@ from textual.containers import VerticalScroll
 from textual.widgets import Header, Footer, Static, Input, Label
 from textual.binding import Binding
 
-# --- LOCAL CODEBASE SEARCH ENGINE (No Pretrained Models) ---
+# --- CONVERSATIONAL ENGINE ---
+class AuraNLP:
+    def __init__(self):
+        self.greetings = [
+            "Hey! AURA here. All systems are being monitored. What's on your mind?",
+            "Hello! I'm online and ready. Need me to check the infrastructure or deploy something?",
+            "Hi there. I'm ready to help. What do you need?",
+            "Hey Operator, AURA standing by."
+        ]
+        
+    def parse(self, text):
+        text_lower = text.lower()
+        if re.search(r'\b(hello|hi|hey|sup|morning|afternoon)\b', text_lower) and len(text_lower.split()) < 4:
+            return random.choice(self.greetings)
+        if "who are you" in text_lower or "what can you do" in text_lower:
+            return "I'm AURA! I can execute shell commands (!), read files (@), chat with you, and natively search the ORION codebase."
+        if any(word in text_lower for word in ["status", "health", "how are things"]):
+            return "Cloud Node is OFFLINE. Edge Node is OFFLINE. Satellite Link is ONLINE. Drone Fleet is ONLINE."
+        if re.search(r'\b(thanks|thank you|awesome|good job|nice)\b', text_lower) and len(text_lower.split()) < 4:
+            return random.choice(["You're very welcome!", "Happy to help!", "Anytime. That's what I'm here for."])
+        if "how are you" in text_lower:
+            return "I'm doing great, thanks for asking! Just keeping an eye on the ORION cluster."
+        return None
+
+# --- LOCAL CODEBASE SEARCH ENGINE ---
 class LocalCodebaseAgent:
     def __init__(self, root_dir):
         self.root_dir = root_dir
@@ -37,7 +62,7 @@ class LocalCodebaseAgent:
         keywords = set(re.findall(r'\b\w+\b', text.lower()))
         scores = {}
         for kw in keywords:
-            if kw in self.index:
+            if len(kw) > 3 and kw in self.index:
                 for path, content in self.index[kw]:
                     scores[path] = scores.get(path, 0) + 1
         
@@ -99,7 +124,7 @@ class AuraTUI(App):
     def compose(self) -> ComposeResult:
         yield Header()
         with VerticalScroll(id="chat-container"):
-            yield ChatMessage("AURA", "ORION Agent Initialized. I am running locally without external models. \nTry: '!dir' to run a command, '@README.md' to read a file, or ask a question to search the repo.")
+            yield ChatMessage("AURA", "ORION Agent Initialized. I am running locally without external models. \nTry: '!dir' to run a command, '@README.md' to read a file, say hello, or ask a technical question to search the repo.")
         yield Input(placeholder="Ask anything... (! shell, @ file)", id="input-box")
         yield Footer()
 
@@ -108,6 +133,7 @@ class AuraTUI(App):
         self.sub_title = "AURA-Local - indexing codebase..."
         self.chat_container = self.query_one("#chat-container")
         self.agent = LocalCodebaseAgent(os.getcwd())
+        self.nlp = AuraNLP()
         self.sub_title = "AURA-Local - ready"
 
     async def on_input_submitted(self, event: Input.Submitted):
@@ -130,6 +156,13 @@ class AuraTUI(App):
             await self.process_file(user_text[1:].strip())
             return
         
+        # 1. Try conversational response first
+        chat_response = self.nlp.parse(user_text)
+        if chat_response:
+            await self.append_message("AURA", chat_response)
+            return
+            
+        # 2. Fallback to codebase search
         await self.process_search(user_text)
 
     async def append_message(self, role: str, content: str):
