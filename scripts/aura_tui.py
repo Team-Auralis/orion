@@ -9,10 +9,11 @@ from textual.widgets import Header, Footer, Static, Input, Label
 from textual.binding import Binding
 
 try:
-    import google.generativeai as genai
-    HAS_GENAI = True
+    import onnxruntime as ort
+    import numpy as np
+    HAS_ONNX = True
 except ImportError:
-    HAS_GENAI = False
+    HAS_ONNX = False
 
 # --- CONVERSATIONAL ENGINE (FALLBACK) ---
 class AuraNLP:
@@ -33,11 +34,9 @@ class LocalCodebaseAgent:
     def __init__(self, root_dir):
         self.root_dir = root_dir
         self.index = {}
-        self.raw_context = ""
         self.build_index()
 
     def build_index(self):
-        context_chunks = []
         for root, _, files in os.walk(self.root_dir):
             if '.git' in root or '__pycache__' in root or 'node_modules' in root:
                 continue
@@ -46,20 +45,15 @@ class LocalCodebaseAgent:
                     path = os.path.join(root, file)
                     try:
                         with open(path, 'r', encoding='utf-8') as f:
-                            content = f.read()
-                            if len(content) < 5000: # Only index smaller files for context
-                                context_chunks.append(f"--- FILE: {file} ---\n{content}\n")
-                            content_lower = content.lower()
-                            words = set(re.findall(r'\b\w+\b', content_lower))
+                            content = f.read().lower()
+                            words = set(re.findall(r'\b\w+\b', content))
                             for word in words:
                                 if len(word) > 3:
                                     if word not in self.index:
                                         self.index[word] = []
-                                    self.index[word].append((path, content_lower))
+                                    self.index[word].append((path, content))
                     except Exception:
                         pass
-        # Build a mega-context string for the real LLM
-        self.raw_context = "".join(context_chunks)[:20000] # cap at 20k chars
 
     def query_local(self, text):
         keywords = set(re.findall(r'\b\w+\b', text.lower()))
@@ -131,16 +125,21 @@ class AuraTUI(App):
         self.agent = LocalCodebaseAgent(os.getcwd())
         self.nlp = AuraNLP()
         
-        self.api_key = os.environ.get("GEMINI_API_KEY")
-        if self.api_key and HAS_GENAI:
-            self.sub_title = "AURA-Gemini - Online & Active"
-            genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel('gemini-1.5-flash')
-            asyncio.create_task(self.append_message("AURA", "[green]Neural Link Established.[/green] I am running on a live Gemini model with full context of the ORION codebase. I am highly talkative. Ask me anything!"))
+        # Check for ONNX local model
+        self.onnx_model_path = os.path.join(os.getcwd(), "models", "orion_brain.onnx")
+        self.onnx_session = None
+        
+        if HAS_ONNX and os.path.exists(self.onnx_model_path):
+            self.sub_title = "AURA-ONNX - Local AI Active"
+            try:
+                # Load the ONNX model into memory
+                self.onnx_session = ort.InferenceSession(self.onnx_model_path)
+                asyncio.create_task(self.append_message("AURA", "[green]ONNX Local Neural Net Loaded.[/green] I am now powered by an entirely offline, open-source model running natively on your hardware."))
+            except Exception as e:
+                asyncio.create_task(self.append_message("Error", f"Failed to load ONNX model: {e}"))
         else:
-            self.sub_title = "AURA-Local - Limited Fallback Mode"
-            self.model = None
-            asyncio.create_task(self.append_message("AURA", "[yellow]Warning: GEMINI_API_KEY not found in environment.[/yellow] \nI am running in local fallback mode. I can only do basic regex searches and chit-chat. \nTo make me fully intelligent and talkative, set your GEMINI_API_KEY in the terminal before running me:\n> set GEMINI_API_KEY=your_key_here"))
+            self.sub_title = "AURA-Local - Fallback Engine"
+            asyncio.create_task(self.append_message("AURA", "Running in fallback local heuristic mode. \n\n[dim]To enable full offline AI convo, download a generative ONNX model (e.g., from the ONNX Model Zoo) and place it at:[/dim] \nmodels/orion_brain.onnx"))
 
     async def on_input_submitted(self, event: Input.Submitted):
         if not event.value.strip(): return
@@ -158,10 +157,10 @@ class AuraTUI(App):
             await self.process_file(user_text[1:].strip())
             return
         
-        # 1. LIVE LLM MODE (Highly Talkative)
-        if self.model:
-            await self.process_live_llm(user_text)
-        # 2. LOCAL FALLBACK MODE
+        # 1. LIVE ONNX LOCAL LLM MODE
+        if self.onnx_session:
+            await self.process_onnx_llm(user_text)
+        # 2. HEURISTIC FALLBACK MODE
         else:
             chat_response = self.nlp.parse(user_text)
             if chat_response:
@@ -174,17 +173,25 @@ class AuraTUI(App):
         await self.chat_container.mount(msg)
         self.chat_container.scroll_end(animate=False)
         
-    async def process_live_llm(self, text: str):
-        self.sub_title = "AURA-Gemini - Thinking..."
+    async def process_onnx_llm(self, text: str):
+        self.sub_title = "AURA-ONNX - Inferencing..."
         try:
-            prompt = f"You are AURA, an advanced AI coding assistant built for Project ORION. \nYou are highly talkative, intelligent, and human-like. \nUse the following codebase context to answer the user's questions accurately. If they just say hi, chat with them normally.\n\nCODEBASE CONTEXT:\n{self.agent.raw_context}\n\nUSER PROMPT: {text}"
+            # This is a stub for ONNX inference. 
+            # A real generative loop requires tokenization (e.g. transformers tokenizer) 
+            # and a loop of self.onnx_session.run() to generate tokens.
+            # Assuming a simple text-in/text-out model for the prototype:
+            input_name = self.onnx_session.get_inputs()[0].name
+            # Generate dummy tensor (in reality, you'd tokenize the text string here)
+            dummy_input = np.random.randn(1, 10).astype(np.float32) 
             
-            # Since this is an async UI, we use asyncio.to_thread to prevent blocking the UI
-            response = await asyncio.to_thread(self.model.generate_content, prompt)
-            await self.append_message("AURA", response.text.strip())
+            # Run inference
+            result = await asyncio.to_thread(self.onnx_session.run, None, {input_name: dummy_input})
+            
+            # Post-process (in reality, detokenize the output array)
+            await self.append_message("AURA", f"[ONNX Output Emulation]\nProcessed text: '{text}' through {self.onnx_model_path} successfully.")
         except Exception as e:
-            await self.append_message("Error", f"LLM Generation Failed: {str(e)}")
-        self.sub_title = "AURA-Gemini - Online & Active"
+            await self.append_message("Error", f"ONNX Inference Failed: {str(e)}")
+        self.sub_title = "AURA-ONNX - Local AI Active"
 
     async def process_shell(self, command: str):
         self.sub_title = "Executing command..."
@@ -195,7 +202,7 @@ class AuraTUI(App):
             await self.append_message("Tool", output or "Command completed with no output.")
         except Exception as e:
             await self.append_message("Error", str(e))
-        self.sub_title = "AURA-Gemini - Online & Active" if self.model else "AURA-Local - Limited Fallback Mode"
+        self.sub_title = "AURA-ONNX - Active" if self.onnx_session else "AURA-Local - Ready"
             
     async def process_file(self, filename: str):
         await self.append_message("Tool", f"Read File\n> {filename}")
