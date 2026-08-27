@@ -181,8 +181,10 @@ class AuraTUI(App):
             if cmd == "orbital":
                 await self.append_message("Tool", "> Initializing ORION Orbital View subsystem...")
                 import subprocess
-                subprocess.Popen("npm install && npm run dev -- --host localhost --port 4173", shell=True, cwd=os.path.join(os.getcwd(), "modules", "orbital-view"))
-                await self.append_message("AURA", "ORION Orbital View initialized and running in the background.\nOpen http://localhost:4173 in your browser to access the live orbital HUD.")
+                # Ponytail: Launching in a new visible CMD window so the user can see when npm install finishes
+                # and when Vite is actually ready, instead of silently failing in the background.
+                subprocess.Popen('start cmd /k "npm install && npm run dev -- --host localhost --port 4173"', shell=True, cwd=os.path.join(os.getcwd(), "modules", "orbital-view"))
+                await self.append_message("AURA", "ORION Orbital View initialized!\nA new terminal window has opened to run the server.\nOnce it says 'ready', open http://localhost:4173 in your browser.")
             else:
                 await self.process_shell(cmd)
         elif text.startswith("@"):
