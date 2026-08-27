@@ -126,7 +126,7 @@ class AuraTUI(App):
         yield Header()
         with VerticalScroll(id="chat-container"):
             yield ChatMessage("AURA", "ORION Agent Initialized.")
-        yield Input(placeholder="Ask anything... (! shell, @ file)", id="input-box")
+        yield Input(placeholder="Ask anything... (! shell, @ file, ? api)", id="input-box")
         yield Footer()
 
     def on_mount(self):
@@ -162,6 +162,9 @@ class AuraTUI(App):
             return
         if user_text.startswith("@"):
             await self.process_file(user_text[1:].strip())
+            return
+        if user_text.startswith("?"):
+            await self.process_api(user_text[1:].strip())
             return
         
         if self.onnx_session:
@@ -258,6 +261,32 @@ class AuraTUI(App):
             await self.append_message("AURA", response)
         else:
             await self.append_message("AURA", self.nlp.fallback(text))
+
+    async def process_api(self, query: str):
+        self.sub_title = "AURA-OSINT - Fetching Open Source Data..."
+        await self.append_message("Tool", f"API Request\n> '{query}'")
+        try:
+            import urllib.request, urllib.parse, json
+            url = f"https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exchars=800&explaintext=1&titles={urllib.parse.quote(query)}"
+            req = urllib.request.Request(url, headers={'User-Agent': 'ORION-Agent/1.0'})
+            
+            def fetch():
+                with urllib.request.urlopen(req, timeout=5) as response:
+                    return json.loads(response.read().decode())
+                    
+            data = await asyncio.to_thread(fetch)
+            pages = data.get("query", {}).get("pages", {})
+            page = list(pages.values())[0]
+            
+            if "extract" in page:
+                await self.append_message("Tool", "Fetched OSINT data via Open Source API (Wikipedia)")
+                await self.append_message("AURA", page["extract"])
+            else:
+                await self.append_message("Error", f"No open source API data found for '{query}'.")
+        except Exception as e:
+            await self.append_message("Error", f"API fetch failed: {str(e)}")
+        
+        self.sub_title = "AURA-ONNX - Local AI Active" if self.onnx_session else "AURA-Local - Ready"
 
     def action_clear(self):
         for child in self.chat_container.children: child.remove()
