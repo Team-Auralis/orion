@@ -241,7 +241,6 @@ class AuraTUI(App):
         self.sub_title = "AURA-PyTorch - Modern Instruct AI Active"
 
     async def process_onnx_llm(self, text: str):
-    async def process_onnx_llm(self, text: str):
         self.sub_title = "AURA-ONNX - Inferencing..."
         try:
             # Ponytail: Lazy custom LLM inference loop. No PyTorch, no transformers.
