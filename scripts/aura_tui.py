@@ -205,9 +205,19 @@ class AuraTUI(App):
                 
                 result = await asyncio.to_thread(self.onnx_session.run, None, onnx_inputs)
                 logits = result[0]
+                next_token_logits = logits[0, -1, :]
+                
+                # Ponytail: Apply a repetition penalty to prevent it from getting stuck in infinite loops
+                # like "Kolkata-based Kolkata-based..."
+                penalty = 1.5
+                for token_id in set(generated_ids):
+                    if next_token_logits[token_id] < 0:
+                        next_token_logits[token_id] *= penalty
+                    else:
+                        next_token_logits[token_id] /= penalty
                 
                 # Greedy sampling (argmax)
-                next_token = int(np.argmax(logits[0, -1, :]))
+                next_token = int(np.argmax(next_token_logits))
                 generated_ids.append(next_token)
                 
                 if next_token == 50256: # EOS token
