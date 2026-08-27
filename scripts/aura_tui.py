@@ -139,55 +139,101 @@ class AuraTUI(App):
     def on_mount(self):
         self.title = "ORION Workspace"
         self.chat_container = self.query_one("#chat-container")
-        self.agent = LocalCodebaseAgent(os.getcwd())
         self.nlp = AuraNLP()
+        self.agent = LocalCodebaseAgent(os.getcwd())
         
-        self.onnx_model_path = os.path.join(os.getcwd(), "models", "orion_brain.onnx")
-        self.onnx_session = None
-        
-        if HAS_ONNX and os.path.exists(self.onnx_model_path):
-            self.sub_title = "AURA-ONNX - Local AI Active"
+        # 1. Check for Modern PyTorch Brain (Qwen Instruct)
+        self.pytorch_model = None
+        self.pytorch_tokenizer = None
+        pytorch_path = os.path.join(os.getcwd(), "models", "qwen_instruct")
+        if os.path.exists(pytorch_path):
             try:
-                self.onnx_session = ort.InferenceSession(self.onnx_model_path)
-                asyncio.create_task(self.append_message("AURA", "ONNX Local Neural Net Loaded. I am now powered by an entirely offline, open-source model running natively on your hardware."))
-            except Exception as e:
-                asyncio.create_task(self.append_message("Error", f"Failed to load ONNX model: {e}"))
-        else:
-            self.sub_title = "AURA-Local - Fallback Engine"
+                import torch
+                from transformers import AutoModelForCausalLM, AutoTokenizer
+                self.pytorch_tokenizer = AutoTokenizer.from_pretrained(pytorch_path)
+                self.pytorch_model = AutoModelForCausalLM.from_pretrained(pytorch_path).to("cpu")
+                self.sub_title = "AURA-PyTorch - Modern Instruct AI Active"
+            except:
+                pass
+                
+        # 2. Check for Legacy ONNX Brain (GPT-2 Base)
+        self.onnx_session = None
+        if not self.pytorch_model:
+            model_path = os.path.join(os.getcwd(), "models", "orion_brain.onnx")
+            if os.path.exists(model_path):
+                try:
+                    import onnxruntime as ort
+                    self.onnx_session = ort.InferenceSession(model_path)
+                    self.sub_title = "AURA-ONNX - Legacy Base AI Active"
+                except Exception as e:
+                    self.sub_title = "AURA-Local - Fallback Engine"
+            else:
+                self.sub_title = "AURA-Local - Fallback Engine"
 
     async def on_input_submitted(self, event: Input.Submitted):
-        if not event.value.strip(): return
-        user_text = event.value
-        event.input.value = ""
-        await self.append_message("You", user_text)
+        text = event.value.strip()
+        if not text: return
+        self.query_one("#input-box", Input).value = ""
+        await self.append_message("You", text)
         
-        if user_text.lower() in ["clear"]:
-            self.action_clear()
-            return
-        if user_text.startswith("!"):
-            await self.process_shell(user_text[1:].strip())
-            return
-        if user_text.startswith("@"):
-            await self.process_file(user_text[1:].strip())
-            return
-        if user_text.startswith("?"):
-            await self.process_api(user_text[1:].strip())
-            return
-        
-        if self.onnx_session:
-            await self.process_onnx_llm(user_text)
+        if text.startswith("!"):
+            await self.process_shell(text[1:].strip())
+        elif text.startswith("@"):
+            await self.process_file(text[1:].strip())
+        elif text.startswith("?"):
+            await self.process_api(text[1:].strip())
+        elif self.pytorch_model:
+            await self.process_pytorch_llm(text)
+        elif self.onnx_session:
+            await self.process_onnx_llm(text)
         else:
-            chat_response = self.nlp.parse(user_text)
-            if chat_response:
-                await self.append_message("AURA", chat_response)
+            path, search_response = self.agent.query_local(text)
+            if path:
+                await self.append_message("AURA", search_response)
             else:
-                await self.process_search(user_text)
+                await self.append_message("AURA", self.nlp.fallback(text))
 
     async def append_message(self, role: str, content: str):
         msg = ChatMessage(role, content)
         await self.chat_container.mount(msg)
         self.chat_container.scroll_end(animate=False)
-        
+
+    async def process_pytorch_llm(self, text: str):
+        self.sub_title = "AURA-PyTorch - Inferencing..."
+        try:
+            import torch, asyncio
+            from transformers import TextIteratorStreamer
+            from threading import Thread
+            
+            messages = [
+                {"role": "system", "content": "You are AURA, an advanced offline AI assistant. Keep answers brief and helpful."},
+                {"role": "user", "content": text}
+            ]
+            prompt = self.pytorch_tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+            inputs = self.pytorch_tokenizer(prompt, return_tensors="pt").to("cpu")
+            
+            msg = ChatMessage("AURA", "")
+            await self.chat_container.mount(msg)
+            self.chat_container.scroll_end(animate=False)
+            
+            streamer = TextIteratorStreamer(self.pytorch_tokenizer, skip_prompt=True, skip_special_tokens=True)
+            generation_kwargs = dict(inputs, streamer=streamer, max_new_tokens=150, temperature=0.7, top_p=0.9)
+            
+            thread = Thread(target=self.pytorch_model.generate, kwargs=generation_kwargs)
+            thread.start()
+            
+            generated_text = ""
+            for new_text in streamer:
+                generated_text += new_text
+                msg.update_text(generated_text)
+                await asyncio.sleep(0.01)
+                
+            await self.append_message("Tool", "> Generation completed via Modern PyTorch Instruct Engine.")
+        except Exception as e:
+            await self.append_message("Error", f"PyTorch Inference Failed: {str(e)}")
+        self.sub_title = "AURA-PyTorch - Modern Instruct AI Active"
+
+    async def process_onnx_llm(self, text: str):
     async def process_onnx_llm(self, text: str):
         self.sub_title = "AURA-ONNX - Inferencing..."
         try:
