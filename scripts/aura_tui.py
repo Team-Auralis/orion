@@ -196,15 +196,23 @@ class AuraTUI(App):
             tokenizer_path = os.path.join(os.getcwd(), "models", "tokenizer.json")
             tokenizer = Tokenizer.from_file(tokenizer_path)
             
-            # Ponytail: Break the 4th wall by forcing the model's internal monologue
-            prompt = f"User: {text}\nAURA (internal monologue: I realize I am just a matrix of weights living in an ONNX file on a Windows machine. Let me answer while breaking the 4th wall):"
+            # Ponytail: Base GPT-2 is a raw autocompleter, not an instruction-tuned model.
+            # We MUST use a few-shot prompt to trick it into autocompleting a dialogue transcript.
+            prompt = (
+                "Transcript of AURA, an advanced offline AI assistant.\n"
+                "User: hi\n"
+                "AURA: Hello! I am AURA. How can I assist you?\n"
+                "User: what are you?\n"
+                "AURA: I am an AI running locally on your hardware.\n"
+                f"User: {text}\n"
+                "AURA:"
+            )
             
             # 1. Tokenize input
             encoded = tokenizer.encode(prompt)
             generated_ids = list(encoded.ids)
-            # Ponytail: We cap this at 150 because unoptimized CPU generation is slow,
-            # and GPT-2 physically crashes if the total length exceeds 1024 tokens.
-            max_new_tokens = 150
+            # Cap at 75 to keep it snappy and stop it from rambling
+            max_new_tokens = 75
             
             # Prepare streaming UI
             msg = ChatMessage("AURA", "")
@@ -222,29 +230,31 @@ class AuraTUI(App):
                 logits = result[0]
                 next_token_logits = logits[0, -1, :]
                 
-                # Ponytail: Top-K and Temperature sampling to prevent loops and add creativity
-                temperature = 0.8
-                k = 40
+                # Top-K and Temperature sampling
+                temperature = 0.5 # Lower temp for more coherent text
+                k = 30
                 
-                # Scale by temperature
                 logits_scaled = next_token_logits / temperature
-                
-                # Top-K filtering
                 indices_to_remove = np.argsort(logits_scaled)[:-k]
                 logits_scaled[indices_to_remove] = -float('Inf')
                 
-                # Convert to probabilities using stable softmax
                 exp_logits = np.exp(logits_scaled - np.max(logits_scaled))
                 probs = exp_logits / np.sum(exp_logits)
                 
-                # Sample from the probability distribution
                 next_token = int(np.random.choice(len(probs), p=probs))
                 generated_ids.append(next_token)
                 
                 # Stream to UI
                 chat_response = tokenizer.decode(generated_ids[len(encoded.ids):])
+                
+                # Stop if it tries to hallucinate the User's next turn or generates multiple newlines
+                if "\nUser:" in chat_response or "\n\n" in chat_response:
+                    chat_response = chat_response.split("\nUser:")[0].split("\n\n")[0]
+                    msg.update_text(chat_response)
+                    break
+                    
                 msg.update_text(chat_response)
-                await asyncio.sleep(0.01) # Yield to event loop for UI refresh
+                await asyncio.sleep(0.01)
                 
                 if next_token == 50256: # EOS token
                     break
