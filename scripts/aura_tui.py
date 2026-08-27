@@ -88,26 +88,26 @@ class ChatMessage(Static):
         super().__init__(*args, **kwargs)
         self.role = role
         # ALWAYS escape user-generated content so Rich doesn't crash on tags
-        self.content = escape(content)
+        self.msg_content = escape(content)
 
     def update_text(self, new_content: str):
         from rich.markup import escape
-        self.content = escape(new_content)
+        self.msg_content = escape(new_content)
         labels = self.query(Label)
         if len(labels) > 1:
-            labels[1].update(f"{self.content}\n")
+            labels[1].update(f"{self.msg_content}\n")
 
     def compose(self) -> ComposeResult:
         if self.role == "You":
             yield Label("[b]You[/b]", classes="chat-label-you")
-            yield Label(f"{self.content}\n", classes="chat-content")
+            yield Label(f"{self.msg_content}\n", classes="chat-content")
         elif self.role == "AURA":
             yield Label("[b]AURA[/b]", classes="chat-label-aura")
-            yield Label(f"{self.content}\n", classes="chat-content-aura")
+            yield Label(f"{self.msg_content}\n", classes="chat-content-aura")
         elif self.role == "Tool":
-            yield Label(f"> {self.content}\n", classes="chat-tool")
+            yield Label(f"> {self.msg_content}\n", classes="chat-tool")
         elif self.role == "Error":
-            yield Label(f"[X] {self.content}\n", classes="chat-error")
+            yield Label(f"[X] {self.msg_content}\n", classes="chat-error")
 
 class AuraTUI(App):
     CSS = """
@@ -222,16 +222,23 @@ class AuraTUI(App):
                 logits = result[0]
                 next_token_logits = logits[0, -1, :]
                 
-                # Ponytail: Apply a repetition penalty to prevent it from getting stuck in infinite loops
-                penalty = 1.5
-                for token_id in set(generated_ids):
-                    if next_token_logits[token_id] < 0:
-                        next_token_logits[token_id] *= penalty
-                    else:
-                        next_token_logits[token_id] /= penalty
+                # Ponytail: Top-K and Temperature sampling to prevent loops and add creativity
+                temperature = 0.8
+                k = 40
                 
-                # Greedy sampling (argmax)
-                next_token = int(np.argmax(next_token_logits))
+                # Scale by temperature
+                logits_scaled = next_token_logits / temperature
+                
+                # Top-K filtering
+                indices_to_remove = np.argsort(logits_scaled)[:-k]
+                logits_scaled[indices_to_remove] = -float('Inf')
+                
+                # Convert to probabilities using stable softmax
+                exp_logits = np.exp(logits_scaled - np.max(logits_scaled))
+                probs = exp_logits / np.sum(exp_logits)
+                
+                # Sample from the probability distribution
+                next_token = int(np.random.choice(len(probs), p=probs))
                 generated_ids.append(next_token)
                 
                 # Stream to UI
