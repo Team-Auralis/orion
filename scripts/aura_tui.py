@@ -308,28 +308,37 @@ class AuraTUI(App):
             await self.append_message("AURA", self.nlp.fallback(text))
 
     async def process_api(self, query: str):
-        self.sub_title = "AURA-OSINT - Fetching Open Source Data..."
-        await self.append_message("Tool", f"API Request\n> '{query}'")
+        self.sub_title = "AURA-OSINT - Web Scraping..."
+        await self.append_message("Tool", f"DuckDuckGo Web Search\n> '{query}'")
         try:
-            import urllib.request, urllib.parse, json
-            url = f"https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exchars=800&explaintext=1&titles={urllib.parse.quote(query)}"
-            req = urllib.request.Request(url, headers={'User-Agent': 'ORION-Agent/1.0'})
+            import urllib.request, urllib.parse, re
+            data = urllib.parse.urlencode({'q': query}).encode('utf-8')
+            req = urllib.request.Request('https://lite.duckduckgo.com/lite/', data=data, headers={'User-Agent': 'Mozilla/5.0'})
             
             def fetch():
                 with urllib.request.urlopen(req, timeout=5) as response:
-                    return json.loads(response.read().decode())
+                    return response.read().decode('utf-8')
                     
-            data = await asyncio.to_thread(fetch)
-            pages = data.get("query", {}).get("pages", {})
-            page = list(pages.values())[0]
+            html = await asyncio.to_thread(fetch)
+            snippets = re.findall(r"<td class='result-snippet'[^>]*>(.*?)</td>", html, re.DOTALL)
             
-            if "extract" in page:
-                await self.append_message("Tool", "Fetched OSINT data via Open Source API (Wikipedia)")
-                await self.append_message("AURA", page["extract"])
+            if snippets:
+                cleanr = re.compile('<.*?>')
+                cleaned = [re.sub(cleanr, '', s).strip() for s in snippets[:3]]
+                context_str = " ".join(cleaned)
+                
+                await self.append_message("Tool", f"Fetched {len(cleaned)} results from Web Scraper. Injecting into context...")
+                
+                # Ponytail: RAG (Retrieval-Augmented Generation). We feed the scraped web text directly into the AI's prompt!
+                enriched_prompt = f"Using this web context: {context_str}. Answer the query: {query}"
+                if self.onnx_session:
+                    await self.process_onnx_llm(enriched_prompt)
+                else:
+                    await self.append_message("AURA", "Web Search Results:\n" + "\n\n".join(cleaned))
             else:
-                await self.append_message("Error", f"No open source API data found for '{query}'.")
+                await self.append_message("Error", f"No web search results found for '{query}'.")
         except Exception as e:
-            await self.append_message("Error", f"API fetch failed: {str(e)}")
+            await self.append_message("Error", f"Web scrape failed: {str(e)}")
         
         self.sub_title = "AURA-ONNX - Local AI Active" if self.onnx_session else "AURA-Local - Ready"
 
