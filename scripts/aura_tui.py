@@ -329,8 +329,8 @@ class AuraTUI(App):
                 
                 await self.append_message("Tool", f"Fetched {len(cleaned)} results from Web Scraper. Injecting into context...")
                 
-                # Ponytail: RAG (Retrieval-Augmented Generation). We feed the scraped web text directly into the AI's prompt!
-                enriched_prompt = f"Using this web context: {context_str}. Answer the query: {query}"
+                # Ponytail: RAG (Retrieval-Augmented Generation) with Summarization.
+                enriched_prompt = f"I searched the web for '{query}'. Here are the raw results: {context_str}. Please summarize these facts into a concise answer."
                 if self.onnx_session:
                     await self.process_onnx_llm(enriched_prompt)
                 else:
