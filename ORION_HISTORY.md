@@ -17,3 +17,5 @@ ORION is an advanced, offline AI coding assistant terminal (TUI). It is designed
 - **Third-Party Pentest:** Execute external security validation.
 - **Geofence & Kill-Switch Rehearsal:** Ensure physical network constraints work flawlessly.
 - **Pilot Deployment:** Present the finalized system to the pilot partner.
+
+8. **ORION Orbital View (formerly God's Eye View):** We integrated an advanced open-source satellite and global intelligence tracker directly into the ORION platform. We stripped out its original branding and claimed it as our own standalone Orbital Intelligence Module. It provides photorealistic 3D tracking of flights, ships, and satellites, complete with a live AI voice agent HUD.

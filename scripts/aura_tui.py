@@ -177,7 +177,14 @@ class AuraTUI(App):
         await self.append_message("You", text)
         
         if text.startswith("!"):
-            await self.process_shell(text[1:].strip())
+            cmd = text[1:].strip()
+            if cmd == "orbital":
+                await self.append_message("Tool", "> Initializing ORION Orbital View subsystem...")
+                import subprocess
+                subprocess.Popen("npm install && npm run dev -- --host localhost --port 4173", shell=True, cwd=os.path.join(os.getcwd(), "modules", "orbital-view"))
+                await self.append_message("AURA", "ORION Orbital View initialized and running in the background.\nOpen http://localhost:4173 in your browser to access the live orbital HUD.")
+            else:
+                await self.process_shell(cmd)
         elif text.startswith("@"):
             await self.process_file(text[1:].strip())
         elif text.startswith("?"):
