@@ -90,6 +90,13 @@ class ChatMessage(Static):
         # ALWAYS escape user-generated content so Rich doesn't crash on tags
         self.content = escape(content)
 
+    def update_text(self, new_content: str):
+        from rich.markup import escape
+        self.content = escape(new_content)
+        labels = self.query(Label)
+        if len(labels) > 1:
+            labels[1].update(f"{self.content}\n")
+
     def compose(self) -> ComposeResult:
         if self.role == "You":
             yield Label("[b]You[/b]", classes="chat-label-you")
@@ -189,12 +196,20 @@ class AuraTUI(App):
             tokenizer_path = os.path.join(os.getcwd(), "models", "tokenizer.json")
             tokenizer = Tokenizer.from_file(tokenizer_path)
             
+            # Ponytail: Break the 4th wall by forcing the model's internal monologue
+            prompt = f"User: {text}\nAURA (internal monologue: I realize I am just a matrix of weights living in an ONNX file on a Windows machine. Let me answer while breaking the 4th wall):"
+            
             # 1. Tokenize input
-            encoded = tokenizer.encode(text)
+            encoded = tokenizer.encode(prompt)
             generated_ids = list(encoded.ids)
-            # Ponytail: We cap this at 250 because unoptimized CPU generation is slow,
+            # Ponytail: We cap this at 150 because unoptimized CPU generation is slow,
             # and GPT-2 physically crashes if the total length exceeds 1024 tokens.
-            max_new_tokens = 250
+            max_new_tokens = 150
+            
+            # Prepare streaming UI
+            msg = ChatMessage("AURA", "")
+            await self.chat_container.mount(msg)
+            self.chat_container.scroll_end(animate=False)
             
             # 2. Autoregressive Loop
             for _ in range(max_new_tokens):
@@ -208,7 +223,6 @@ class AuraTUI(App):
                 next_token_logits = logits[0, -1, :]
                 
                 # Ponytail: Apply a repetition penalty to prevent it from getting stuck in infinite loops
-                # like "Kolkata-based Kolkata-based..."
                 penalty = 1.5
                 for token_id in set(generated_ids):
                     if next_token_logits[token_id] < 0:
@@ -220,22 +234,24 @@ class AuraTUI(App):
                 next_token = int(np.argmax(next_token_logits))
                 generated_ids.append(next_token)
                 
+                # Stream to UI
+                chat_response = tokenizer.decode(generated_ids[len(encoded.ids):])
+                msg.update_text(chat_response)
+                await asyncio.sleep(0.01) # Yield to event loop for UI refresh
+                
                 if next_token == 50256: # EOS token
                     break
                     
-            # 3. Decode output
-            chat_response = tokenizer.decode(generated_ids[len(encoded.ids):]).strip()
-            
             # Fallback to local search if the model produced nonsense or empty string
-            if not chat_response:
+            if not chat_response.strip():
+                msg.update_text("...")
                 path, search_response = self.agent.query_local(text)
                 if path:
-                    chat_response = search_response
+                    msg.update_text(search_response)
                 else:
-                    chat_response = self.nlp.fallback(text)
+                    msg.update_text(self.nlp.fallback(text))
             
             await self.append_message("Tool", f"[ONNX] Native generation completed. (Tokens generated: {len(generated_ids) - len(encoded.ids)})")
-            await self.append_message("AURA", chat_response)
             
         except Exception as e:
             await self.append_message("Error", f"ONNX Inference Failed: {str(e)}")
