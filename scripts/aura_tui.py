@@ -192,7 +192,9 @@ class AuraTUI(App):
             # 1. Tokenize input
             encoded = tokenizer.encode(text)
             generated_ids = list(encoded.ids)
-            max_new_tokens = 25
+            # Ponytail: We cap this at 250 because unoptimized CPU generation is slow,
+            # and GPT-2 physically crashes if the total length exceeds 1024 tokens.
+            max_new_tokens = 250
             
             # 2. Autoregressive Loop
             for _ in range(max_new_tokens):
