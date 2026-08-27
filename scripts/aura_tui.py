@@ -181,18 +181,37 @@ class AuraTUI(App):
     async def process_onnx_llm(self, text: str):
         self.sub_title = "AURA-ONNX - Inferencing..."
         try:
-            onnx_inputs = {}
-            for node in self.onnx_session.get_inputs():
-                if node.type == 'tensor(int64)':
-                    onnx_inputs[node.name] = np.array([[50256]], dtype=np.int64)
-                elif node.type == 'tensor(float)':
-                    onnx_inputs[node.name] = np.zeros((1, 10), dtype=np.float32)
-                else:
-                    onnx_inputs[node.name] = np.ones((1, 1), dtype=np.int64)
-
-            result = await asyncio.to_thread(self.onnx_session.run, None, onnx_inputs)
+            # Ponytail: Lazy custom LLM inference loop. No PyTorch, no transformers.
+            from tokenizers import Tokenizer
+            tokenizer_path = os.path.join(os.getcwd(), "models", "tokenizer.json")
+            tokenizer = Tokenizer.from_file(tokenizer_path)
             
-            chat_response = self.nlp.parse(text)
+            # 1. Tokenize input
+            encoded = tokenizer.encode(text)
+            generated_ids = list(encoded.ids)
+            max_new_tokens = 25
+            
+            # 2. Autoregressive Loop
+            for _ in range(max_new_tokens):
+                onnx_inputs = {
+                    'input_ids': np.array([generated_ids], dtype=np.int64),
+                    'attention_mask': np.ones((1, len(generated_ids)), dtype=np.int64)
+                }
+                
+                result = await asyncio.to_thread(self.onnx_session.run, None, onnx_inputs)
+                logits = result[0]
+                
+                # Greedy sampling (argmax)
+                next_token = int(np.argmax(logits[0, -1, :]))
+                generated_ids.append(next_token)
+                
+                if next_token == 50256: # EOS token
+                    break
+                    
+            # 3. Decode output
+            chat_response = tokenizer.decode(generated_ids[len(encoded.ids):]).strip()
+            
+            # Fallback to local search if the model produced nonsense or empty string
             if not chat_response:
                 path, search_response = self.agent.query_local(text)
                 if path:
@@ -200,8 +219,7 @@ class AuraTUI(App):
                 else:
                     chat_response = self.nlp.fallback(text)
             
-            out_shape = result[0].shape if hasattr(result[0], 'shape') else len(result[0])
-            await self.append_message("Tool", f"[ONNX] Forward pass successful. Generated output shape: {out_shape}")
+            await self.append_message("Tool", f"[ONNX] Native generation completed. (Tokens generated: {len(generated_ids) - len(encoded.ids)})")
             await self.append_message("AURA", chat_response)
             
         except Exception as e:
