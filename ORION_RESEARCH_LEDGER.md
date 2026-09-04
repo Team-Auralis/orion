@@ -3,7 +3,20 @@
 This ledger contains the permanent, chronological history of all empirical experiments conducted to validate the ORION Artificial Civilization Intelligence (ACI) framework.
 
 **Repository:** Team-Auralis/orion
-**Version:** Alpha (Experimental Mock Phase)
+**Version:** v1.0-ACI-Alpha (Experimental Mock Phase)
+
+---
+
+## Failure Classification Taxonomy
+Every failed test during the validation phase is categorized to build the ORION Failure Corpus, tracking what failed, why, and how it was fixed.
+- **F-001:** False transfer
+- **F-002:** Causal hallucination
+- **F-003:** Agent collision
+- **F-004:** Long-horizon myopia
+- **F-005:** Uncertainty miscalibration
+- **F-006:** Simulation-model error
+- **F-007:** Knowledge retrieval failure
+- **F-008:** Governance rejection failure
 
 ---
 
@@ -42,7 +55,7 @@ This ledger contains the permanent, chronological history of all empirical exper
 **Commit:** 6eb1435
 **Objective:** Determine if ORION can discover causal relationships from raw, noisy observations containing confounding variables, and compare against blind controls.
 **Setup:** Raw observations fed. 3-way control (No Memory vs String Match vs ORION Structural Transfer).
-**Result:** ORION ( cost) outperformed Control B () and Control A (). It successfully isolated the true causal variables from confounders in MIRROR and generalized the structure.
+**Result:** ORION (\ cost) outperformed Control B (\ cost) and Control A (\ cost). It successfully isolated the true causal variables from confounders in MIRROR and generalized the structure.
 **Limitations:** Small sample size (2 phases).
 
 ---
@@ -50,9 +63,9 @@ This ledger contains the permanent, chronological history of all empirical exper
 ## Experiment: ACI-004.1 | Replication Suite (Empirical Moat Validation)
 **Date:** September 2026
 **Commit:** 4598435
-**Objective:** Statistically evaluate Hypothesis 1 ($): Increasing accumulated OMNIS causal knowledge produces measurable improvements in performance.
+**Objective:** Statistically evaluate Hypothesis 1 (H1): Increasing accumulated OMNIS causal knowledge produces measurable improvements in performance.
 **Setup:** 100 randomized scenarios (domains, names, confounders) mapped to 4 underlying causal structures.
-**Result:** ORION knowledge reuse rate: 96.0%. Total Cost: ~. Control A/B Reuse Rate: 0.0%. Total Cost: ~,500B. Efficiency advantage: +83.0%.
+**Result:** ORION knowledge reuse rate: 96.0%. Total Cost: ~\. Control A/B Reuse Rate: 0.0%. Total Cost: ~\,500B. Efficiency advantage: +83.0%.
 **Limitations:** Only 4 underlying causal structures, making the hypothesis space relatively small.
 
 ---
@@ -72,7 +85,7 @@ This ledger contains the permanent, chronological history of all empirical exper
 **Commit:** 97b0e25
 **Objective:** Test whether ORION can coordinate multiple specialized intelligences when their objectives conflict.
 **Setup:** Compound crisis. Control A (Single agent). Control B (Uncoordinated swarm). ORION (NEXUS+OMNIS+FORGE).
-**Result:** ORION (, 0 violations) outperformed Control A (, 4 violations) and Control B (, 3 violations). NEXUS successfully resolved disputes by grounding arguments in OMNIS physics and simulating compromises in FORGE.
+**Result:** ORION (\ cost, 0 violations) outperformed Control A (\ cost, 4 violations) and Control B (\ cost, 3 violations). NEXUS successfully resolved disputes by grounding arguments in OMNIS physics and simulating compromises in FORGE.
 **Limitations:** Hand-designed agent proposals.
 
 ---
@@ -84,24 +97,27 @@ This ledger contains the permanent, chronological history of all empirical exper
 **Setup:** 100 randomized crises run against Full ORION and 4 ablated versions (-OMNIS, -NEXUS, -FORGE, -ASCEND).
 **Result:** Removing any component caused distinct degradation patterns: -NEXUS (catastrophic collisions), -OMNIS (physics hallucinations), -FORGE (untested production blowouts), -ASCEND (long-term 20-year objective failure).
 **Limitations:** Simulated crisis costs; requires full LLM execution for real-world validation.
+
+---
+
 ## Experiment: ACI-008 | Full Integrated Benchmark
 **Date:** September 2026
-**Commit:** Pending
+**Commit:** dcaf183
 **Objective:** Evaluate the complete ORION architecture under a compound crisis requiring simultaneous resolution of conflicting objectives, agent disagreement, missing information, and novel causal discovery.
 **Setup:** "Global Trade Embargo + Unprecedented Heatwave" with sensor noise and directly conflicting macro-objectives (Reliability vs Emissions vs Budget vs Healthcare).
-**Result:** System successfully reconstructed the ground truth, rejected myopic agent proposals, used FORGE to discover a composite compromise, and generalized the components to OMNIS memory. Scored **90/100** on the standardized ACI Empirical Benchmark, meeting the threshold for foundational ACI.
+**Result:** System successfully reconstructed the ground truth, rejected myopic agent proposals, used FORGE to discover a composite compromise, and generalized the components to OMNIS memory. Scored **90/100** on the standardized ACI Empirical Benchmark, meeting the predefined ORION ACI-001 benchmark threshold under the simulated evaluation environment.
 **Limitations:** Relies on simulated physics and execution; "Real-world capability" remains the lowest score (3/5) due to lack of physical actuation hooks.
 
 ---
 
 ## 🛑 ARCHITECTURE FREEZE: v1.0-ACI-Alpha
 **Date:** September 2026
-**Commit:** To be tagged
+**Commit:** ec80c72
 **Status:** Feature development is officially paused. The theoretical architecture (OMNIS, NEXUS, FORGE, MIRROR, ASCEND) has been successfully implemented and empirically validated across Experiments 001-008.
 
 ### Next Phase: Independent Validation Roadmap
 The system will now enter a rigorous evaluation phase to validate the 90/100 Benchmark score against external scrutiny.
-1. **Phase A (Freeze):** 1.0-ACI-Alpha code, models, and scoring locked.
+1. **Phase A (Freeze):** v1.0-ACI-Alpha code, models, and scoring locked.
 2. **Phase B (Reproduce):** Repeated executions of ACI-008 to map statistical variance.
 3. **Phase C (Blind Test):** Execution against entirely novel, un-authored scenarios.
 4. **Phase D (Adversarial Evaluator):** An independent researcher will deliberately attempt to break the system using false information, misleading analogies, and extreme constraint conflicts.
