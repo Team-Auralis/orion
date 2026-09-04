@@ -90,3 +90,32 @@ def get_db():
         yield db
     finally:
         db.close()
+class OmnisEntity(Base):
+    __tablename__ = 'omnis_entities'
+    id = Column(String, primary_key=True)
+    type = Column(String, nullable=False) # e.g. INFRASTRUCTURE, CITY, CLIMATE
+    name = Column(String, nullable=False)
+    attributes = Column(Text, nullable=True) # JSON blob of attributes
+    confidence = Column(Float, default=1.0) # Uncertainty measure
+    provenance = Column(String, nullable=False) # Which agent/sensor provided this
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class OmnisRelationship(Base):
+    __tablename__ = 'omnis_relationships'
+    id = Column(String, primary_key=True)
+    source_id = Column(String, nullable=False)
+    target_id = Column(String, nullable=False)
+    type = Column(String, nullable=False) # e.g. CAUSES, SUPPLIES_TO, DEPENDS_ON
+    weight = Column(Float, default=1.0) # Strength of the relationship or causal link
+    confidence = Column(Float, default=1.0)
+    provenance = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class OmnisObservation(Base):
+    __tablename__ = 'omnis_observations'
+    id = Column(String, primary_key=True)
+    entity_id = Column(String, nullable=False)
+    state_data = Column(Text, nullable=False) # JSON blob of the observed state
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    provenance = Column(String, nullable=False)
