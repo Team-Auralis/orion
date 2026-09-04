@@ -167,3 +167,26 @@ class MirrorEvent(Base):
     simulation_id = Column(String, nullable=False)
     tick = Column(Integer, nullable=False)
     event_data = Column(Text, nullable=False) # JSON blob of what happened (e.g., Drought, Power Grid Failure)
+
+class AscendObjective(Base):
+    __tablename__ = 'ascend_objectives'
+    id = Column(String, primary_key=True)
+    description = Column(Text, nullable=False)
+    target_date = Column(DateTime(timezone=True), nullable=False)
+    status = Column(String, nullable=False, default="ACTIVE") # ACTIVE, ACHIEVED, FAILED, REPLANNING
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class AscendMilestone(Base):
+    __tablename__ = 'ascend_milestones'
+    id = Column(String, primary_key=True)
+    objective_id = Column(String, nullable=False)
+    description = Column(Text, nullable=False)
+    target_date = Column(DateTime(timezone=True), nullable=False)
+    status = Column(String, nullable=False, default="PENDING")
+    
+class AscendConstraint(Base):
+    __tablename__ = 'ascend_constraints'
+    id = Column(String, primary_key=True)
+    objective_id = Column(String, nullable=False)
+    constraint_type = Column(String, nullable=False) # e.g. BUDGET, SAFETY, EMISSIONS
+    value = Column(Text, nullable=False) # JSON blob defining the limit
