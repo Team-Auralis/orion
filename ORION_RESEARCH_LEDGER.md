@@ -91,3 +91,17 @@ This ledger contains the permanent, chronological history of all empirical exper
 **Setup:** "Global Trade Embargo + Unprecedented Heatwave" with sensor noise and directly conflicting macro-objectives (Reliability vs Emissions vs Budget vs Healthcare).
 **Result:** System successfully reconstructed the ground truth, rejected myopic agent proposals, used FORGE to discover a composite compromise, and generalized the components to OMNIS memory. Scored **90/100** on the standardized ACI Empirical Benchmark, meeting the threshold for foundational ACI.
 **Limitations:** Relies on simulated physics and execution; "Real-world capability" remains the lowest score (3/5) due to lack of physical actuation hooks.
+
+---
+
+## 🛑 ARCHITECTURE FREEZE: v1.0-ACI-Alpha
+**Date:** September 2026
+**Commit:** To be tagged
+**Status:** Feature development is officially paused. The theoretical architecture (OMNIS, NEXUS, FORGE, MIRROR, ASCEND) has been successfully implemented and empirically validated across Experiments 001-008.
+
+### Next Phase: Independent Validation Roadmap
+The system will now enter a rigorous evaluation phase to validate the 90/100 Benchmark score against external scrutiny.
+1. **Phase A (Freeze):** 1.0-ACI-Alpha code, models, and scoring locked.
+2. **Phase B (Reproduce):** Repeated executions of ACI-008 to map statistical variance.
+3. **Phase C (Blind Test):** Execution against entirely novel, un-authored scenarios.
+4. **Phase D (Adversarial Evaluator):** An independent researcher will deliberately attempt to break the system using false information, misleading analogies, and extreme constraint conflicts.
