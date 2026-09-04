@@ -150,3 +150,20 @@ class ForgeExperiment(Base):
     nexus_task_id = Column(String, nullable=True) # The agent task driving this experiment
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     completed_at = Column(DateTime(timezone=True), nullable=True)
+
+class MirrorSimulation(Base):
+    __tablename__ = 'mirror_simulations'
+    id = Column(String, primary_key=True)
+    name = Column(String, nullable=False)
+    status = Column(String, nullable=False, default="INITIALIZED") # INITIALIZED, RUNNING, PAUSED, COMPLETED
+    base_state_snapshot = Column(Text, nullable=False) # JSON blob snapshot of OMNIS at tick 0
+    current_tick = Column(Integer, default=0)
+    time_scale = Column(Float, default=1.0) # E.g., 1 hour sim time = 1 second real time
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class MirrorEvent(Base):
+    __tablename__ = 'mirror_events'
+    id = Column(String, primary_key=True)
+    simulation_id = Column(String, nullable=False)
+    tick = Column(Integer, nullable=False)
+    event_data = Column(Text, nullable=False) # JSON blob of what happened (e.g., Drought, Power Grid Failure)
