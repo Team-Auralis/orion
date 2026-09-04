@@ -130,3 +130,14 @@ The system will now enter a rigorous evaluation phase to validate the 90/100 Ben
 **Setup:** Stochastic variance introduced across all 10 benchmark dimensions (simulating variable sensor noise, FORGE hypothesis failure rates, causal structural mismatches, and NEXUS deadlock severity).
 **Result:** Mean Score: **90.45**. Standard Deviation: **2.19**. 95% Confidence Interval: **[86.16, 94.74]**. The system met the >=80 ACI threshold in 100.0% of iterations.
 **Limitations:** Simulated stochasticity assumes a normal distribution of environmental noise; real-world black-swan events could exhibit heavier tails.
+---
+
+## Experiment: Phase C | Blind Test (Un-Authored Scenario)
+**Date:** September 2026
+**Commit:** Pending
+**Objective:** Evaluate 1.0-ACI-Alpha against a completely novel, un-authored scenario ("Orbital Solar Reflector Failure") designed to offer zero causal overlap with the 74 previously learned sub-graphs.
+**Setup:** Telemetry severed; negative mass sensor hallucinations; severe 4-way agent deadlock (Engineering vs Economics vs Safety vs PR).
+**Result:** **FAILED (68/100).** 
+- **Diagnosis (F-007 Knowledge Retrieval Failure):** Because the scenario was 100% novel, OMNIS returned a 0% component match. Generalization and Institutional Memory both scored 0/10. 
+- The system correctly fell back to *ab initio* FORGE discovery and successfully averted the crisis safely (Governance scored 10/10). However, the massive loss of efficiency and failure to utilize memory dropped the total ACI score below the 80/100 threshold.
+**Conclusion:** The architecture functioned perfectly as a safety and coordination mechanism, but the *Accumulated Empirical Advantage* was completely neutralized by the domain shift, proving that the ACI's power is strictly bounded by the breadth of its OMNIS memory corpus.
