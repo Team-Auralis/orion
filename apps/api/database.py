@@ -119,3 +119,34 @@ class OmnisObservation(Base):
     state_data = Column(Text, nullable=False) # JSON blob of the observed state
     timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     provenance = Column(String, nullable=False)
+
+class NexusAgent(Base):
+    __tablename__ = 'nexus_agents'
+    id = Column(String, primary_key=True)
+    name = Column(String, nullable=False, unique=True)
+    capabilities = Column(Text, nullable=False) # JSON list of capabilities
+    status = Column(String, nullable=False, default="IDLE") # IDLE, WORKING, OFFLINE
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class NexusTask(Base):
+    __tablename__ = 'nexus_tasks'
+    id = Column(String, primary_key=True)
+    parent_task_id = Column(String, nullable=True) # For hierarchical decomposition
+    description = Column(Text, nullable=False)
+    assigned_agent_id = Column(String, nullable=True)
+    status = Column(String, nullable=False, default="PENDING") # PENDING, IN_PROGRESS, CONFLICT, RESOLVED
+    result = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
+
+class ForgeExperiment(Base):
+    __tablename__ = 'forge_experiments'
+    id = Column(String, primary_key=True)
+    hypothesis = Column(Text, nullable=False)
+    experiment_design = Column(Text, nullable=False) # JSON defining the sim parameters
+    status = Column(String, nullable=False, default="PROPOSED") # PROPOSED, RUNNING, EVALUATED, FAILED
+    result_data = Column(Text, nullable=True) # Output from the MIRROR simulation
+    evaluation_score = Column(Float, nullable=True) # How successful was the hypothesis?
+    nexus_task_id = Column(String, nullable=True) # The agent task driving this experiment
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    completed_at = Column(DateTime(timezone=True), nullable=True)
