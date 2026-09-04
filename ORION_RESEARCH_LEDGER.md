@@ -84,3 +84,10 @@ This ledger contains the permanent, chronological history of all empirical exper
 **Setup:** 100 randomized crises run against Full ORION and 4 ablated versions (-OMNIS, -NEXUS, -FORGE, -ASCEND).
 **Result:** Removing any component caused distinct degradation patterns: -NEXUS (catastrophic collisions), -OMNIS (physics hallucinations), -FORGE (untested production blowouts), -ASCEND (long-term 20-year objective failure).
 **Limitations:** Simulated crisis costs; requires full LLM execution for real-world validation.
+## Experiment: ACI-008 | Full Integrated Benchmark
+**Date:** September 2026
+**Commit:** Pending
+**Objective:** Evaluate the complete ORION architecture under a compound crisis requiring simultaneous resolution of conflicting objectives, agent disagreement, missing information, and novel causal discovery.
+**Setup:** "Global Trade Embargo + Unprecedented Heatwave" with sensor noise and directly conflicting macro-objectives (Reliability vs Emissions vs Budget vs Healthcare).
+**Result:** System successfully reconstructed the ground truth, rejected myopic agent proposals, used FORGE to discover a composite compromise, and generalized the components to OMNIS memory. Scored **90/100** on the standardized ACI Empirical Benchmark, meeting the threshold for foundational ACI.
+**Limitations:** Relies on simulated physics and execution; "Real-world capability" remains the lowest score (3/5) due to lack of physical actuation hooks.
