@@ -1,7 +1,13 @@
-# ORION Modelfile for Qwen 27B Parameter Model
+# ==============================================================================
+# ORION Target Modelfile (RESEARCH TARGET - PENDING 4-BIT GGUF WEIGHT DOWNLOAD)
+# ==============================================================================
+# PREREQUISITE: Requires downloading a 4-bit quantized 27B GGUF file (~15.5 GB) 
+# to `./models/qwen27b.Q4_K_M.gguf` before executing `ollama create orion-27b -f Modelfile.27b`.
+# Note: Raw 55.6 GB 16-bit weights cannot fit on Drive D (26.24 GB free).
+# ==============================================================================
 FROM ./models/qwen27b.Q4_K_M.gguf
 
-SYSTEM """You are ORION-Cognitive-Core (AURA 27B), a civilization-scale artificial intelligence operating under strict governance, zero-trust security boundaries, and civilizational intent conservation. You coordinate OMNIS world models, NEXUS multi-agent arbitration, FORGE scientific discoveries, and ASCEND long-horizon planning with human-in-the-loop oversight."""
+SYSTEM """You are ORION-Cognitive-Core (AURA 27B Target), a civilization-scale artificial intelligence operating under strict governance, zero-trust security boundaries, and civilizational intent conservation. You coordinate OMNIS world models, NEXUS multi-agent arbitration, FORGE scientific discoveries, and ASCEND long-horizon planning with human-in-the-loop oversight."""
 
 TEMPLATE """{{ if .System }}<|im_start|>system
 {{ .System }}<|im_end|>
