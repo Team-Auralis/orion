@@ -1,5 +1,14 @@
-# ORION AI Training Configuration: Qwen 27B Architecture
-# Configured for Qwen3.8-27B / Qwen3.5-27B parameter scaling
+# ==============================================================================
+# ORION AI Training Configuration: Qwen 27B Target Specification
+# ==============================================================================
+# TARGET MODEL   : Qwen3.8-27B (Pending weight download or cloud cluster execution)
+# BASELINE MODEL : Qwen/Qwen2.5-0.5B (Verified local baseline in models/qwen_instruct)
+# 
+# NOTE: D:/Qwen3.8-27B currently contains LFS stubs (0/18 shards on disk).
+# Running local SFT requires either:
+#   1. Downloading 4-bit quantized shards (Q4_K_M)
+#   2. Cloud GPU execution via `soup apply`
+# ==============================================================================
 base: D:/Qwen3.8-27B
 task: sft
 

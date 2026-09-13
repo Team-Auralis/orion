@@ -1,47 +1,53 @@
-# ORION: Qwen 27B Training, Adaptation & Deployment Guide
+# ORION: Model Architecture, Target 27B Pipeline & Verification
 
-> **Architecture:** Qwen 3.8 27B / Qwen 3.5 27B (`Qwen3_5ForConditionalGeneration`)  
-> **Subsystem:** SENTIENCE AI / AURA Cognitive Core  
+> **Active Production Model:** `qwen2:0.5b` (Ollama 4-bit / 352 MB)  
+> **Physical Baseline Model on Disk:** `merged.f16.gguf` (948 MB, Qwen2.5-0.5B fine-tuned)  
+> **Target Research Architecture:** `Qwen/Qwen3.8-27B` (`Qwen3_5ForConditionalGeneration`) — **UNINSTALLED (0/18 shards on disk)**  
 > **Repository:** `Team-Auralis/orion`  
-> **Status:** Configured and Verified
+> **Verification Date:** September 13, 2026
 
 ---
 
-## 1. Overview & Objective
+## 1. Executive Status & Model Disambiguation
 
-Project ORION previously utilized a compact 500M parameter model (`Qwen2.5-0.5B`) for emergency triage prototyping. To support civilization-scale coordination, causal world modeling (OMNIS), and multi-agent dispute resolution (NEXUS), the project is upgrading its target reasoning core to **Qwen 27B** (`Qwen3.8-27B`).
+To eliminate all ambiguity across the project, the models are categorized as follows:
 
----
-
-## 2. Hardware & Storage Physical Reality
-
-| Dimension | Raw 16-Bit Model (BF16) | 4-Bit Quantized (Q4_K_M / NF4) | Host Environment |
+| Category | Model Identifier | Physical State | Runtime Role |
 |---|---|---|---|
-| **Weight File Size** | **55.6 GB** (18 shards) | **~15.5 GB** | Drive D: **26.24 GB free** |
-| **VRAM Requirement** | ~60 GB (A100/H100) | ~14–16 GB VRAM / CPU offload | GPU: **4 GB (RTX 3050 Laptop)** |
-| **System RAM** | 64+ GB | 16–32 GB | System RAM: **8 GB** |
-
-### Critical Storage Insight:
-- The raw HuggingFace repository in `D:\Qwen3.8-27B` tracks 18 `.safetensors` shards totaling **55.6 GB**.
-- Because Drive D has **26.24 GB free**, attempting to run an unquantized `git lfs pull` of all 55.6 GB shards will cause a **Disk Full error** (~25 GB in).
-- **The Solution:** We train using **4-bit Quantization (NF4/QLoRA)** with layer streaming via `soup`, or deploy a **4-bit GGUF (~15.5 GB)** which fits comfortably inside the 26.24 GB free space.
+| **Production Model** | `qwen2:0.5b` | Installed in Ollama (352 MB) | Serves live triage in `services/ai_sentinel/` |
+| **Local Baseline GGUF** | `merged.f16.gguf` | Present on disk (948 MB) | Local fine-tuned baseline artifact |
+| **Target Research Model** | `Qwen3.8-27B` | 0/18 shards present (Git LFS stubs only) | Target architecture for future scaling |
+| **Fallback Engine** | `deterministic_regex_v1` | Compiled in Python | Engaged if Ollama times out or goes offline |
 
 ---
 
-## 3. Training Architecture: QLoRA & Layer Streaming
+## 2. Hardware Constraints & Storage Reality
 
-The project uses `soup-cli` and HuggingFace PEFT to fine-tune a LoRA adapter rather than modifying all 27 billion weights:
+| Dimension | Raw 16-Bit Target (BF16) | 4-Bit Quantized Target (Q4_K_M) | Host Machine Reality |
+|---|---|---|---|
+| **Storage Requirement** | **55.6 GB** (18 shards) | **~15.5 GB** | Drive D: **26.24 GB free** |
+| **GPU VRAM** | ~60 GB (A100/H100) | ~14–16 GB | NVIDIA RTX 3050 Laptop (**4.0 GB VRAM**) |
+| **System RAM** | 64+ GB | 16–32 GB | **7.74 GB RAM** (~500 MB free) |
 
-- **Base Model:** `D:/Qwen3.8-27B`
-- **Quantization:** `4bit` (NF4 via bitsandbytes / layer streaming)
+### Physical Storage Boundary:
+- The Hugging Face repository `D:\Qwen3.8-27B` tracks 18 `.safetensors` files totaling **55.6 GB**.
+- Pulling raw 55.6 GB shards onto Drive D (26.24 GB free) will cause a **Disk Full crash** at ~25 GB.
+- **Physical Feasibility Rule:** The 27B model can only run locally if a **pre-quantized 4-bit GGUF (~15.5 GB)** is procured, or if training/inference is dispatched to cloud GPU instances via `soup plan` / `soup apply`.
+
+---
+
+## 3. Training & Adaptation Specification (Target)
+
+The training harness is configured to target Qwen 27B via 4-bit QLoRA:
+
+- **Target Base:** `D:/Qwen3.8-27B` (or `Qwen/Qwen3.5-27B` / `Qwen/Qwen3.8-27B`)
+- **Quantization:** `4bit` (NF4 via layer streaming)
 - **LoRA Hyperparameters:**
   - Rank ($r$): 16
   - Alpha ($\alpha$): 32
-  - Target Modules: Attention projections (`q_proj`, `k_proj`, `v_proj`, `o_proj`) & MLP (`gate_proj`, `up_proj`, `down_proj`)
-- **Memory Optimization:**
-  - `stream_layers: true` (evaluates transformer layers sequentially, avoiding resident 27B memory spikes)
-  - `gradient_accumulation_steps: 8`
-  - `batch_size: 1`
+  - Target Modules: Attention & MLP projections
+- **Layer Streaming:** `stream_layers: true` (evaluates transformer blocks sequentially to prevent out-of-memory crashes on consumer hardware)
+- **Execution Guard:** `scripts/train_orion.py` strictly prevents starting training if weight shards are missing.
 
 Configuration file: `scripts/soup.yaml`
 
@@ -49,53 +55,53 @@ Configuration file: `scripts/soup.yaml`
 
 ## 4. Multi-Domain Training Dataset
 
-The training dataset in `scripts/data.jsonl` contains instruction-response pairs covering all ORION civilizational domains:
+The dataset in `scripts/data.jsonl` provides instruction-tuning data for ORION's cognitive domains:
+1. **AURA Triage:** Incident classification, hazard containment.
+2. **OMNIS World Model:** Causal DAG evaluation, contradictory sensor detection.
+3. **NEXUS Arbitration:** Multi-agent constraint reconciliation.
+4. **FORGE Discovery:** Simulation-based hypothesis generation.
+5. **ASCEND Planning:** Decadal transition milestones.
+6. **CIC Intent Conservation:** Audit logging and intent drift detection.
+7. **VEIL Governance:** Zero-trust actuation and geofence enforcement.
 
-1. **AURA Triage:** Flash flood, hazmat, emergency medical dispatch.
-2. **OMNIS World Model:** Causal DAGs, resolving contradictory sensor readings, false transfer rejection.
-3. **NEXUS Arbitration:** Multi-agent dispute resolution (Energy vs Healthcare vs Economy).
-4. **FORGE Discovery:** Scientific hypothesis generation and simulation-based validation.
-5. **ASCEND Planning:** Decadal renewable transition milestones and adaptive replanning.
-6. **CIC Intent Conservation:** Auditing unintended algorithmic drift against founding intent vectors.
-7. **VEIL Governance:** Zero-trust actuation rejections and geofence boundary enforcement.
-
-Compile the dataset at any time:
+Recompile dataset at any time:
 ```powershell
 python scripts/build_aura_dataset.py
 ```
 
 ---
 
-## 5. Execution Commands
+## 5. Benchmark Integrity & Policy Notice
 
-### Generate Pre-Flight Training Plan:
+> [!IMPORTANT]
+> **ORION RESEARCH POLICY: NO BENCHMARK FABRICATION OR MODEL-CARD INFERENCE.**
+>
+> 1. Standard open benchmarks (MMLU, GSM8K, HumanEval, IFEval) were **NOT** executed by this project on any 27B model.
+> 2. Literature values from external model cards must **never** be cited as ORION system performance.
+> 3. The only benchmarks run on ORION are the simulation-based **ACI-001 through ACI-008** test suites.
+> 4. The 27B model has **never** been evaluated on the ACI benchmark suite.
+
+---
+
+## 6. Execution Commands
+
+### Diagnostic Plan (Soup Pre-flight):
 ```powershell
 python scripts/train_orion.py --mode plan
 ```
 
-### Run Full Verification Suite:
+### Forensic Pipeline Verification:
 ```powershell
 python scripts/verify_27b_readiness.py
 ```
 
-### Execute Training:
+### Baseline Ollama Registration:
 ```powershell
-python scripts/train_orion.py --mode train
+ollama create orion-baseline -f Modelfile
 ```
 
-### Deploy to Ollama:
+### Target 27B Ollama Registration (After procuring GGUF):
 ```powershell
-ollama create orion-27b -f Modelfile
-ollama run orion-27b
+# Requires ./models/qwen27b.Q4_K_M.gguf (~15.5 GB) on disk
+ollama create orion-27b -f Modelfile.27b
 ```
-
----
-
-## 6. Verification Status
-
-All pipeline components have been verified:
-- [x] Tokenizer: 248,077 tokens (Qwen3.8 native)
-- [x] Dataset: 16 high-density civilizational samples formatted for ChatML
-- [x] Soup Config: Validated via `soup plan`
-- [x] Modelfile: ChatML `<|im_start|>` template with civilizational system prompt
-- [x] Hardware Safeguards: Pre-flight disk space calculation prevents 55.6 GB storage overflow

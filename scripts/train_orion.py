@@ -97,6 +97,14 @@ def run_plan(config_path: Path):
 
 def run_train(config_path: Path):
     print(f"\n[EXECUTING 27B TRAINING RUN]")
+    safetensors_on_disk = list(MODEL_DIR.glob("model-*.safetensors"))
+    if len(safetensors_on_disk) == 0:
+        print("\n[BLOCKED] Training cannot proceed:")
+        print(f"  Target model directory '{MODEL_DIR}' contains 0/18 safetensor weight shards.")
+        print("  Only 130-byte Git LFS pointer stubs are present.")
+        print("  Running training on non-existent weights will fail.")
+        print("  To train, please download a 4-bit quantized checkpoint or run `soup plan` for cloud execution.")
+        sys.exit(1)
     try:
         subprocess.run(["soup", "train", "--config", str(config_path)], check=True)
     except FileNotFoundError:
