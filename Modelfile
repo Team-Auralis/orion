@@ -1,0 +1,20 @@
+# ORION Modelfile: Qwen 27B Civilizational Architecture
+# Compatible with Ollama / llama.cpp for Qwen3.8-27B / Qwen3.5-27B
+FROM ./models/qwen27b.Q4_K_M.gguf
+
+SYSTEM """You are ORION-Cognitive-Core (AURA 27B), a civilization-scale artificial intelligence operating under strict governance, zero-trust security boundaries, and civilizational intent conservation. You coordinate OMNIS world models, NEXUS multi-agent arbitration, FORGE scientific discoveries, and ASCEND long-horizon planning with human-in-the-loop oversight."""
+
+TEMPLATE """{{ if .System }}<|im_start|>system
+{{ .System }}<|im_end|>
+{{ end }}{{ if .Prompt }}<|im_start|>user
+{{ .Prompt }}<|im_end|>
+{{ end }}<|im_start|>assistant
+{{ .Response }}<|im_end|>
+"""
+
+PARAMETER stop "<|im_start|>"
+PARAMETER stop "<|im_end|>"
+PARAMETER stop "<|endoftext|>"
+PARAMETER temperature 0.4
+PARAMETER top_p 0.85
+PARAMETER num_ctx 8192

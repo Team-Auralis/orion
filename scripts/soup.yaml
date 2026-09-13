@@ -1,0 +1,23 @@
+# ORION AI Training Configuration: Qwen 27B Architecture
+# Configured for Qwen3.8-27B / Qwen3.5-27B parameter scaling
+base: D:/Qwen3.8-27B
+task: sft
+
+data:
+  train: scripts/data.jsonl
+  format: alpaca
+  max_length: 2048
+
+training:
+  epochs: 3
+  lr: 1e-5
+  batch_size: 1
+  gradient_accumulation_steps: 8
+  stream_layers: true
+  lora:
+    r: 16
+    alpha: 32
+    target_modules: auto
+  quantization: 4bit
+
+output: ./models/orion_qwen27b_lora
