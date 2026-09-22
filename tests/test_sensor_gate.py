@@ -74,3 +74,20 @@ def test_transfer_guard():
     assert not r4.allow_direct_transfer and r4.require_forge_verification
     r5 = g.evaluate(0.5, "1", False)
     assert r5.allow_direct_transfer and not r5.require_forge_verification
+
+
+def test_sensor_gate_malformed_readings_are_impossibilities_not_errors():
+    gate = SensorConsistencyGate()
+    report = gate.check_readings(
+        [
+            {"metric": "mass", "value": 10.0},
+            {"unit": "kg"},  # missing metric/value
+            "not a dict",
+            None,
+        ]
+    )
+    # Malformed entries must be reported as impossibilities, never raise
+    # (gate runs on the unauthenticated /v1/telemetry/compress endpoint).
+    assert not report.is_consistent
+    assert len(report.impossibilities) == 3
+    assert report.confidence == 0.0
