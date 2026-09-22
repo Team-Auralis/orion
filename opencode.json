@@ -1,0 +1,82 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "experimental": {
+    "mcp_timeout": 120000
+  },
+  "mcp": {
+    "huggingface": {
+      "type": "remote",
+      "url": "https://huggingface.co/mcp",
+      "enabled": true
+    },
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "enabled": true
+    },
+    "github": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "enabled": true,
+      "oauth": true
+    },
+    "ollama-mcp": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "ollama-mcp"
+      ],
+      "enabled": true,
+      "timeout": 60000
+    },
+    "filesystem": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "D:\\orion",
+        "C:\\Users\\shaur\\AppData\\Local\\Temp\\opencode"
+      ],
+      "enabled": true
+    },
+    "memory": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "enabled": true
+    },
+    "sequential-thinking": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "enabled": true
+    },
+    "playwright": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@playwright/mcp"
+      ],
+      "enabled": false
+    },
+    "graft": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@nanonets/graft",
+        "mcp"
+      ],
+      "enabled": true
+    }
+  }
+}
