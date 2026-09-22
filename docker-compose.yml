@@ -5,6 +5,18 @@ services:
     image: redis:7-alpine
     container_name: orion-redis
     command: redis-server --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a $${REDIS_PASSWORD} ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    networks:
+      - core
 
   postgres:
     image: postgres:15-alpine
@@ -16,6 +28,8 @@ services:
     volumes:
       - orion_pgdata:/var/lib/postgresql/data
       - ./infra/docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - core
 
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d keycloak"]
@@ -38,6 +52,9 @@ services:
       - "8080:8080"
     volumes:
       - ./infra/keycloak/realm-export.json:/opt/keycloak/data/import/realm.json
+    networks:
+      - edge
+      - core
     depends_on:
       postgres:
         condition: service_healthy
@@ -53,6 +70,8 @@ services:
       - "/policy"
     volumes:
       - ./policy/opa:/policy
+    networks:
+      - core
 
 
   nats:
@@ -60,6 +79,8 @@ services:
     container_name: orion-nats
     command: "-js --user ${NATS_USER} --pass ${NATS_PASSWORD}"
  # monitoring
+    networks:
+      - core
 
   ascend-lb:
     image: nginx:alpine
@@ -72,6 +93,8 @@ services:
       - "443:443"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      - edge
 
   orion-api:
     build:
@@ -79,6 +102,8 @@ services:
       dockerfile: Dockerfile.python
     container_name: orion-api
     command: uvicorn apps.api.main:app --host 0.0.0.0 --port 8001
+    ports:
+      - "8001:8001"
     environment:
       - PYTHONPATH=/app/apps/api:/app
       - DATABASE_URL=${DATABASE_URL}
@@ -87,6 +112,9 @@ services:
       - KEYCLOAK_JWKS_URL=http://keycloak:8080/realms/orion/protocol/openid-connect/certs
       - OPA_URL=http://opa:8181/v1/data/orion/authz/allow
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+    networks:
+      - edge
+      - core
 
     depends_on:
       - postgres
@@ -103,11 +131,14 @@ services:
     environment:
       - PYTHONPATH=/app/apps/api:/app
       - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@orion-redis:6379/0
       - NATS_URL=nats://${NATS_USER}:${NATS_PASSWORD}@nats:4222
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
     depends_on:
       - nats
       - postgres
+    networks:
+      - core
 
   orion-sentinel:
     build:
@@ -124,6 +155,8 @@ services:
       - "host.docker.internal:host-gateway"
     depends_on:
       - nats
+    networks:
+      - core
 
   orion-aegis:
     build:
@@ -137,6 +170,8 @@ services:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
     depends_on:
       - nats
+    networks:
+      - core
 
   orion-dashboard:
     build:
@@ -148,6 +183,8 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8001
       - NEXT_PUBLIC_KEYCLOAK_URL=http://localhost:8080
+    networks:
+      - edge
 
 
   prometheus:
@@ -158,6 +195,8 @@ services:
 
     depends_on:
       - orion-api
+    networks:
+      - core
 
   grafana:
     image: grafana/grafana:latest
@@ -165,18 +204,25 @@ services:
     ports:
       - "3001:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=orion_admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-orion_grafana_CHANGE_ME}
     depends_on:
       - prometheus
+    networks:
+      - edge
+      - core
 
   jaeger:
     image: jaegertracing/all-in-one:latest
     container_name: orion-jaeger
+    networks:
+      - core
 
 
 
 
-
+networks:
+  edge:
+  core:
 volumes:
   orion_pgdata:
 

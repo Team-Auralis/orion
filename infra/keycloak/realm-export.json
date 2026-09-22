@@ -6,8 +6,8 @@
     {
       "clientId": "orion-api",
       "enabled": true,
-      "publicClient": false,
-      "directAccessGrantsEnabled": false,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
       "redirectUris": ["http://localhost:3000/*", "http://localhost:8001/*"],
       "webOrigins": ["http://localhost:3000"]
     }
@@ -22,13 +22,13 @@
     {
       "username": "operator1",
       "enabled": true,
-      "credentials": [ { "type": "password", "value": "operatorpass", "temporary": false } ],
+      "credentials": [ { "type": "password", "value": "0ZZAPJOr5eyn-DtC-RovCdr2", "temporary": false } ],
       "realmRoles": [ "operator" ]
     },
     {
       "username": "citizen1",
       "enabled": true,
-      "credentials": [ { "type": "password", "value": "citizenpass", "temporary": false } ],
+      "credentials": [ { "type": "password", "value": "nyuWVRAvKbfIrxHrvNetl-Sy", "temporary": false } ],
       "realmRoles": [ "citizen" ]
     }
   ]
