@@ -916,14 +916,20 @@ async def list_incidents(
 
 class TelemetryRequest(BaseModel):
     device_id: str
-    states: List[int]  # 0, 1, 2, 3 (Multi-valued states)
-    readings: Optional[List[Dict[str, Any]]] = (
-        None  # Optional raw sensor readings (metric/value) for consistency gating
+    # Cap list sizes at the model boundary: the packing loops are O(n) and this
+    # endpoint is unauthenticated, so an unbounded list is a trivial memory/CPU DoS.
+    states: List[int] = Field(
+        ..., max_length=100_000
+    )  # 0, 1, 2, 3 (Multi-valued states)
+    readings: Optional[List[Dict[str, Any]]] = Field(
+        default=None,
+        max_length=10_000,  # Optional raw sensor readings (metric/value) for consistency gating
     )
 
 
 @app.post("/v1/telemetry/compress")
-async def compress_telemetry(req: TelemetryRequest):
+@limiter.limit("60/minute")
+async def compress_telemetry(request: Request, req: TelemetryRequest):
     t0 = time.perf_counter()
     # 1. Quaternary Packing (2 bits per state = 4 states per byte)
     quat_bytes = bytearray((len(req.states) + 3) // 4)
