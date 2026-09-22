@@ -39,6 +39,7 @@ from e2e_training_smoke_test import (  # noqa: E402
     get_git_commit,
 )
 from orion_runner import experiment, param, run_experiment  # noqa: E402
+import orion_corpus  # noqa: E402
 
 MODEL_DIR = MODELS_DIR / "qwen_instruct"
 PREF_DEFAULT = Path(REPO_ROOT) / "data" / "training" / "orion_preferences.jsonl"
@@ -121,6 +122,11 @@ def run_orion_dpo(
     avail_gb, hardware = preflight()
     print(f"[STAGE 0: PREFLIGHT] RAM {avail_gb:.2f} GB free")
 
+    # Real BPE tokenizer wins when it was trained AND the corpus resolves to
+    # real shards; otherwise the crc32 surrogate path stays (CI smoke).
+    _, corpus_source, corpus_real = orion_corpus.resolve_corpus()
+    use_bpe = orion_corpus.bpe_tokenizer_available() and corpus_real
+
     prefs_hash = compute_file_sha256(preferences_path)
     rows = load_preferences(preferences_path)
     n_skip = sum(
@@ -154,8 +160,20 @@ def run_orion_dpo(
     use_real = not surrogate and avail_gb >= 3.2 and MODEL_DIR.exists()
     if surrogate:
         print("[STAGE 2: MODEL] architectural surrogate (verification mode)")
+        if use_bpe:
+            tokenizer = orion_corpus.load_bpe_compat()
+            vocab_size = tokenizer.vocab_size
+            base_name = "qwen2-architectural-surrogate-bpe"
+            print(
+                f"  Real BPE tokenizer active (vocab={vocab_size}, "
+                f"corpus={corpus_source})"
+            )
+        else:
+            tokenizer = None
+            vocab_size = 1000
+            base_name = "qwen2-architectural-surrogate"
         cfg = Qwen2Config(
-            vocab_size=1000,
+            vocab_size=vocab_size,
             hidden_size=64,
             intermediate_size=128,
             num_hidden_layers=2,
@@ -179,8 +197,6 @@ def run_orion_dpo(
             ),
         )
         ref = Qwen2ForCausalLM(cfg)
-        tokenizer = None
-        base_name = "qwen2-architectural-surrogate"
         print(
             f"[STAGE 2: POLICY] {policy.print_trainable_parameters() or 'LoRA fresh'}"
         )

@@ -39,6 +39,7 @@ from e2e_training_smoke_test import (  # noqa: E402
 )
 from orion_runner import experiment, param, run_experiment  # noqa: E402
 from orion_runner.loader import pack_sequences, tokenize_samples  # noqa: E402
+import orion_corpus  # noqa: E402
 
 MODEL_DIR = MODELS_DIR / "qwen_instruct"
 
@@ -94,9 +95,24 @@ def run_orion_training(
     avail_gb, hardware = preflight()
     print(f"[STAGE 0: PREFLIGHT] RAM {avail_gb:.2f} GB free")
 
-    dataset_hash = compute_file_sha256(dataset_path)
-    rows = load_dataset(dataset_path)
-    print(f"[STAGE 1: DATA] {len(rows)} samples | sha256 {dataset_hash[:16]}...")
+    # Real BPE tokenizer wins when it was trained AND the corpus resolves to
+    # real shards; otherwise the crc32 surrogate path stays (CI smoke).
+    corpus_files, corpus_source, corpus_real = orion_corpus.resolve_corpus()
+    use_bpe = orion_corpus.bpe_tokenizer_available() and corpus_real
+
+    if use_bpe:
+        rows = orion_corpus.load_samples(corpus_files)
+        dataset_hash = orion_corpus.corpus_sha256(corpus_files)
+        dataset_path = orion_corpus.CORPUS_DIR
+        print(
+            f"[STAGE 1: DATA] {len(rows)} samples (corpus shards) | "
+            f"sha256 {dataset_hash[:16]}..."
+        )
+    else:
+        dataset_path = Path(dataset_path)
+        dataset_hash = compute_file_sha256(dataset_path)
+        rows = load_dataset(dataset_path)
+        print(f"[STAGE 1: DATA] {len(rows)} samples | sha256 {dataset_hash[:16]}...")
 
     torch.manual_seed(seed)
     from transformers import (
@@ -110,8 +126,20 @@ def run_orion_training(
     use_real = not surrogate and avail_gb >= 2.6 and MODEL_DIR.exists()
     if surrogate:
         print("[STAGE 2: MODEL] architectural surrogate (verification mode)")
+        if use_bpe:
+            tokenizer = orion_corpus.load_bpe_compat()
+            vocab_size = tokenizer.vocab_size
+            base_name = "qwen2-architectural-surrogate-bpe"
+            print(
+                f"  Real BPE tokenizer active (vocab={vocab_size}, "
+                f"corpus={corpus_source})"
+            )
+        else:
+            tokenizer = None
+            vocab_size = 1000
+            base_name = "qwen2-architectural-surrogate"
         cfg = Qwen2Config(
-            vocab_size=1000,
+            vocab_size=vocab_size,
             hidden_size=64,
             intermediate_size=128,
             num_hidden_layers=2,
@@ -123,8 +151,6 @@ def run_orion_training(
             eos_token_id=2,
         )
         base = Qwen2ForCausalLM(cfg)
-        tokenizer = None
-        base_name = "qwen2-architectural-surrogate"
     elif use_real:
         print(f"[STAGE 2: MODEL] loading real 0.5B from {MODEL_DIR}")
         tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR, local_files_only=True)

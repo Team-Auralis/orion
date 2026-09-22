@@ -1,0 +1,30 @@
+{
+  "bos_token": {
+    "content": "<bos>",
+    "lstrip": false,
+    "rstrip": false,
+    "single_word": false,
+    "normalized": true
+  },
+  "eos_token": {
+    "content": "<eos>",
+    "lstrip": false,
+    "rstrip": false,
+    "single_word": false,
+    "normalized": true
+  },
+  "pad_token": {
+    "content": "<pad>",
+    "lstrip": false,
+    "rstrip": false,
+    "single_word": false,
+    "normalized": true
+  },
+  "unk_token": {
+    "content": "<unk>",
+    "lstrip": false,
+    "rstrip": false,
+    "single_word": false,
+    "normalized": true
+  }
+}

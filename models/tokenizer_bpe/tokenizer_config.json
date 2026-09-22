@@ -1,0 +1,20 @@
+{
+  "bos_token": "<bos>",
+  "eos_token": "<eos>",
+  "pad_token": "<pad>",
+  "unk_token": "<unk>",
+  "bos_token_id": 1,
+  "eos_token_id": 2,
+  "pad_token_id": 0,
+  "unk_token_id": 3,
+  "add_bos_token": false,
+  "add_eos_token": false,
+  "model_max_length": 4096,
+  "model_type": "orion-bpe",
+  "tokenizer_class": "PreTrainedTokenizerFast",
+  "trainer": {
+    "vocab_size": 10240,
+    "min_frequency": 1,
+    "byte_level": true
+  }
+}

@@ -47,6 +47,9 @@ DATA_DIR = REPO_ROOT / "data" / "training"
 MODELS_DIR = REPO_ROOT / "models"
 RUNS_LOG_PATH = LOGS_DIR / "training_runs.jsonl"
 
+sys.path.insert(0, str(REPO_ROOT / "scripts" / "training"))
+import orion_corpus  # noqa: E402
+
 
 @dataclass
 class TrainingRunRecord:
@@ -186,6 +189,11 @@ def run_training_smoke_test(
     print("[STAGE 2: TOKENIZATION & MODEL]")
     torch.manual_seed(42)
 
+    # Real BPE tokenizer wins when it was trained AND the corpus resolves to
+    # real shards; otherwise the crc32 surrogate path stays (CI smoke).
+    corpus_files, corpus_source, corpus_real = orion_corpus.resolve_corpus()
+    use_bpe = orion_corpus.bpe_tokenizer_available() and corpus_real
+
     if use_full_model and (MODELS_DIR / "qwen_instruct").exists():
         model_path = str(MODELS_DIR / "qwen_instruct")
         print(f"  Loading real local model from: {model_path}")
@@ -202,9 +210,21 @@ def run_training_smoke_test(
     else:
         # Exact architectural replica of Qwen2 using tiny dimensions
         # Validates full Qwen2 attention, RoPE, MLP, RMSNorm, PEFT LoRA, and backprop
+        if use_bpe:
+            tokenizer = orion_corpus.load_bpe_compat()
+            vocab_size = tokenizer.vocab_size
+            base_name = "qwen2-architectural-surrogate-bpe"
+            print(
+                f"  Real BPE tokenizer active (vocab={vocab_size}, "
+                f"corpus={corpus_source})"
+            )
+        else:
+            tokenizer = None  # Synthetic token mapping for surrogate
+            vocab_size = 1000
+            base_name = "qwen2-architectural-surrogate"
         print("  Instantiating Qwen2 architectural surrogate (64-dim, 2-layer, 2-head)")
         cfg = Qwen2Config(
-            vocab_size=1000,
+            vocab_size=vocab_size,
             hidden_size=64,
             intermediate_size=128,
             num_hidden_layers=2,
@@ -216,8 +236,6 @@ def run_training_smoke_test(
             eos_token_id=2,
         )
         base_model = Qwen2ForCausalLM(cfg)
-        tokenizer = None  # Synthetic token mapping for surrogate
-        base_name = "qwen2-architectural-surrogate"
 
     # Stage 3: LoRA Configuration
     lora_cfg = LoraConfig(
