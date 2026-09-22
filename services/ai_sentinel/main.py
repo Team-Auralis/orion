@@ -248,6 +248,12 @@ async def message_handler(msg):
 
     except Exception as e:
         print(f"[SENTIENCE] Error processing message: {e}")
+        # NAK so JetStream redelivers with backoff; an unhandled return here
+        # used to leave the message un-acked -> infinite redelivery loop.
+        try:
+            await msg.nak(delay=5)
+        except Exception:
+            pass
 
 
 NATS_URL = os.environ.get("NATS_URL", "nats://localhost:4222")
