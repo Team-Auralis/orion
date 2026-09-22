@@ -1,17 +1,26 @@
 import os
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Float, DateTime, Text, Boolean, Integer, create_engine
+from sqlalchemy import (
+    Column,
+    String,
+    Float,
+    DateTime,
+    Text,
+    Boolean,
+    Integer,
+    create_engine,
+)
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 DATABASE_URL = os.environ.get(
-    "DATABASE_URL", 
-    "postgresql://orion_admin:LOCAL_DEV_SECRET@localhost:5433/keycloak"
+    "DATABASE_URL", "postgresql://orion_admin:LOCAL_DEV_SECRET@localhost:5433/keycloak"
 )
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+
 
 class Incident(Base):
     __tablename__ = "incidents"
@@ -25,64 +34,82 @@ class Incident(Base):
     message = Column(Text, nullable=True)
     ai_severity = Column(String, nullable=True)
     ai_tags = Column(String, nullable=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
 
 class Asset(Base):
     __tablename__ = "assets"
-    
+
     asset_id = Column(String, primary_key=True, index=True)
-    type = Column(String, nullable=False) # FIRE_TRUCK, AMBULANCE, POLICE
+    type = Column(String, nullable=False)  # FIRE_TRUCK, AMBULANCE, POLICE
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
     target_incident_id = Column(String, nullable=True)
-    status = Column(String, nullable=False, default="OFFLINE") # OFFLINE, IDLE, DISPATCHED, EN_ROUTE, ON_SCENE, RETURNING, MAINTENANCE
+    status = Column(
+        String, nullable=False, default="OFFLINE"
+    )  # OFFLINE, IDLE, DISPATCHED, EN_ROUTE, ON_SCENE, RETURNING, MAINTENANCE
     version = Column(Integer, nullable=False, default=1)
-    
-    __mapper_args__ = {
-        "version_id_col": version
-    }
+
+    __mapper_args__ = {"version_id_col": version}
+
 
 class IdempotencyKey(Base):
     __tablename__ = "idempotency_keys"
 
     key = Column(String, primary_key=True, index=True)
     response_body = Column(Text, nullable=False)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
 
 class BreakGlassSession(Base):
     __tablename__ = "break_glass_sessions"
-    
+
     token = Column(String, primary_key=True, index=True)
     user_id = Column(String, nullable=False)
     reason = Column(Text, nullable=False)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
     expires_at = Column(DateTime(timezone=True), nullable=False)
 
+
 class OutboxEvent(Base):
-    __tablename__ = 'outbox_events'
+    __tablename__ = "outbox_events"
     id = Column(String, primary_key=True)
     topic = Column(String, nullable=False)
     payload = Column(Text, nullable=False)
     headers = Column(Text, nullable=True)
-    published = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    published = Column(Boolean, default=False, index=True)
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
 
 class DispatchRecommendation(Base):
-    __tablename__ = 'dispatch_recommendations'
+    __tablename__ = "dispatch_recommendations"
     id = Column(String, primary_key=True)
     incident_id = Column(String, nullable=False)
     recommended_asset_id = Column(String, nullable=False)
     reason = Column(String, nullable=True)
-    status = Column(String, default='PENDING')
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    status = Column(String, default="PENDING")
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
     resolved_at = Column(DateTime(timezone=True), nullable=True)
     resolved_by = Column(String, nullable=True)
     version = Column(Integer, nullable=False, default=1)
 
-    __mapper_args__ = {
-        "version_id_col": version
-    }
+    __mapper_args__ = {"version_id_col": version}
+
 
 def get_db():
     db = SessionLocal()
@@ -90,103 +117,206 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
 class OmnisEntity(Base):
-    __tablename__ = 'omnis_entities'
+    __tablename__ = "omnis_entities"
     id = Column(String, primary_key=True)
-    type = Column(String, nullable=False) # e.g. INFRASTRUCTURE, CITY, CLIMATE
+    type = Column(String, nullable=False)  # e.g. INFRASTRUCTURE, CITY, CLIMATE
     name = Column(String, nullable=False)
-    attributes = Column(Text, nullable=True) # JSON blob of attributes
-    confidence = Column(Float, default=1.0) # Uncertainty measure
-    provenance = Column(String, nullable=False) # Which agent/sensor provided this
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    attributes = Column(Text, nullable=True)  # JSON blob of attributes
+    confidence = Column(Float, default=1.0)  # Uncertainty measure
+    provenance = Column(String, nullable=False)  # Which agent/sensor provided this
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
 
 class OmnisRelationship(Base):
-    __tablename__ = 'omnis_relationships'
+    __tablename__ = "omnis_relationships"
     id = Column(String, primary_key=True)
     source_id = Column(String, nullable=False)
     target_id = Column(String, nullable=False)
-    type = Column(String, nullable=False) # e.g. CAUSES, SUPPLIES_TO, DEPENDS_ON
-    weight = Column(Float, default=1.0) # Strength of the relationship or causal link
+    type = Column(String, nullable=False)  # e.g. CAUSES, SUPPLIES_TO, DEPENDS_ON
+    weight = Column(Float, default=1.0)  # Strength of the relationship or causal link
     confidence = Column(Float, default=1.0)
     provenance = Column(String, nullable=False)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
 
 class OmnisObservation(Base):
-    __tablename__ = 'omnis_observations'
+    __tablename__ = "omnis_observations"
     id = Column(String, primary_key=True)
     entity_id = Column(String, nullable=False)
-    state_data = Column(Text, nullable=False) # JSON blob of the observed state
-    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    state_data = Column(Text, nullable=False)  # JSON blob of the observed state
+    timestamp = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
     provenance = Column(String, nullable=False)
 
+
 class NexusAgent(Base):
-    __tablename__ = 'nexus_agents'
+    __tablename__ = "nexus_agents"
     id = Column(String, primary_key=True)
     name = Column(String, nullable=False, unique=True)
-    capabilities = Column(Text, nullable=False) # JSON list of capabilities
-    status = Column(String, nullable=False, default="IDLE") # IDLE, WORKING, OFFLINE
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    capabilities = Column(Text, nullable=False)  # JSON list of capabilities
+    status = Column(String, nullable=False, default="IDLE")  # IDLE, WORKING, OFFLINE
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
 
 class NexusTask(Base):
-    __tablename__ = 'nexus_tasks'
+    __tablename__ = "nexus_tasks"
     id = Column(String, primary_key=True)
-    parent_task_id = Column(String, nullable=True) # For hierarchical decomposition
+    parent_task_id = Column(String, nullable=True)  # For hierarchical decomposition
     description = Column(Text, nullable=False)
     assigned_agent_id = Column(String, nullable=True)
-    status = Column(String, nullable=False, default="PENDING") # PENDING, IN_PROGRESS, CONFLICT, RESOLVED
+    status = Column(
+        String, nullable=False, default="PENDING"
+    )  # PENDING, IN_PROGRESS, CONFLICT, RESOLVED
     result = Column(Text, nullable=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
     resolved_at = Column(DateTime(timezone=True), nullable=True)
 
+
 class ForgeExperiment(Base):
-    __tablename__ = 'forge_experiments'
+    __tablename__ = "forge_experiments"
     id = Column(String, primary_key=True)
     hypothesis = Column(Text, nullable=False)
-    experiment_design = Column(Text, nullable=False) # JSON defining the sim parameters
-    status = Column(String, nullable=False, default="PROPOSED") # PROPOSED, RUNNING, EVALUATED, FAILED
-    result_data = Column(Text, nullable=True) # Output from the MIRROR simulation
-    evaluation_score = Column(Float, nullable=True) # How successful was the hypothesis?
-    nexus_task_id = Column(String, nullable=True) # The agent task driving this experiment
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    experiment_design = Column(Text, nullable=False)  # JSON defining the sim parameters
+    status = Column(
+        String, nullable=False, default="PROPOSED"
+    )  # PROPOSED, RUNNING, EVALUATED, FAILED
+    result_data = Column(Text, nullable=True)  # Output from the MIRROR simulation
+    evaluation_score = Column(
+        Float, nullable=True
+    )  # How successful was the hypothesis?
+    nexus_task_id = Column(
+        String, nullable=True
+    )  # The agent task driving this experiment
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
     completed_at = Column(DateTime(timezone=True), nullable=True)
 
+
 class MirrorSimulation(Base):
-    __tablename__ = 'mirror_simulations'
+    __tablename__ = "mirror_simulations"
     id = Column(String, primary_key=True)
     name = Column(String, nullable=False)
-    status = Column(String, nullable=False, default="INITIALIZED") # INITIALIZED, RUNNING, PAUSED, COMPLETED
-    base_state_snapshot = Column(Text, nullable=False) # JSON blob snapshot of OMNIS at tick 0
+    status = Column(
+        String, nullable=False, default="INITIALIZED"
+    )  # INITIALIZED, RUNNING, PAUSED, COMPLETED
+    base_state_snapshot = Column(
+        Text, nullable=False
+    )  # JSON blob snapshot of OMNIS at tick 0
     current_tick = Column(Integer, default=0)
-    time_scale = Column(Float, default=1.0) # E.g., 1 hour sim time = 1 second real time
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    time_scale = Column(
+        Float, default=1.0
+    )  # E.g., 1 hour sim time = 1 second real time
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
 
 class MirrorEvent(Base):
-    __tablename__ = 'mirror_events'
+    __tablename__ = "mirror_events"
     id = Column(String, primary_key=True)
     simulation_id = Column(String, nullable=False)
     tick = Column(Integer, nullable=False)
-    event_data = Column(Text, nullable=False) # JSON blob of what happened (e.g., Drought, Power Grid Failure)
+    event_data = Column(
+        Text, nullable=False
+    )  # JSON blob of what happened (e.g., Drought, Power Grid Failure)
+
 
 class AscendObjective(Base):
-    __tablename__ = 'ascend_objectives'
+    __tablename__ = "ascend_objectives"
     id = Column(String, primary_key=True)
     description = Column(Text, nullable=False)
     target_date = Column(DateTime(timezone=True), nullable=False)
-    status = Column(String, nullable=False, default="ACTIVE") # ACTIVE, ACHIEVED, FAILED, REPLANNING
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    status = Column(
+        String, nullable=False, default="ACTIVE"
+    )  # ACTIVE, ACHIEVED, FAILED, REPLANNING
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
 
 class AscendMilestone(Base):
-    __tablename__ = 'ascend_milestones'
+    __tablename__ = "ascend_milestones"
     id = Column(String, primary_key=True)
     objective_id = Column(String, nullable=False)
     description = Column(Text, nullable=False)
     target_date = Column(DateTime(timezone=True), nullable=False)
     status = Column(String, nullable=False, default="PENDING")
-    
+
+
 class AscendConstraint(Base):
-    __tablename__ = 'ascend_constraints'
+    __tablename__ = "ascend_constraints"
     id = Column(String, primary_key=True)
     objective_id = Column(String, nullable=False)
-    constraint_type = Column(String, nullable=False) # e.g. BUDGET, SAFETY, EMISSIONS
-    value = Column(Text, nullable=False) # JSON blob defining the limit
+    constraint_type = Column(String, nullable=False)  # e.g. BUDGET, SAFETY, EMISSIONS
+    value = Column(Text, nullable=False)  # JSON blob defining the limit
+
+
+# ── CIC: Civilizational Intent Conservation ──────────────────────────
+
+
+class CICIntentRecord(Base):
+    """A versioned snapshot of the civilization's founding intent vector."""
+
+    __tablename__ = "cic_intent_records"
+    id = Column(String, primary_key=True)
+    version = Column(Integer, nullable=False, default=1)
+    intent_vector = Column(
+        Text, nullable=False
+    )  # JSON: {"sustainability": 0.9, "equity": 0.85, ...}
+    rationale = Column(Text, nullable=True)  # Why this version was created
+    author = Column(String, nullable=False)  # Who authorized the change
+    status = Column(String, nullable=False, default="ACTIVE")  # ACTIVE, SUPERSEDED
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+
+class CICAuditLog(Base):
+    """Per-action audit: records the drift score every time the auditor runs."""
+
+    __tablename__ = "cic_audit_log"
+    id = Column(String, primary_key=True)
+    action_description = Column(Text, nullable=False)
+    intent_version = Column(Integer, nullable=False)
+    drift_score = Column(
+        Float, nullable=False
+    )  # 0.0 = perfect alignment, 1.0 = total drift
+    threshold = Column(Float, nullable=False)
+    verdict = Column(String, nullable=False)  # PASS, WARN, BLOCK
+    details = Column(Text, nullable=True)  # JSON breakdown per dimension
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+
+class CICDriftEvent(Base):
+    """Raised when drift exceeds the warning threshold. Feeds into ASCEND replanning."""
+
+    __tablename__ = "cic_drift_events"
+    id = Column(String, primary_key=True)
+    audit_log_id = Column(String, nullable=False)
+    severity = Column(String, nullable=False)  # WARN, CRITICAL
+    corrective_action = Column(Text, nullable=True)  # What should happen next
+    resolved = Column(Boolean, default=False)
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    resolved_at = Column(DateTime(timezone=True), nullable=True)

@@ -211,7 +211,12 @@ async def outbox_publisher_loop():
                     )
                     for ev in events:
                         headers = json.loads(ev.headers) if ev.headers else {}
-                        await nc.publish(ev.topic, ev.payload.encode(), headers=headers)
+                        # Timeout a stuck publish so one dead NATS connection
+                        # can't wedge the whole outbox loop forever.
+                        await asyncio.wait_for(
+                            nc.publish(ev.topic, ev.payload.encode(), headers=headers),
+                            timeout=10,
+                        )
                         ev.published = True
                     if events:
                         db.commit()
