@@ -6,6 +6,7 @@ import hashlib
 import math
 import asyncio
 import time
+import ipaddress
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional, List
 
@@ -52,12 +53,34 @@ otlp_exporter = OTLPSpanExporter(
 trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(otlp_exporter))
 
 
+# Comma-separated explicit proxy IPs allowed to set X-Real-IP (beyond the
+# loopback/private ranges that nginx edge uses by default).
+_TRUSTED_PROXY_IPS = {
+    ip.strip()
+    for ip in os.environ.get("TRUSTED_PROXY_IPS", "").split(",")
+    if ip.strip()
+}
+
+
+def _is_trusted_proxy(peer: str) -> bool:
+    if peer in _TRUSTED_PROXY_IPS:
+        return True
+    try:
+        addr = ipaddress.ip_address(peer)
+    except ValueError:
+        return False
+    return addr.is_loopback or addr.is_private
+
+
 def get_real_ip(request: Request) -> str:
-    # Strictly trust X-Real-IP from Nginx edge proxy
-    real_ip = request.headers.get("X-Real-IP")
-    if real_ip:
-        return real_ip.strip()
-    return request.client.host if request.client else "127.0.0.1"
+    # Only honor X-Real-IP when it came from a trusted proxy peer; otherwise a
+    # direct client on 0.0.0.0:8000 can spoof it to rotate rate-limit buckets.
+    peer = request.client.host if request.client else "127.0.0.1"
+    if _is_trusted_proxy(peer):
+        real_ip = request.headers.get("X-Real-IP")
+        if real_ip:
+            return real_ip.strip()
+    return peer
 
 
 def get_rate_limit_key(request: Request) -> str:
