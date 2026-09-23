@@ -12,14 +12,17 @@ layouts are bit-exact with gguf.quants (llama.cpp reference).
 
 Q4_K_M / lower-bit: llama.cpp's `quantize` binary is NOT bundled or installed
 on this box (checked: PATH + repo; ollama 0.34 has no quantize subcommand and
-the gguf python package implements no K-quant quantizers). The code path is
-ready: pass `--quant Q4_K_M` and if a llama.cpp quantize binary is present on
-PATH (or at LLAMA_QUANTIZE) it is invoked on the f16 export; otherwise the
-variant is reported blocked instead of silently skipped.
+gguf.quants.quantize raises NotImplementedError for every K-quant / IQ type,
+re-verified live on each run). The code path is ready: pass `--quant Q4_K_M`
+and if a llama.cpp quantize binary is present on PATH (or at LLAMA_QUANTIZE)
+it is invoked on the f16 export; otherwise the variant is reported blocked
+with the exact live error instead of silently skipped.
 
 Usage:
-    python scripts/training/export_gguf_matrix.py
-    python scripts/training/export_gguf_matrix.py --hf-dir models/comp001/10m
+    python scripts/training/export_gguf_matrix.py             # 100m-real default
+    python scripts/training/export_gguf_matrix.py --model-dir models/comp001/100m
+    python scripts/training/export_gguf_matrix.py --model-dir models/comp001/10m \
+        --outdir models/comp001/10m/gguf
     python scripts/training/export_gguf_matrix.py --quant Q4_K_M
 """
 
@@ -102,10 +105,9 @@ def roundtrip_verify(gguf_path: Path, hf_dir: Path) -> dict:
     cfg = json.loads((hf_dir / "config.json").read_text(encoding="utf-8"))
 
     gguf_names = [t.name for t in reader.tensors]
+    # single load: used both for shape cross-check and the dequant probes below
     loaded = stnp.load_file(str(hf_dir / "model.safetensors"))
-    hf_shapes = {}
-    for hf_key, arr in loaded.items():
-        hf_shapes[hf_key] = list(arr.shape)
+    hf_shapes = {k: list(v.shape) for k, v in loaded.items()}
 
     missing = [name for name in gguf_names if GGUF_TO_HF.get(name) not in hf_shapes]
     # tensors stored as u8 give gguf byte-shape; compare via expected element shapes
@@ -136,7 +138,6 @@ def roundtrip_verify(gguf_path: Path, hf_dir: Path) -> dict:
         )
         if n in gguf_names
     ]
-    loaded = stnp.load_file(str(hf_dir / "model.safetensors"))
     for gname in probe_names:
         t = next(t for t in reader.tensors if t.name == gname)
         dq = tensor_to_f32(t)
@@ -179,30 +180,43 @@ def find_llama_quantize() -> Path | None:
     return None
 
 
-def q4_k_m_or_blocked(hf_dir: Path, out_dir: Path, f16_path: Path) -> dict:
+def k_quant_python_gate() -> str:
+    """Live probe of the python-side lower-bit path: gguf.quants.quantize on a
+    K-quant-eligible tensor. Returns the exact exception text (or 'no_error')."""
+    import numpy as np
+    from gguf.constants import GGMLQuantizationType as T
+    from gguf.quants import quantize
+
+    try:
+        quantize(np.zeros((1, 256), dtype=np.float32), T.Q4_K)
+    except Exception as e:  # noqa: BLE001 - the exact failure text is the point
+        return f"{type(e).__name__}: {str(e) or '(no message)'}"
+    return "no_error"
+
+
+def q4_k_m_or_blocked(
+    hf_dir: Path, out_dir: Path, f16_path: Path, size_tag: str = "100m"
+) -> dict:
     """Attempt Q4_K_M via a llama.cpp quantize binary; if none is installed,
     record the honest limitation (no installs allowed) and return blocked."""
-    target = (
-        "comp001-100m-Q4_K_M.gguf"
-        if hf_dir.name == "100m"
-        else "comp001-10m-Q4_K_M.gguf"
-    )
+    target = f"comp001-{size_tag}-Q4_K_M.gguf"
     out = out_dir / target
     bin_path = find_llama_quantize()
     if bin_path is None:
+        gate = k_quant_python_gate()
         return {
             "state": "blocked_requires_llama_cpp",
             "file": str(out),
             "bytes": 0,
             "reason": (
-                "Q4_K_M/lower-bit requires llama.cpp 'quantize' binary (k-quant "
-                "path) which is NOT installed: PATH + repo scan found no "
-                "llama-quantize/quantize/llama-cli, ollama 0.34 has no quantize "
-                "subcommand, and gguf==0.19.0 gguf.quants.quantize raises "
-                "NotImplementedError for Q4_K/Q3_K/Q2_K/Q6_K (verified by probe). "
-                "No installs were made (task constraint). Code path ready: set "
-                "LLAMA_QUANTIZE or put llama-quantize on PATH and rerun with "
-                "--quant Q4_K_M."
+                "Q4_K_M/lower-bit requires llama.cpp 'quantize' binary "
+                "(k-quant path) which is NOT installed: PATH + repo scan found "
+                "no llama-quantize/quantize/llama-cli (cmake+mingw present but "
+                "building llama.cpp is out of scope, T7). Python-side path is "
+                f"blocked too: gguf.quants.quantize on a K-quant-eligible "
+                f"tensor raised {gate}. No installs were made (task "
+                "constraint). Code path ready: set LLAMA_QUANTIZE or put "
+                "llama-quantize on PATH and rerun with --quant Q4_K_M."
             ),
         }
     subprocess.run([str(bin_path), str(f16_path), str(out), "Q4_K_M"], check=True)
@@ -216,8 +230,14 @@ def q4_k_m_or_blocked(hf_dir: Path, out_dir: Path, f16_path: Path) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--hf-dir", default=str(REPO_ROOT / "models" / "comp001" / "100m"))
-    ap.add_argument("--out-dir", default="")
+    ap.add_argument(
+        "--hf-dir",
+        "--model-dir",
+        dest="hf_dir",
+        default=str(REPO_ROOT / "models" / "comp001" / "100m-real"),
+        help="HF export dir (config.json + model.safetensors); default 100m-real",
+    )
+    ap.add_argument("--out-dir", "--outdir", dest="out_dir", default="")
     ap.add_argument(
         "--quants",
         default="f16,q8_0,q4_0,Q4_K_M",
@@ -240,6 +260,19 @@ def main() -> int:
     quants = [args.quant] if args.quant else [q.strip() for q in args.quants.split(",")]
     size_tag = "100m" if hf_dir.name == "100m" else hf_dir.name
 
+    cfg = json.loads((hf_dir / "config.json").read_text(encoding="utf-8"))
+    from convert_hf_to_gguf import STReader  # already on sys.path above
+
+    param_count = 0
+    st = STReader(hf_dir / "model.safetensors")
+    for shape in st.shapes().values():
+        n = 1
+        for d in shape:
+            n *= d
+        param_count += n
+    st.close()
+    disk_free_before = shutil.disk_usage(hf_dir).free
+
     variants = {}
     start = time.time()
     for quant in quants:
@@ -253,16 +286,17 @@ def main() -> int:
             }
         elif quant == "Q4_K_M":
             f16_path = out_dir / NAME["f16"].format(size=size_tag)
-            resp = q4_k_m_or_blocked(hf_dir, out_dir, f16_path)
+            resp = q4_k_m_or_blocked(hf_dir, out_dir, f16_path, size_tag)
             variants[quant] = resp
         else:
             print(f"[matrix] unsupported quant {quant!r} - skipping")
     # lower-bit (below q4_0, e.g. Q3_K_M / Q2_K) goes through the same llama.cpp path
     if "lower" in quants:
         resp = q4_k_m_or_blocked(
-            hf_dir, out_dir, out_dir / NAME["f16"].format(size=size_tag)
+            hf_dir, out_dir, out_dir / NAME["f16"].format(size=size_tag), size_tag
         )
         variants["lower_attempt"] = resp
+    disk_free_after = shutil.disk_usage(hf_dir).free
 
     # round-trip sanity on every exported f16/q8/q4 file
     sanity = {}
@@ -326,11 +360,20 @@ def main() -> int:
 
     # -- honest size/power table ----------------------------------------------
     hf_bytes = (hf_dir / "model.safetensors").stat().st_size
+    roundtrip_max_err = {}
+    for quant, s in sanity.items():
+        errs = [
+            v for v in s.get("probe_max_abs_err", {}).values() if isinstance(v, float)
+        ]
+        roundtrip_max_err[quant] = max(errs) if errs else "n/a"
     print("\n=== COMP-001 GGUF matrix ===")
-    print(f"source: {hf_dir} | safetensors {hf_bytes / 1e6:.1f} MB")
+    print(
+        f"source: {hf_dir} | safetensors {hf_bytes / 1e6:.1f} MB | "
+        f"params {param_count:,} | vocab {cfg.get('vocab_size')}"
+    )
     header = (
-        f"  {'variant':8s} {'params':12s} {'MB':>9s} {'ratio':>7s} "
-        f"{'probe':>8s} {'est. RAM MB':>11s}  state"
+        f"  {'variant':8s} {'MB':>9s} {'ratio':>7s} {'probe':>8s} "
+        f"{'maxerr':>8s} {'est. RAM MB':>11s}  state"
     )
     print(header)
     for quant, info in variants.items():
@@ -340,13 +383,12 @@ def main() -> int:
         msg = "" if info["state"] == "exported" else info.get("reason", "")
         if info["state"] == "exported":
             est_ram = mb * 1.25  # weights + overhead (no KV cache here)
-        elif quant == "Q4_K_M":
-            est_ram = 0.0
         else:
             est_ram = 0.0
         print(
-            f"  {quant:8s} {info.get('params', '-'):12s} {mb:9.2f} {ratio:7.3f} "
-            f"{str(probe):>8s} {est_ram:11.1f}  {info['state']} {msg}"
+            f"  {quant:8s} {mb:9.2f} {ratio:7.3f} {str(probe):>8s} "
+            f"{str(roundtrip_max_err.get(quant, 'n/a')):>8s} {est_ram:11.1f}  "
+            f"{info['state']} {msg}"
         )
     print(
         "  (est. RAM MB = GGUF bytes * 1.25, load-time overhead; KV cache & logits excluded)"
@@ -357,10 +399,10 @@ def main() -> int:
         from repro import record_experiment  # scripts/ on path
 
         record = {
-            "run_id": f"comp001-gguf-matrix-{int(time.time())}",
+            "run_id": f"comp001-{size_tag}-gguf-matrix-{int(time.time())}",
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "status": "COMPLETED",
-            "base_model_name": "comp001-custom-100m/g10m",
+            "base_model_name": f"comp001-{size_tag}",
             "model_type": "GGUF export matrix",
             "dataset_path": str(hf_dir / "model.safetensors"),
             "tokenizer_path": str(hf_dir / "tokenizer.json"),
@@ -375,13 +417,21 @@ def main() -> int:
             "checkpoint_path": str(out_dir),
             "output_differs": False,
             "error_message": "",
+            "source_dir": str(hf_dir),
+            "model_param_count": param_count,
+            "vocab_size": cfg.get("vocab_size"),
+            "safetensors_bytes": hf_bytes,
+            "disk_free_before": disk_free_before,
+            "disk_free_after": disk_free_after,
             "variants": {
                 q: {
                     **v,
                     "params": v.get("params", "-"),
+                    "bytes": v["bytes"],
                     "mb": round(v["bytes"] / 1e6, 2),
-                    "ratio_vs_424mb": round(v["bytes"] / hf_bytes, 3),
+                    "ratio_vs_safetensors": round(v["bytes"] / hf_bytes, 3),
                     "probe_score": probes.get(q),
+                    "roundtrip_max_abs_err": roundtrip_max_err.get(q, "n/a"),
                     "est_ram_mb": round(v["bytes"] / 1e6 * 1.25, 2)
                     if v["state"] == "exported"
                     else 0.0,
@@ -390,11 +440,19 @@ def main() -> int:
             },
             "sanity": sanity,
             "smoke_10m": smoke,
-            "hg_bytes": hf_bytes,
+            "roundtrip_probe_tensors": {
+                q: s.get("probe_max_abs_err", {}) for q, s in sanity.items()
+            },
         }
-        params = {"quants": quants, "smoke_10m": args.smoke_10m}
-        record_experiment("comp001-gguf-matrix", params, record)
-        print(f"[RECORD] comp001-gguf-matrix logged: {record['run_id']}")
+        params = {
+            "quants": quants,
+            "smoke_10m": args.smoke_10m,
+            "model_dir": str(hf_dir),
+            "out_dir": str(out_dir),
+        }
+        exp_name = f"comp001-{size_tag}-gguf-matrix"
+        record_experiment(exp_name, params, record)
+        print(f"[RECORD] {exp_name} logged: {record['run_id']}")
     except (
         Exception
     ) as e:  # pragma: no cover - ledger failure shouldn't kill the export
