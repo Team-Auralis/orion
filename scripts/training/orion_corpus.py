@@ -94,6 +94,12 @@ def format_sample(s: dict) -> str:
     return f"INSTRUCTION: {s['instruction']}\nRESPONSE: {s['response']}"
 
 
+def row_text(s: dict) -> str:
+    """Training text for one corpus row: raw pre-training `text` rows pass
+    through verbatim; SFT rows use the INSTRUCTION/RESPONSE layout."""
+    return s["text"] if "text" in s else format_sample(s)
+
+
 def iter_texts(files):
     """Yield one text document per jsonl row / per txt shard (for BPE training)."""
     for path in files:
@@ -116,14 +122,19 @@ def iter_texts(files):
             yield path.read_text(encoding="utf-8", errors="ignore")
 
 
-def load_samples(files):
-    """SFT samples (instruction/response) from jsonl shards; txt shards carry
-    raw pre-training text and are ignored by the SFT harnesses."""
+def load_samples(files, limit=None):
+    """Rows from jsonl shards (SFT instruction/response or raw `text`);
+    txt shards are ignored. `limit` stops reading as soon as enough rows are
+    collected - smoke harnesses must not parse the full 63M-token corpus."""
     rows = []
     for path in files:
         if path.suffix.lower() == ".jsonl":
             with open(path, "r", encoding="utf-8") as f:
-                rows.extend(json.loads(line) for line in f if line.strip())
+                for line in f:
+                    if line.strip():
+                        rows.append(json.loads(line))
+                        if limit is not None and len(rows) >= limit:
+                            return rows[:limit]
     return rows
 
 

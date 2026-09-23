@@ -68,10 +68,6 @@ def load_dataset(path: Path) -> list:
     return rows
 
 
-def format_sample(s: dict) -> str:
-    return f"INSTRUCTION: {s['instruction']}\nRESPONSE: {s['response']}"
-
-
 def run_orion_training(
     dataset_path: Path,
     epochs: int = 3,
@@ -101,11 +97,12 @@ def run_orion_training(
     use_bpe = orion_corpus.bpe_tokenizer_available() and corpus_real
 
     if use_bpe:
-        rows = orion_corpus.load_samples(corpus_files)
-        dataset_hash = orion_corpus.corpus_sha256(corpus_files)
+        train_files = orion_corpus.train_shards(corpus_files)
+        rows = orion_corpus.load_samples(train_files)
+        dataset_hash = orion_corpus.corpus_sha256(train_files)
         dataset_path = orion_corpus.CORPUS_DIR
         print(
-            f"[STAGE 1: DATA] {len(rows)} samples (corpus shards) | "
+            f"[STAGE 1: DATA] {len(rows)} samples (corpus train shards) | "
             f"sha256 {dataset_hash[:16]}..."
         )
     else:
@@ -191,11 +188,11 @@ def run_orion_training(
     model = get_peft_model(base, lora_cfg)
     model.print_trainable_parameters()
 
-    texts = [format_sample(s) for s in rows]
+    texts = [orion_corpus.row_text(s) for s in rows]
     if tokenizer is not None:
         if use_packing:
             packed = pack_sequences(
-                tokenize_samples(rows, tokenizer, format_sample, max_len),
+                tokenize_samples(rows, tokenizer, orion_corpus.row_text, max_len),
                 max_len,
                 pad_id=tokenizer.pad_token_id or 0,
                 seed=seed,
@@ -220,7 +217,7 @@ def run_orion_training(
     else:
         tokens = []
         for s in rows:
-            combined = format_sample(s)
+            combined = orion_corpus.row_text(s)
             ids = (
                 [1] + [zlib.crc32(w.encode()) % 990 + 3 for w in combined.split()] + [2]
             )

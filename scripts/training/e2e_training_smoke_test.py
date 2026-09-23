@@ -173,17 +173,30 @@ def run_training_smoke_test(
             use_full_model = False
 
     # Stage 1: Data Preparation & Hashing
-    data_file = DATA_DIR / "tiny_train.jsonl"
-    if not data_file.exists():
-        create_sample_dataset(data_file)
-    dataset_hash = compute_file_sha256(data_file)
-
-    with open(data_file, "r", encoding="utf-8") as f:
-        raw_lines = [json.loads(line) for line in f if line.strip()]
-
-    print(
-        f"[STAGE 1: DATA] Loaded {len(raw_lines)} samples from {data_file.name}. SHA-256: {dataset_hash[:16]}..."
-    )
+    # Real corpus -> its train shards (via orion_corpus); no shards -> smoke file.
+    corpus_files, corpus_source, corpus_real = orion_corpus.resolve_corpus()
+    if corpus_real:
+        train_files = orion_corpus.train_shards(corpus_files)
+        data_file = orion_corpus.CORPUS_DIR
+        dataset_hash = orion_corpus.corpus_sha256(train_files)
+        # ponytail: the smoke loop only trains on the first rows (train_ids[:3]) -
+        # cap the load so the 63M-token corpus never blows smoke-test RAM.
+        raw_lines = orion_corpus.load_samples(train_files, limit=16)
+        print(
+            f"[STAGE 1: DATA] {len(raw_lines)} samples (corpus train shards) | "
+            f"SHA-256: {dataset_hash[:16]}..."
+        )
+    else:
+        data_file = DATA_DIR / "tiny_train.jsonl"
+        if not data_file.exists():
+            create_sample_dataset(data_file)
+        dataset_hash = compute_file_sha256(data_file)
+        with open(data_file, "r", encoding="utf-8") as f:
+            raw_lines = [json.loads(line) for line in f if line.strip()]
+        print(
+            f"[STAGE 1: DATA] Loaded {len(raw_lines)} samples from {data_file.name}. "
+            f"SHA-256: {dataset_hash[:16]}..."
+        )
 
     # Stage 2: Tokenization & Model Setup
     print("[STAGE 2: TOKENIZATION & MODEL]")
@@ -191,7 +204,6 @@ def run_training_smoke_test(
 
     # Real BPE tokenizer wins when it was trained AND the corpus resolves to
     # real shards; otherwise the crc32 surrogate path stays (CI smoke).
-    corpus_files, corpus_source, corpus_real = orion_corpus.resolve_corpus()
     use_bpe = orion_corpus.bpe_tokenizer_available() and corpus_real
 
     if use_full_model and (MODELS_DIR / "qwen_instruct").exists():
@@ -251,10 +263,7 @@ def run_training_smoke_test(
 
     # Prepare inputs
     if tokenizer is not None:
-        texts = [
-            f"INSTRUCTION: {s['instruction']}\nRESPONSE: {s['response']}"
-            for s in raw_lines
-        ]
+        texts = [orion_corpus.row_text(s) for s in raw_lines]
         encoded = tokenizer(
             texts, padding=True, truncation=True, max_length=128, return_tensors="pt"
         )
@@ -265,7 +274,7 @@ def run_training_smoke_test(
         # Simple deterministically hashed token IDs bounded to surrogate vocab
         input_tokens = []
         for s in raw_lines:
-            combined = f"{s['instruction']} {s['response']}"
+            combined = orion_corpus.row_text(s)
             t_ids = (
                 [1] + [zlib.crc32(w.encode()) % 990 + 3 for w in combined.split()] + [2]
             )
