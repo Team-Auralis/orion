@@ -1,0 +1,13 @@
+{
+  "experiment": "NECTAR-003",
+  "control": "shuffled-IDs",
+  "seed": 0,
+  "dt_ms": null,
+  "measured": true,
+  "mock": false,
+  "baseline_responders": 412,
+  "analytic_true_overlap": 412,
+  "expected_random_overlap": 1,
+  "null_supported": true,
+  "wall_s": 145.4
+}

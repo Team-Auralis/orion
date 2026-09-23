@@ -1,20 +1,21 @@
-﻿import uuid
+import uuid
 import json
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from apps.api.database import ForgeExperiment, OmnisObservation
 
 class ForgeEngine:
-    \"\"\"
+    """
     FORGE: The Scientific Discovery Engine.
     Executes the loop: Hypothesis -> Experiment -> Result -> Evaluation -> Knowledge Update.
-    \"\"\"
+    """
     
-    def __init__(self, db_session: Session):
+    def __init__(self, db_session: Session, math_coprocessor=None):
         self.db = db_session
+        self.math_coprocessor = math_coprocessor
 
     def propose_hypothesis(self, hypothesis: str, experiment_design: dict, nexus_task_id: str = None) -> str:
-        \"\"\"Step 1: Agent proposes a hypothesis and the required simulation parameters.\"\"\"
+        """Step 1: Agent proposes a hypothesis and the required simulation parameters."""
         experiment_id = str(uuid.uuid4())
         experiment = ForgeExperiment(
             id=experiment_id,
@@ -28,7 +29,7 @@ class ForgeEngine:
         return experiment_id
 
     def execute_experiment(self, experiment_id: str):
-        \"\"\"Step 2: Send the design to the MIRROR simulation layer (mocked).\"\"\"
+        """Step 2: Send the design to the MIRROR simulation layer (mocked)."""
         experiment = self.db.query(ForgeExperiment).filter_by(id=experiment_id).first()
         if not experiment:
             raise ValueError(f"Experiment {experiment_id} not found.")
@@ -40,16 +41,33 @@ class ForgeEngine:
         return True
 
     def record_result(self, experiment_id: str, result_data: dict, evaluation_score: float):
-        \"\"\"Step 3 & 4: Record the result and the evaluation of the hypothesis.\"\"\"
+        """Step 3 & 4: Record the result and the evaluation of the hypothesis."""
         experiment = self.db.query(ForgeExperiment).filter_by(id=experiment_id).first()
-        experiment.result_data = json.dumps(result_data)
+        result_copy = dict(result_data)
+        if self.math_coprocessor:
+            try:
+                design = json.loads(experiment.experiment_design) if experiment.experiment_design else {}
+                review = self.math_coprocessor.review_experiment(
+                    hypothesis=experiment.hypothesis,
+                    design=design,
+                    result=result_data,
+                    evaluation_score=evaluation_score,
+                )
+                result_copy["math_coprocessor_review"] = review
+            except Exception as e:
+                result_copy["math_coprocessor_review"] = {
+                    "verdict": "INCONCLUSIVE",
+                    "fallback_reason": f"Unhandled error: {e}",
+                    "confidence": 0.0,
+                }
+        experiment.result_data = json.dumps(result_copy)
         experiment.evaluation_score = evaluation_score
         experiment.status = "EVALUATED"
         experiment.completed_at = datetime.now(timezone.utc)
         self.db.commit()
 
     def update_knowledge_graph(self, experiment_id: str, target_entity_id: str):
-        \"\"\"Step 5: If the hypothesis is validated, update OMNIS with the new knowledge.\"\"\"
+        """Step 5: If the hypothesis is validated, update OMNIS with the new knowledge."""
         experiment = self.db.query(ForgeExperiment).filter_by(id=experiment_id).first()
         if experiment.evaluation_score < 0.8:
             return False # Not enough confidence to update the world model

@@ -1,0 +1,7 @@
+sqlalchemy>=2.0
+brian2>=2.10
+numpy
+pandas
+pyarrow
+prometheus_client
+opentelemetry-sdk

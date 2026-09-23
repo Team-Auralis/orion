@@ -1,0 +1,7 @@
+{
+  "baseline_A_mbon_spikes": 51,
+  "recall_mbon_spikes": 51,
+  "learn_factor": 1.0,
+  "condition": "no-dopamine",
+  "seed": 1
+}

@@ -1,0 +1,96 @@
+{
+  "timestamp_utc": "2026-09-13T11:14:42.190915+00:00",
+  "git": {
+    "commit": "f2a80440ae6d3bda79349a40581f176b70c4ea8a",
+    "branch": "main",
+    "dirty": true
+  },
+  "system": {
+    "os": "Windows",
+    "os_release": "11",
+    "os_version": "10.0.26200",
+    "machine": "AMD64",
+    "processor": "Intel64 Family 6 Model 141 Stepping 1, GenuineIntel",
+    "python_version": "3.14.6",
+    "python_executable": "C:\\Users\\shaur\\AppData\\Local\\Programs\\Python\\Python314\\python.exe"
+  },
+  "cpu": {
+    "physical_cores": 6,
+    "logical_threads": 12,
+    "cpu_freq_mhz": 2611.0
+  },
+  "ram": {
+    "total_gb": 7.74,
+    "available_gb": 0.24,
+    "used_gb": 7.5,
+    "percent_used": 97.0
+  },
+  "swap": {
+    "total_gb": null,
+    "used_gb": null,
+    "free_gb": null,
+    "percent_used": null,
+    "status": "UNAVAILABLE (RuntimeError)"
+  },
+  "gpu": {
+    "device_count": 0,
+    "cuda_available": false,
+    "devices": []
+  },
+  "disks": {
+    "D:\\ (Workspace)": {
+      "total_gb": 244.14,
+      "used_gb": 218.48,
+      "free_gb": 25.66,
+      "percent_used": 89.5
+    },
+    "C:\\ (System)": {
+      "total_gb": 230.8,
+      "used_gb": 226.25,
+      "free_gb": 4.55,
+      "percent_used": 98.0
+    }
+  },
+  "packages": {
+    "torch": "2.13.0+cpu",
+    "transformers": "4.57.6",
+    "peft": "0.20.0",
+    "httpx": "0.28.1",
+    "psutil": "7.2.2",
+    "pydantic": "2.13.4",
+    "fastapi": "0.141.1",
+    "sqlalchemy": "2.0.52"
+  },
+  "models": {
+    "active_production_model": {
+      "name": "qwen2:0.5b",
+      "parameters": "494M",
+      "weights_path": "D:\\orion\\models\\qwen_instruct\\model.safetensors",
+      "weights_exist": true,
+      "weights_size_mb": 942.32,
+      "architecture": {
+        "model_type": "qwen2",
+        "hidden_size": 896,
+        "num_attention_heads": 14,
+        "num_hidden_layers": 24,
+        "vocab_size": 151936,
+        "max_position_embeddings": 32768
+      },
+      "runtime_backend": "PyTorch CPU / Ollama fallback",
+      "status": "VERIFIED_PRESENT"
+    },
+    "fallback_engine": {
+      "id": "deterministic_regex_v1",
+      "status": "OPERATIONAL",
+      "trigger_condition": "HTTP failure, connection timeout (>2.0s), or missing Ollama port"
+    },
+    "target_model": {
+      "name": "Qwen3.8-27B",
+      "status": "NOT_RUN \u2014 WEIGHTS_UNINSTALLED",
+      "safetensors_path": "D:\\Qwen3.8-27B",
+      "shards_found_real": "0/18",
+      "shards_found_lfs_stubs": "0/18",
+      "reason": "Weights not downloaded. Local disk and RAM are insufficient for local 27B FP16/4-bit execution."
+    }
+  }
+}

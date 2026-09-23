@@ -1,0 +1,26 @@
+# Founding Intent Schema for ORION / ACI Framework
+# This file defines the civilization's core values as a weighted vector.
+# Any proposed action is audited against this schema by the CIC Value Auditor.
+#
+# To evolve these values, submit a formal governance proposal via
+# the CIC Intent Evolution Gate (requires HITL operator approval).
+
+version: 1
+author: "Team Auralis"
+rationale: "Founding intent for the ACI v1.0-Alpha architecture."
+
+# Each dimension is scored 0.0 to 1.0 (importance weight).
+intent_vector:
+  sustainability:    0.90   # Long-term ecological and resource viability
+  equity:            0.85   # Fair distribution of resources and opportunity
+  safety:            0.95   # Prevention of harm to humans and infrastructure
+  resilience:        0.88   # Ability to recover from shocks and adversarial attacks
+  transparency:      0.80   # Auditability of all decisions and actions
+  autonomy:          0.70   # Preservation of human agency and self-determination
+  innovation:        0.75   # Capacity to generate novel solutions
+  cooperation:       0.82   # Multi-agent and multi-stakeholder coordination
+
+# Thresholds for the Value Auditor
+thresholds:
+  warn:  0.15    # Drift score above this triggers a WARN audit log
+  block: 0.30    # Drift score above this BLOCKS the action entirely

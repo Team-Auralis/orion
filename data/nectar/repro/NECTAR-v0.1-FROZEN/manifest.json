@@ -1,0 +1,205 @@
+{
+  "freeze": "NECTAR-v0.1-FROZEN",
+  "frozen_at_utc": "2026-09-14T15:29:00Z",
+  "host": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "machine": "AMD64",
+    "cpu": "i5-11260H 6C/12T",
+    "ram_gb": 8,
+    "gpu": "RTX 3050 Laptop 4GB VRAM (unused; CPU path)"
+  },
+  "software": {
+    "python": "3.14.6",
+    "numpy": "2.5.1",
+    "pandas": "3.0.5",
+    "brian2": "2.10.1",
+    "sqlalchemy": "2.0.52"
+  },
+  "git": {
+    "head": "f2a8044",
+    "nectar_tree_state": "untracked (new since last commit), integrity via hashes below"
+  },
+  "default_params": {
+    "v_0": -52.0,
+    "v_rst": -52.0,
+    "v_th": -45.0,
+    "t_mbr": 20.0,
+    "tau": 5.0,
+    "t_rfc": 2.2,
+    "t_dly": 1.8,
+    "w_syn": 0.275,
+    "r_poi": 150.0,
+    "r_poi2": 0.0,
+    "f_poi": 250,
+    "dt_ms": 0.1,
+    "integrator": "linear",
+    "synaptic_model": "g += w",
+    "reset": "v = v_rst; g = 0*mV",
+    "threshold": "v > v_th",
+    "refractory": "rfc"
+  },
+  "code_files": [
+    {
+      "path": "README.md",
+      "sha256": "124c30092455ea7c95de908b263932d52b8af09ab108d75e743b6eb9dedd5f2e",
+      "bytes": 1861
+    },
+    {
+      "path": "__init__.py",
+      "sha256": "939aa6dc3cdc8c136981ad12344aebf8a75e93b78ccb6e4f19c17f644f2837cc",
+      "bytes": 419
+    },
+    {
+      "path": "benchmarks\\__init__.py",
+      "sha256": "6d8ac4afbcd4d9a1e8cc7379d4c00bb9a66bf85577963c45cb127e1f7d8ed4e8",
+      "bytes": 961
+    },
+    {
+      "path": "benchmarks\\exp_learn_001.py",
+      "sha256": "592f5e6963eee00d8e19bbbd13744b16aa16df571d57d08c7f589182f62b8374",
+      "bytes": 7043
+    },
+    {
+      "path": "benchmarks\\exp_odor_001.py",
+      "sha256": "9b1fadc8c31f873527cd22b1e75dc4f72dedcc496740312022e18124bab61139",
+      "bytes": 3886
+    },
+    {
+      "path": "benchmarks\\exp_sugar_001.py",
+      "sha256": "05a71ab0039150061f7210f96c4646220b8790f3f497dd373a08b4064c1394d7",
+      "bytes": 4563
+    },
+    {
+      "path": "benchmarks\\forge_smoke.py",
+      "sha256": "2d5bc4e10c8548db00c3784e7757619c0a853049d0a2ba0cffec673d9490ab7d",
+      "bytes": 2328
+    },
+    {
+      "path": "benchmarks\\smoke_brian2.py",
+      "sha256": "2c93faacc02a3ed5d42a21192ecab0ed9d86db00f50dc48264e33b96f906d219",
+      "bytes": 2622
+    },
+    {
+      "path": "connectome\\__init__.py",
+      "sha256": "ac8d0c229f873f2f2a368031ba7c3f49d9a0b0570e05ef4cb2ed7c1b3d3d5287",
+      "bytes": 166
+    },
+    {
+      "path": "connectome\\atlas.py",
+      "sha256": "58a69e91b07b020208f37b72ab64c6eb3a4e434f958975b9039350fc3073ddc6",
+      "bytes": 2760
+    },
+    {
+      "path": "connectome\\loader.py",
+      "sha256": "12724fd4be83cdd3c3b57109866063eeb723c2ad24cd04fd6ac932ec1eb59dc2",
+      "bytes": 4412
+    },
+    {
+      "path": "connectome\\subset.py",
+      "sha256": "44af2946198c379b93f7ae573fe8f001f1133ab3fa13345309dde38f3d789b74",
+      "bytes": 1969
+    },
+    {
+      "path": "core\\__init__.py",
+      "sha256": "0dd8a9f26ddcac3a4ac9f6c15493068a4975e8e190949b2607e0f006903bcc73",
+      "bytes": 273
+    },
+    {
+      "path": "core\\backend.py",
+      "sha256": "98705960fad5800eea40bcf6311b7f219387c18f49b751e204ad7dda4f5fbf43",
+      "bytes": 903
+    },
+    {
+      "path": "core\\engine.py",
+      "sha256": "8a43436567bea969232b489702fd0b566714c0961b6398031f61d55759e4c96e",
+      "bytes": 2566
+    },
+    {
+      "path": "decoders\\__init__.py",
+      "sha256": "d126e7e5c63d0f83f7aba3cb30a159eee42a87d20fcaeb87246f25eb5694ef9e",
+      "bytes": 770
+    },
+    {
+      "path": "encoders\\__init__.py",
+      "sha256": "e078582cf305cb2a0f0c2ea9c639e11bf1d7d7298c982f5ea384ec0a7d4dad5f",
+      "bytes": 551
+    },
+    {
+      "path": "experiments\\__init__.py",
+      "sha256": "edb43df712a1acbcaf8823ff16e2101f73c81247b8dfeabfb034ab1f57becabb",
+      "bytes": 1427
+    },
+    {
+      "path": "memory\\__init__.py",
+      "sha256": "a5bc1fd0360fb086b05feddb51a6002371ca5ff49511127d3e4aac0269cc36ce",
+      "bytes": 127
+    },
+    {
+      "path": "memory\\flymemory.py",
+      "sha256": "49e2f43357204c643c5ff6d1f2ae6ec582f70b9aefed67c64e7cbd4229170e22",
+      "bytes": 6854
+    },
+    {
+      "path": "readouts\\__init__.py",
+      "sha256": "bb8da62e7640c4313c385b74955723c33ee6bb9189cb7955412cc99fb95d9ea0",
+      "bytes": 1052
+    },
+    {
+      "path": "safety\\__init__.py",
+      "sha256": "9ba22fca1da1c71ad5dc90830a14343a375e208dc5aa6200b16680268f5aca69",
+      "bytes": 30
+    },
+    {
+      "path": "safety\\audit.py",
+      "sha256": "46ba4fbce892bea69d8015aa2a0ca269814542efcf1af9a700d4752b753a5bc0",
+      "bytes": 1142
+    },
+    {
+      "path": "simulator\\__init__.py",
+      "sha256": "db122c2d3191321bcc464ef3d30c5d1fe07ce53ae8f4a182b5bdcd9a4645c3e4",
+      "bytes": 96
+    },
+    {
+      "path": "simulator\\brian2_backend.py",
+      "sha256": "2e1a1f8ca357af1c7c93f7cf510c05f5a34e20156f15031e023a275ac095214f",
+      "bytes": 7799
+    },
+    {
+      "path": "simulator\\null_backend.py",
+      "sha256": "a1749a4096067a08c61c154abcbaecc3661c4274106474bac696ea898464b110",
+      "bytes": 1553
+    }
+  ],
+  "phase2_code_files": [
+    {
+      "path": "benchmarks\\nectar_005_generalization.py",
+      "sha256": "abfb334ec70e573a857544309464df239a2a1c66d7a84d4c9551854424a198e5",
+      "bytes": 8978,
+      "added_utc": "2026-09-15T23:20:00Z"
+    },
+    {
+      "path": "benchmarks\\nectar_006_benefit.py",
+      "sha256": "6ab1f07829e8bcb61f754a3387716c7cf1f972169c4844ec0a21a7024db60790",
+      "bytes": 10813,
+      "added_utc": "2026-09-15T23:20:00Z"
+    }
+  ],
+  "results": [
+    {
+      "path": "EXP-ODOR-001_hub.json",
+      "sha256": "a5fd76feaba51185a687d53dfb5a11a026724e54f1526c37dba2e919ac395eb0"
+    },
+    {
+      "path": "EXP-SUGAR-001_v630.json",
+      "sha256": "1ada14ed1c56b8bc1624fcd01dc8438be0be8143f91dc06ac9a252dbf6119476"
+    },
+    {
+      "path": "EXP-LEARN-001.json",
+      "sha256": "0ea9b2b4e867c4379103350d0b0703baa38f9d010a15f570648842b381d4534e"
+    },
+    {
+      "path": "fly_memory.json",
+      "sha256": "680b3f45dd81f85427d352134e5103df20a98d4d1209e3c84e7d905d756a7ae7"
+    }
+  ]
+}

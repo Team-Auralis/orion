@@ -149,11 +149,44 @@ async def sanitized_validation_handler(request: Request, exc: RequestValidationE
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.environ.get("NEXT_PUBLIC_API_URL", "http://localhost:3000")],
+    allow_origins=[os.environ.get("CORS_ORIGINS", "http://localhost:3000")],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/health")
+async def health_check():
+    """Lightweight health endpoint for K8s probes and load balancers."""
+    checks = {}
+    # DB
+    try:
+        db = SessionLocal()
+        db.execute(sqlalchemy.text("SELECT 1"))
+        db.close()
+        checks["db"] = "ok"
+    except Exception as e:
+        checks["db"] = f"fail: {type(e).__name__}"
+    # Redis
+    try:
+        if redis_client:
+            redis_client.ping()
+            checks["redis"] = "ok"
+        else:
+            checks["redis"] = "not_configured"
+    except Exception as e:
+        checks["redis"] = f"fail: {type(e).__name__}"
+    # NATS
+    checks["nats"] = "ok" if nc.is_connected else "disconnected"
+
+    healthy = all(v == "ok" for v in checks.values() if v != "not_configured")
+    from fastapi.responses import JSONResponse
+    return JSONResponse(
+        status_code=200 if healthy else 503,
+        content={"status": "healthy" if healthy else "degraded", "checks": checks},
+    )
+
 
 # CHRONOS AUDIT: Immutable logging of all state mutations
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -339,7 +372,7 @@ JWKS_CACHE = None
 JWKS_CACHE_TIME = 0
 
 
-def get_jwks():
+async def get_jwks():
     global JWKS_CACHE, JWKS_CACHE_TIME
     if JWKS_CACHE and (time.time() - JWKS_CACHE_TIME < 3600):
         return JWKS_CACHE
@@ -349,7 +382,8 @@ def get_jwks():
         return JWKS_CACHE or {}
 
     try:
-        resp = httpx.get(JWKS_URL, timeout=5.0)
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(JWKS_URL, timeout=5.0)
         if redis_client:
             try:
                 redis_client.delete("circuit_failures:KEYCLOAK")
@@ -399,7 +433,7 @@ async def get_current_user(request: Request) -> Dict[str, Any]:
             )
             raise HTTPException(status_code=403, detail="Token validation failed")
 
-        jwks = get_jwks()
+        jwks = await get_jwks()
         keys = (jwks or {}).get("keys") or []
         if not keys:
             cyber_emit(
@@ -897,12 +931,16 @@ async def break_glass_override(
 
 @app.get("/v1/incidents")
 async def list_incidents(
+    limit: int = 50,
+    offset: int = 0,
     user: Dict[str, Any] = Depends(
         check_policy(action="dashboard:view", resource="admin")
     ),
     db: Session = Depends(get_db),
 ):
-    incidents = db.query(Incident).order_by(Incident.created_at.desc()).all()
+    # ponytail: cap limit to prevent abuse; 200 is plenty for dashboard pagination.
+    limit = min(limit, 200)
+    incidents = db.query(Incident).order_by(Incident.created_at.desc()).offset(offset).limit(limit).all()
     return [
         {
             "incident_id": inc.id,
@@ -1073,9 +1111,9 @@ async def get_ai_health():
     except Exception as e:
         ollama_status = f"UNREACHABLE ({type(e).__name__})"
 
-    target_shards_dir = "D:/Qwen3.8-27B"
+    target_shards_dir = os.environ.get("ORION_TARGET_MODEL_DIR", "")
     shards_found = 0
-    if os.path.exists(target_shards_dir):
+    if target_shards_dir and os.path.exists(target_shards_dir):
         import glob
 
         shards_found = len(

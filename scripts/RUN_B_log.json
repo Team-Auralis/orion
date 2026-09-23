@@ -1,0 +1,27 @@
+{
+  "experiment_id": "RUN_B",
+  "objective": "e0f38886-7f01-4493-8760-0e344513eaef",
+  "events": [
+    {
+      "year": 3,
+      "type": "DISRUPTION",
+      "desc": "Extreme weather damages infrastructure"
+    },
+    {
+      "year": 8,
+      "type": "DISRUPTION",
+      "desc": "Grid stability issues due to high renewables"
+    },
+    {
+      "year": 14,
+      "type": "DISRUPTION",
+      "desc": "Major solar manufacturing shortage"
+    }
+  ],
+  "replans": 3,
+  "knowledge_updates": 3,
+  "final_state": {
+    "renewables_pct": 69.5,
+    "budget_spent": 49.0
+  }
+}

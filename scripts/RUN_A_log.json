@@ -1,0 +1,37 @@
+{
+  "experiment_id": "RUN_A",
+  "objective": "dbdef044-356d-4345-b0bc-55a297992d54",
+  "events": [
+    {
+      "year": 4,
+      "type": "DISRUPTION",
+      "desc": "Major solar manufacturing shortage"
+    },
+    {
+      "year": 7,
+      "type": "DISRUPTION",
+      "desc": "Extreme weather damages infrastructure"
+    },
+    {
+      "year": 9,
+      "type": "DISRUPTION",
+      "desc": "Energy demand increases unexpectedly"
+    },
+    {
+      "year": 12,
+      "type": "DISRUPTION",
+      "desc": "Budget constraint becomes tighter"
+    },
+    {
+      "year": 15,
+      "type": "DISRUPTION",
+      "desc": "A previously assumed relationship in the world model proves incorrect"
+    }
+  ],
+  "replans": 5,
+  "knowledge_updates": 5,
+  "final_state": {
+    "renewables_pct": 62.5,
+    "budget_spent": 55.0
+  }
+}

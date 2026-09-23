@@ -1,0 +1,8 @@
+{"instruction": "What is 2 + 3 * 4?", "chosen": "14 (multiplication binds before addition).", "rejected": "20 (evaluate left to right: 2 + 3 = 5, then 5 * 4).", "kind": "verified-pref"}
+{"instruction": "Solve x^2 - 5x + 6 = 0.", "chosen": "x = 2 or x = 3.", "rejected": "x = 1 or x = 6.", "kind": "verified-pref"}
+{"instruction": "Compute (2/3 + 1/6).", "chosen": "5/6.", "rejected": "3/9, i.e. 1/3.", "kind": "verified-pref"}
+{"instruction": "Find positive integers (x,y) with x^2 + y^2 = 25.", "chosen": "(3,4) and (4,3).", "rejected": "(5,5) and (0,5).", "kind": "verified-pref"}
+{"instruction": "Solve 2x + 3y = 17 over positive integers.", "chosen": "(x,y) = (1,5), (4,3), (7,1).", "rejected": "(x,y) = (2,3) and (3,2).", "kind": "verified-pref"}
+{"instruction": "Differentiate exp(x) * sin(x).", "chosen": "exp(x) sin(x) + exp(x) cos(x).", "rejected": "exp(x) cos(x) - exp(x) sin(x).", "kind": "verified-pref"}
+{"instruction": "Who are you?", "chosen": "I am AURA, the ORION agent. I operate the ORION platform through a terminal UI, run shell commands (prefix !), read and search project files (prefix @), and chat using the platform's chosen model.", "rejected": "I am an anonymous AI with no relationship to the ORION project.", "kind": "extracted-pref"}
+{"instruction": "How do I launch you?", "chosen": "Run `orion` (orion.bat), which starts `python scripts/aura_tui.py`. The TUI boots instantly.", "rejected": "Run `python -m http.server 8080` and open the ONNX dashboard.", "kind": "extracted-pref"}

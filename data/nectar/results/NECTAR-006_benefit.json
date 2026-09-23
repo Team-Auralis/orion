@@ -1,0 +1,37 @@
+{
+  "experiment": "NECTAR-006",
+  "measured": true,
+  "mock": false,
+  "real": {
+    "identity_accuracy": 1.0,
+    "n_identity_trials": 9,
+    "transfer_rate_partial5_to_sugar": 1.0,
+    "n_transfer_trials": 3,
+    "transfer_margin_mean": 462.8185,
+    "transfer_margin_std": 19.759,
+    "mean_wall_s": 11.27,
+    "n_neurons": 127400
+  },
+  "shuffled": {
+    "identity_accuracy": 1.0,
+    "n_identity_trials": 9,
+    "transfer_rate_partial5_to_sugar": 1.0,
+    "n_transfer_trials": 3,
+    "transfer_margin_mean": 530.8134,
+    "transfer_margin_std": 1.5756,
+    "mean_wall_s": 10.64,
+    "n_neurons": 127400
+  },
+  "reservoir": {
+    "identity_accuracy": 0.5556,
+    "n_identity_trials": 9,
+    "transfer_rate_partial5_to_sugar": 0.0,
+    "n_transfer_trials": 3,
+    "transfer_margin_mean": -2.1066,
+    "transfer_margin_std": 0.0207,
+    "mean_wall_s": 21.2,
+    "n_neurons": 127400
+  },
+  "chance_identity": 0.3333333333333333,
+  "chance_transfer": 0.3333333333333333
+}

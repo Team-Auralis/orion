@@ -12,8 +12,15 @@ models/
 merged/
 vault/
 data/
+papers/
+third_party/
+scratch/
 *.db
 *.gguf
+*.safetensors
+*.pdf
+*.tfstate
+*.tfstate.*
 .graft/
 graft/
 graphify-out/

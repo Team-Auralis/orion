@@ -1,0 +1,10 @@
+{
+  "interfaceFontSize": 14,
+  "showLineNumber": true,
+  "strictLineBreaks": false,
+  "readableLineLength": true,
+  "defaultViewMode": "preview",
+  "livePreview": true,
+  "attachmentFolderPath": "attachments",
+  "newFileLocation": "current"
+}

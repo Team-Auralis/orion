@@ -50,3 +50,19 @@ data/training/corpus/val-*.jsonl
 data/training/corpus/test-*.jsonl
 data/training/corpus/.cache-build/
 
+# SQLite development databases
+*.db
+
+# Terraform state — contains secrets, NEVER commit
+*.tfstate
+*.tfstate.*
+
+# Model weights — too large for git
+*.gguf
+*.safetensors
+*.bin
+models/checkpoints/
+models/comp001/
+
+# Large binary docs — host externally
+*.pdf

@@ -211,17 +211,49 @@ async def message_handler(msg):
             WORKER_LATENCY.observe(time.time() - start_time)
             await msg.ack()
         except json.JSONDecodeError as e:
-            # Poison message: can never succeed, don't loop it forever.
+            # Poison message: can never succeed. Send to DLQ for inspection
+            # rather than term()'ing into the void.
             print(f"Unparseable message: {e}")
-            await msg.term()
+            await _send_to_dlq(msg, f"json_decode_error: {e}")
+            await msg.ack()
         except Exception as e:
             print(f"Error processing message: {e}")
-            # Transient failure (DB down etc.): redeliver with backoff rather
-            # than dropping the event forever.
-            await msg.nak(delay=5)
+            # Check delivery count — after 5 retries, move to DLQ.
+            # ponytail: num_delivered requires JetStream metadata; fall back to nak if unavailable.
+            try:
+                num = msg.metadata.num_delivered if msg.metadata else 0
+            except Exception:
+                num = 0
+            if num >= 5:
+                print(f"Max retries exceeded for {msg.subject}, sending to DLQ")
+                await _send_to_dlq(msg, f"max_retries: {e}")
+                await msg.ack()
+            else:
+                # Transient failure (DB down etc.): redeliver with backoff rather
+                # than dropping the event forever.
+                await msg.nak(delay=5)
 
 
 NATS_URL = os.environ.get("NATS_URL", "nats://localhost:4222")
+_js = None  # set in main()
+
+
+async def _send_to_dlq(msg, reason: str):
+    """Publish a failed message to the dead_letter stream for manual inspection."""
+    if _js is None:
+        print(f"[DLQ] JetStream not ready, cannot archive: {reason}")
+        return
+    dlq_payload = json.dumps({
+        "original_subject": msg.subject,
+        "original_data": msg.data.decode(errors="replace"),
+        "reason": reason,
+        "timestamp": datetime.utcnow().isoformat(),
+    })
+    try:
+        await _js.publish(f"dead_letter.{msg.subject}", dlq_payload.encode())
+    except Exception as e:
+        print(f"[DLQ] Failed to publish to dead letter: {e}")
+
 
 
 async def network_handler(msg):
@@ -250,14 +282,21 @@ async def main():
         return
 
     # Initialize JetStream
+    global _js
     js = nc.jetstream()
+    _js = js
 
-    # Create stream if it doesn't exist
+    # Create streams if they don't exist
     try:
         await js.add_stream(name="incidents", subjects=["incident.*", "network.*"])
         print("JetStream 'incidents' stream initialized.")
     except Exception as e:
         print(f"Stream setup: {e}")
+    try:
+        await js.add_stream(name="dead_letter", subjects=["dead_letter.*"])
+        print("JetStream 'dead_letter' stream initialized.")
+    except Exception as e:
+        print(f"DLQ stream setup: {e}")
 
     # Subscribe via JetStream for guaranteed delivery
     sub = await js.subscribe(

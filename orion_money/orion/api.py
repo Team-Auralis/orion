@@ -32,13 +32,14 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from orion import events, jobs, ledger
 from orion.config import get_config
+from orion.connectors.gumroad import GumroadConnector
 from orion.db import get_session, init_db
 from orion.discovery import DiscoveryService
 from orion.experiments import ExperimentService
 from orion.ledger import fmt_paise
 from orion.log import get_logger
 from orion.memory import query as memory_query
-from orion.models import Opportunity, utc_now_iso
+from orion.models import Opportunity, Product, utc_now_iso
 from orion.router import ModelRouter
 from orion.safety import ApprovalService, Decision, SafetyEngine
 from orion.scoring import OpportunityScorer
@@ -945,6 +946,277 @@ def api_jobs(status: Optional[str] = None, limit: int = 50):
     with get_session() as s:
         rows = jobs.list_jobs(status=status, limit=max(1, min(limit, 500)), session=s)
     return {"jobs": [_job_payload(r) for r in rows], "count": len(rows)}
+
+
+# ---------------------------------------------------------------------------
+# Gumroad connector endpoints
+# ---------------------------------------------------------------------------
+
+
+class GumroadPublishRequest(BaseModel):
+    product_id: str = Field(min_length=1)
+
+
+class GumroadSalesParams(BaseModel):
+    after: Optional[str] = None
+    before: Optional[str] = None
+    product_id: Optional[str] = None
+
+
+def _require_mode(allowed: tuple[str, ...]) -> str:
+    """Check autonomy mode; raise if not allowed. Returns the mode."""
+    mode = get_config().autonomy.default_mode
+    if mode not in allowed:
+        raise BlockedByPolicy(
+            f"endpoint requires mode in {allowed}, current is {mode}",
+            [f"autonomy mode is {mode}, need one of {allowed}"],
+        )
+    return mode
+
+
+@app.post("/api/gumroad/test")
+def api_gumroad_test():
+    """Test Gumroad API connection."""
+    mode = _require_mode(("assisted", "autonomous", "dry_run"))
+    import asyncio
+
+    connector = GumroadConnector()
+    try:
+        ok = asyncio.run(connector.test_connection())
+        return {"connected": ok, "mode": mode}
+    finally:
+        asyncio.run(connector.close())
+
+
+@app.post("/api/gumroad/publish")
+def api_gumroad_publish(req: GumroadPublishRequest):
+    """Publish a product to Gumroad (requires approval for L2 action)."""
+    mode = _require_mode(("assisted", "autonomous", "dry_run"))
+
+    with get_session() as s:
+        product = s.query(Product).filter(Product.id == req.product_id).first()
+        if not product:
+            raise ApiError(f"product {req.product_id} not found", 404)
+        if product.status not in ("READY_TO_PUBLISH", "QUALITY_FAILED"):
+            raise ApiError(
+                f"product {req.product_id} not ready to publish (status={product.status})",
+                400,
+            )
+
+        # Create approval request (publish is L2 -> requires approval)
+        approval = ApprovalService().request(
+            action="publish",
+            why=f"Publish product {product.id} to Gumroad",
+            cost_paise=0,
+            potential_revenue_paise=product.price_usd_cents
+            * 100,  # convert USD cents to INR paise (rough)
+            risk_level="L2",
+            proposed_payload={"product_id": product.id, "platform": "gumroad"},
+            destination="gumroad",
+            correlation_id=product.id,
+            session=s,
+        )
+
+    # In dry-run, the approval is auto-approved
+    if approval.status == "APPROVED" and approval.decision == "dry_run_auto_approve":
+        # Simulate the publish
+        import asyncio
+
+        connector = GumroadConnector()
+        try:
+            result = asyncio.run(connector.create_product(product))
+        finally:
+            asyncio.run(connector.close())
+
+        if result.success:
+            # Update product status
+            with get_session() as s:
+                p = s.query(Product).filter(Product.id == req.product_id).first()
+                if p:
+                    p.status = "PUBLISHED"
+                    p.updated_at = utc_now_iso()
+                    s.flush()
+            _publish(
+                "product_published",
+                agent="gumroad",
+                entity_id=product.id,
+                metadata={
+                    "method": result.method,
+                    "url": result.url,
+                    "gumroad_id": result.product_id,
+                },
+                correlation_id=product.id,
+            )
+            return {
+                "status": "SIMULATED" if mode == "dry_run" else "COMPLETED",
+                "mode": mode,
+                "approval": _approval_payload(approval),
+                "publish_result": {
+                    "success": result.success,
+                    "product_id": result.product_id,
+                    "url": result.url,
+                    "method": result.method,
+                    "draft_bundle_path": result.draft_bundle_path,
+                },
+            }
+        else:
+            return {
+                "status": "SIMULATED" if mode == "dry_run" else "FAILED",
+                "mode": mode,
+                "approval": _approval_payload(approval),
+                "publish_result": {
+                    "success": False,
+                    "error": result.error,
+                    "method": result.method,
+                    "draft_bundle_path": result.draft_bundle_path,
+                },
+            }
+
+    # Real mode: return pending approval
+    _publish(
+        "approval_requested",
+        agent="safety",
+        entity_id=approval.id,
+        metadata={"action": "publish", "product_id": product.id},
+        correlation_id=product.id,
+    )
+    return {
+        "status": "PENDING",
+        "mode": mode,
+        "approval": _approval_payload(approval),
+        "publish_result": None,
+    }
+
+
+@app.post("/api/gumroad/publish/execute")
+def api_gumroad_publish_execute(approval_id: int):
+    """Execute a previously approved Gumroad publish (called after human approval)."""
+    mode = _require_mode(("assisted", "autonomous"))
+
+    with get_session() as s:
+        approval = ApprovalService().approve(
+            approval_id, reason="approved via API", session=s
+        )
+        payload = json.loads(approval.payload_json) if approval.payload_json else {}
+        product_id = payload.get("product_id")
+
+        if not product_id:
+            raise ApiError("approval payload missing product_id", 400)
+
+        product = s.query(Product).filter(Product.id == product_id).first()
+        if not product:
+            raise ApiError(f"product {product_id} not found", 404)
+
+        import asyncio
+
+        connector = GumroadConnector()
+        try:
+            result = asyncio.run(connector.create_product(product))
+        finally:
+            asyncio.run(connector.close())
+
+        if result.success:
+            product.status = "PUBLISHED"
+            product.updated_at = utc_now_iso()
+            s.flush()
+            _publish(
+                "product_published",
+                agent="gumroad",
+                entity_id=product.id,
+                metadata={
+                    "method": result.method,
+                    "url": result.url,
+                    "gumroad_id": result.product_id,
+                },
+                correlation_id=product.id,
+            )
+            return {
+                "status": "COMPLETED",
+                "approval": _approval_payload(approval),
+                "publish_result": {
+                    "success": result.success,
+                    "product_id": result.product_id,
+                    "url": result.url,
+                    "method": result.method,
+                    "draft_bundle_path": result.draft_bundle_path,
+                },
+            }
+        else:
+            return {
+                "status": "FAILED",
+                "approval": _approval_payload(approval),
+                "publish_result": {
+                    "success": False,
+                    "error": result.error,
+                    "method": result.method,
+                    "draft_bundle_path": result.draft_bundle_path,
+                },
+            }
+
+
+@app.get("/api/gumroad/sales")
+def api_gumroad_sales(
+    after: Optional[str] = None,
+    before: Optional[str] = None,
+    product_id: Optional[str] = None,
+):
+    """List Gumroad sales with optional filters."""
+    _require_mode(("assisted", "autonomous", "dry_run"))
+
+    import asyncio
+
+    connector = GumroadConnector()
+    try:
+        sales = asyncio.run(
+            connector.list_sales(after=after, before=before, product_id=product_id)
+        )
+    finally:
+        asyncio.run(connector.close())
+
+    return {
+        "sales": [
+            {
+                "id": s.id,
+                "product_id": s.product_id,
+                "price_usd_cents": s.price_usd_cents,
+                "currency": s.currency,
+                "email": s.email,
+                "created_at": s.created_at,
+                "payout_id": s.payout_id,
+            }
+            for s in sales
+        ],
+        "count": len(sales),
+    }
+
+
+@app.get("/api/gumroad/payouts")
+def api_gumroad_payouts():
+    """List Gumroad payouts."""
+    _require_mode(("assisted", "autonomous", "dry_run"))
+
+    import asyncio
+
+    connector = GumroadConnector()
+    try:
+        payouts = asyncio.run(connector.list_payouts())
+    finally:
+        asyncio.run(connector.close())
+
+    return {
+        "payouts": [
+            {
+                "id": p.id,
+                "amount_usd_cents": p.amount_usd_cents,
+                "currency": p.currency,
+                "status": p.status,
+                "arrived_at": p.arrived_at,
+                "paid_out_at": p.paid_out_at,
+            }
+            for p in payouts
+        ],
+        "count": len(payouts),
+    }
 
 
 # ---------------------------------------------------------------------------

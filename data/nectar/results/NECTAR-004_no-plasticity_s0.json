@@ -1,0 +1,7 @@
+{
+  "baseline_A_mbon_spikes": 50,
+  "recall_mbon_spikes": 54,
+  "learn_factor": 1.08,
+  "condition": "no-plasticity",
+  "seed": 0
+}

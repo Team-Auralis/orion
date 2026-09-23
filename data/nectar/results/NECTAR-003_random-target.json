@@ -1,0 +1,15 @@
+{
+  "experiment": "NECTAR-003",
+  "control": "random-target",
+  "seed": 0,
+  "dt_ms": null,
+  "measured": true,
+  "mock": false,
+  "baseline_responders": 403,
+  "our_responders": 76,
+  "overlap_vs_ref": 0,
+  "precision": 0.0,
+  "recall": 0.0,
+  "overlap_vs_baseline": 0,
+  "wall_s": 174.6
+}

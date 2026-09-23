@@ -1,0 +1,15 @@
+{
+  "experiment": "NECTAR-003",
+  "control": "tox-signs",
+  "seed": 0,
+  "dt_ms": null,
+  "measured": true,
+  "mock": false,
+  "baseline_responders": 416,
+  "our_responders": 21,
+  "overlap_vs_ref": 21,
+  "precision": 1.0,
+  "recall": 0.0469,
+  "overlap_vs_baseline": 21,
+  "wall_s": 46.2
+}

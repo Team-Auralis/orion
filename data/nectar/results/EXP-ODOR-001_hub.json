@@ -1,0 +1,25 @@
+{
+  "experiment": "EXP-ODOR-001",
+  "backend": "brian2",
+  "n_neurons": 138639,
+  "n_edges": 15091983,
+  "drivers": [
+    90883,
+    79529,
+    87447,
+    93981,
+    74067,
+    85900,
+    102727,
+    109989
+  ],
+  "duration_s": 0.5,
+  "wall_s": 4.6,
+  "slower_than_rt": 9.2,
+  "n_spiking": 492,
+  "total_spikes": 3352,
+  "propagated": 484,
+  "mean_first_spike_ms": 66.9,
+  "ram_final_gb": 0.88,
+  "mock": false
+}

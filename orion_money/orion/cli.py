@@ -109,6 +109,22 @@ def _build_parser() -> _Parser:
     )
     p.add_argument("url", help="https URL on the browser allowlist (research only)")
 
+    # gumroad subcommands
+    gum = sub.add_parser("gumroad", help="Gumroad connector commands")
+    gum_sub = gum.add_subparsers(dest="gumroad_command", required=True)
+
+    gum_sub.add_parser("test", help="test Gumroad API connection")
+
+    p = gum_sub.add_parser("publish", help="publish a product to Gumroad")
+    p.add_argument("product_id", help="product ID to publish")
+
+    p = gum_sub.add_parser("sales", help="list Gumroad sales")
+    p.add_argument("--after", help="filter sales after this date (ISO format)")
+    p.add_argument("--before", help="filter sales before this date (ISO format)")
+    p.add_argument("--product-id", help="filter by product ID")
+
+    gum_sub.add_parser("payouts", help="list Gumroad payouts")
+
     # product subcommands
     prod = sub.add_parser("product", help="product generation commands")
     prod_sub = prod.add_subparsers(dest="product_command", required=True)
@@ -769,6 +785,170 @@ def cmd_research(args) -> int:
     return EXIT_OK
 
 
+# ---------------------------------------------------------------------------
+# Gumroad CLI commands
+# ---------------------------------------------------------------------------
+
+
+def cmd_gumroad_test(args) -> int:
+    """Test Gumroad API connection."""
+    from orion.connectors.gumroad import GumroadConnector
+    import asyncio
+
+    connector = GumroadConnector()
+    try:
+        ok = asyncio.run(connector.test_connection())
+    finally:
+        asyncio.run(connector.close())
+
+    if ok:
+        print("Gumroad connection: OK")
+        return EXIT_OK
+    else:
+        print("Gumroad connection: FAILED")
+        return EXIT_RUNTIME
+
+
+def cmd_gumroad_publish(args) -> int:
+    """Publish a product to Gumroad (requests approval, then executes)."""
+    from orion.connectors.gumroad import GumroadConnector
+    from orion.products import get_product
+    from orion.safety import ApprovalService
+    import asyncio
+
+    product = get_product(args.product_id)
+    if not product:
+        print(f"product {args.product_id} not found", file=sys.stderr)
+        return EXIT_USER
+
+    if product.status not in ("READY_TO_PUBLISH", "QUALITY_FAILED"):
+        print(
+            f"product {args.product_id} not ready to publish (status={product.status})",
+            file=sys.stderr,
+        )
+        return EXIT_USER
+
+    # Request approval
+    approval = ApprovalService().request(
+        action="publish",
+        why=f"Publish product {product.id} to Gumroad",
+        cost_paise=0,
+        potential_revenue_paise=product.price_usd_cents * 100,
+        risk_level="L2",
+        proposed_payload={"product_id": product.id, "platform": "gumroad"},
+        destination="gumroad",
+        correlation_id=product.id,
+    )
+
+    print(f"Approval requested: #{approval.id} (status={approval.status})")
+    if approval.status == "PENDING":
+        print(
+            f"Run `orion approve {approval.id}` to approve, then `orion gumroad publish {args.product_id}` again to execute"
+        )
+        return EXIT_OK
+
+    # Dry-run auto-approved - execute
+    connector = GumroadConnector()
+    try:
+        result = asyncio.run(connector.create_product(product))
+    finally:
+        asyncio.run(connector.close())
+
+    if result.success:
+        from orion.products import update_status
+
+        update_status(product.id, "PUBLISHED")
+        print(f"Published via {result.method}")
+        if result.product_id:
+            print(f"  Gumroad product ID: {result.product_id}")
+        if result.url:
+            print(f"  URL: {result.url}")
+        if result.draft_bundle_path:
+            print(f"  Draft bundle: {result.draft_bundle_path}")
+        return EXIT_OK
+    else:
+        print(f"Publish failed: {result.error}")
+        if result.draft_bundle_path:
+            print(f"Draft bundle created at: {result.draft_bundle_path}")
+        return EXIT_RUNTIME
+
+
+def cmd_gumroad_sales(args) -> int:
+    """List Gumroad sales."""
+    from orion.connectors.gumroad import GumroadConnector
+    from orion.ledger import fmt_paise
+    import asyncio
+
+    connector = GumroadConnector()
+    try:
+        sales = asyncio.run(
+            connector.list_sales(
+                after=args.after, before=args.before, product_id=args.product_id
+            )
+        )
+    finally:
+        asyncio.run(connector.close())
+
+    if not sales:
+        print("no sales")
+        return EXIT_OK
+
+    print(
+        f"{'ID':<20} {'Product':<15} {'Amount':>10} {'Currency':<5} {'Email':<30} {'Date':<20} {'Payout':<15}"
+    )
+    print("-" * 120)
+    for s in sales:
+        amount_str = f"${s.price_usd_cents / 100:.2f}"
+        date_str = s.created_at[:19] if s.created_at else ""
+        payout_str = s.payout_id or ""
+        email_str = (s.email[:28] + "..") if len(s.email) > 30 else s.email
+        print(
+            f"{s.id:<20} {s.product_id:<15} {amount_str:>10} {s.currency:<5} {email_str:<30} {date_str:<20} {payout_str:<15}"
+        )
+    return EXIT_OK
+
+
+def cmd_gumroad_payouts(args) -> int:
+    """List Gumroad payouts."""
+    from orion.connectors.gumroad import GumroadConnector
+    import asyncio
+
+    connector = GumroadConnector()
+    try:
+        payouts = asyncio.run(connector.list_payouts())
+    finally:
+        asyncio.run(connector.close())
+
+    if not payouts:
+        print("no payouts")
+        return EXIT_OK
+
+    print(
+        f"{'ID':<20} {'Amount':>12} {'Currency':<5} {'Status':<12} {'Arrived':<20} {'Paid Out':<20}"
+    )
+    print("-" * 95)
+    for p in payouts:
+        amount_str = f"${p.amount_usd_cents / 100:.2f}"
+        arrived_str = p.arrived_at[:19] if p.arrived_at else ""
+        paid_str = p.paid_out_at[:19] if p.paid_out_at else ""
+        print(
+            f"{p.id:<20} {amount_str:>12} {p.currency:<5} {p.status:<12} {arrived_str:<20} {paid_str:<20}"
+        )
+    return EXIT_OK
+
+
+_GUMROAD_HANDLERS = {
+    "test": cmd_gumroad_test,
+    "publish": cmd_gumroad_publish,
+    "sales": cmd_gumroad_sales,
+    "payouts": cmd_gumroad_payouts,
+}
+
+
+def cmd_gumroad(args) -> int:
+    return _GUMROAD_HANDLERS[args.gumroad_command](args)
+
+
 def cmd_product_generate(args) -> int:
     """Generate a new digital product from spec."""
     from orion.products import ProductSpec, generate_product
@@ -982,6 +1162,7 @@ _HANDLERS = {
     "kill": cmd_kill,
     "logs": cmd_logs,
     "research": cmd_research,
+    "gumroad": cmd_gumroad,
     "vault": cmd_vault,
     "product": cmd_product,
 }

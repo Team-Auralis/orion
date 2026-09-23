@@ -2,7 +2,9 @@
 
 ``MockConnector`` powers the offline pipeline; ``RealMarketplaceConnector``
 is an explicit NOT IMPLEMENTED stub (never fakes automation, never hits the
-network). See ``orion.connectors.base.ConnectorBase`` for the protocol.
+network). ``GumroadConnector`` publishes products to Gumroad (official API
+first, then draft-bundle fallback). See ``orion.connectors.base.ConnectorBase``
+for the protocol.
 """
 
 from orion.connectors.base import (
@@ -13,6 +15,7 @@ from orion.connectors.base import (
 )
 from orion.connectors.mock import MockConnector
 from orion.connectors.real_marketplace import RealMarketplaceConnector
+from orion.connectors.gumroad import GumroadConnector
 
 __all__ = [
     "ConnectorBase",
@@ -21,4 +24,5 @@ __all__ = [
     "offer_hash",
     "MockConnector",
     "RealMarketplaceConnector",
+    "GumroadConnector",
 ]

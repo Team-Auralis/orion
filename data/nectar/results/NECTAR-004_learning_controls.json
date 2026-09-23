@@ -1,0 +1,63 @@
+[
+  {
+    "condition": "scrambled-dopamine",
+    "seeds": {
+      "0": {
+        "baseline_A_mbon_spikes": 50,
+        "recall_mbon_spikes": 54,
+        "learn_factor": 1.08
+      },
+      "1": {
+        "baseline_A_mbon_spikes": 51,
+        "recall_mbon_spikes": 51,
+        "learn_factor": 1.0
+      }
+    },
+    "measured": true,
+    "mock": false,
+    "scrambled_gain_on_B": 1.0,
+    "learn_factor_mean": 1.04,
+    "learn_factor_std": 0.04,
+    "n_seeds": 2
+  },
+  {
+    "condition": "random-kc",
+    "seeds": {
+      "0": {
+        "baseline_A_mbon_spikes": 50,
+        "recall_mbon_spikes": 54,
+        "learn_factor": 1.08
+      },
+      "1": {
+        "baseline_A_mbon_spikes": 51,
+        "recall_mbon_spikes": 51,
+        "learn_factor": 1.0
+      }
+    },
+    "measured": true,
+    "mock": false,
+    "learn_factor_mean": 1.04,
+    "learn_factor_std": 0.04,
+    "n_seeds": 2
+  },
+  {
+    "condition": "degree-matched-kc",
+    "seeds": {
+      "0": {
+        "baseline_A_mbon_spikes": 50,
+        "recall_mbon_spikes": 54,
+        "learn_factor": 1.08
+      },
+      "1": {
+        "baseline_A_mbon_spikes": 51,
+        "recall_mbon_spikes": 51,
+        "learn_factor": 1.0
+      }
+    },
+    "measured": true,
+    "mock": false,
+    "learn_factor_mean": 1.04,
+    "learn_factor_std": 0.04,
+    "n_seeds": 2
+  }
+]

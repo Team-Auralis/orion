@@ -17,7 +17,7 @@ def override_check_policy(action: str, resource: str):
         return {"subject": "test-user-123", "role": "operator"}
     return dependency
 
-from apps.api.main import get_db as main_get_db
+from apps.api.main import get_db as main_get_db, limiter
 
 
 @pytest.fixture(autouse=True)
@@ -26,6 +26,7 @@ def api_dependencies():
     saved = dict(app.dependency_overrides)
     app.dependency_overrides[main_get_db] = override_get_db
     app.dependency_overrides[get_current_user] = override_get_current_user
+    limiter.reset()
     yield
     app.dependency_overrides.clear()
     app.dependency_overrides.update(saved)
@@ -42,6 +43,17 @@ def test_health_check_or_metrics():
     response = client.get("/metrics")
     assert response.status_code == 200
     assert b"python_gc_objects_collected_total" in response.content or b"http_requests_total" in response.content
+
+
+def test_health_endpoint():
+    response = client.get("/health")
+    assert response.status_code in (200, 503)
+    data = response.json()
+    assert "status" in data
+    assert "checks" in data
+    assert "db" in data["checks"]
+    assert "nats" in data["checks"]
+    assert "redis" in data["checks"]
 
 @patch("apps.api.main.redis_client")
 def test_break_glass_auth_missing_reason(mock_redis):

@@ -18,7 +18,7 @@ spec:
       - name: orion-api
         image: orion-api:latest
         ports:
-        - containerPort: 8000
+        - containerPort: 8001
         envFrom:
         - secretRef:
             name: orion-secrets
@@ -31,8 +31,8 @@ spec:
             memory: "1Gi"
         readinessProbe:
           httpGet:
-            path: /metrics
-            port: 8000
+            path: /health
+            port: 8001
           initialDelaySeconds: 5
           periodSeconds: 10
 ---
@@ -46,7 +46,7 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 8000
+      targetPort: 8001
   type: ClusterIP
 ---
 apiVersion: apps/v1

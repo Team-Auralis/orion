@@ -1,0 +1,157 @@
+{
+  "D:\\orion\\services\\aegis\\main.py": {
+    "mtime": 1787415128.5745323,
+    "ast_hash": "3e4b2bae31ff06fcdf367ae70f54ecff",
+    "semantic_hash": "3e4b2bae31ff06fcdf367ae70f54ecff"
+  },
+  "D:\\orion\\services\\ai_sentinel\\main.py": {
+    "mtime": 1787307924.601101,
+    "ast_hash": "21405106093d2803bfa29c5bd7acdd87",
+    "semantic_hash": "21405106093d2803bfa29c5bd7acdd87"
+  },
+  "D:\\orion\\services\\ascend\\planner.py": {
+    "mtime": 1788509158.7329915,
+    "ast_hash": "2d821ae8f6ebe113f25b475049580ead",
+    "semantic_hash": "2d821ae8f6ebe113f25b475049580ead"
+  },
+  "D:\\orion\\services\\cic\\auditor.py": {
+    "mtime": 1788874779.7040403,
+    "ast_hash": "377d8b028ac72586d3c8507a71e7a729",
+    "semantic_hash": "377d8b028ac72586d3c8507a71e7a729"
+  },
+  "D:\\orion\\services\\cyber\\detections.py": {
+    "mtime": 1787477323.8999722,
+    "ast_hash": "aa77805264277b7256e04719f29f2427",
+    "semantic_hash": "aa77805264277b7256e04719f29f2427"
+  },
+  "D:\\orion\\services\\cyber\\emitter.py": {
+    "mtime": 1787482326.7726908,
+    "ast_hash": "7ad89a39673b9bb49136076670b0db3e",
+    "semantic_hash": "7ad89a39673b9bb49136076670b0db3e"
+  },
+  "D:\\orion\\services\\cyber\\oses.py": {
+    "mtime": 1787477260.9077897,
+    "ast_hash": "ea469ba2207a9682deda1fe4b9d98987",
+    "semantic_hash": "ea469ba2207a9682deda1fe4b9d98987"
+  },
+  "D:\\orion\\services\\cyber\\soar.py": {
+    "mtime": 1787477477.8225732,
+    "ast_hash": "0d9f7d18a813b2d8059b3ac3dab4222f",
+    "semantic_hash": "0d9f7d18a813b2d8059b3ac3dab4222f"
+  },
+  "D:\\orion\\services\\cyber\\__init__.py": {
+    "mtime": 1787477369.944258,
+    "ast_hash": "f0cabc35383f17b0ac530bbdf77342a5",
+    "semantic_hash": "f0cabc35383f17b0ac530bbdf77342a5"
+  },
+  "D:\\orion\\services\\forge\\engine.py": {
+    "mtime": 1788509158.7284796,
+    "ast_hash": "21b01206e43fa10e517c1bf8bb1bcb97",
+    "semantic_hash": "21b01206e43fa10e517c1bf8bb1bcb97"
+  },
+  "D:\\orion\\services\\mirror\\engine.py": {
+    "mtime": 1788509173.8832028,
+    "ast_hash": "be60a42735bb3c18c7b30dabc57234d0",
+    "semantic_hash": "be60a42735bb3c18c7b30dabc57234d0"
+  },
+  "D:\\orion\\services\\nexus\\fabric.py": {
+    "mtime": 1788509158.725967,
+    "ast_hash": "59641b59ad940a1feb06979660289bd8",
+    "semantic_hash": "59641b59ad940a1feb06979660289bd8"
+  },
+  "D:\\orion\\services\\omnis\\sensor_gate.py": {
+    "mtime": 1788874453.313715,
+    "ast_hash": "24a834a744d9beaa4899006249f60cd4",
+    "semantic_hash": "24a834a744d9beaa4899006249f60cd4"
+  },
+  "D:\\orion\\services\\omnis\\transfer_guard.py": {
+    "mtime": 1788874456.1970732,
+    "ast_hash": "565482db8b726514d0d0d4b6165b1ce8",
+    "semantic_hash": "565482db8b726514d0d0d4b6165b1ce8"
+  },
+  "D:\\orion\\services\\worker\\main.py": {
+    "mtime": 1787417561.828436,
+    "ast_hash": "0abd0d2d26f0a17dfe62b4743c5533f6",
+    "semantic_hash": "0abd0d2d26f0a17dfe62b4743c5533f6"
+  },
+  "D:\\orion\\models\\orion_custom_lora\\adapter_config.json": {
+    "mtime": 1788370746.5278995,
+    "ast_hash": "282f7c27205293d227891ddd0364171b",
+    "semantic_hash": "282f7c27205293d227891ddd0364171b"
+  },
+  "D:\\orion\\models\\orion_custom_lora\\tokenizer.json": {
+    "mtime": 1788370747.1036663,
+    "ast_hash": "aa2988694a177776324112349a8df055",
+    "semantic_hash": "aa2988694a177776324112349a8df055"
+  },
+  "D:\\orion\\models\\orion_custom_lora\\tokenizer_config.json": {
+    "mtime": 1788370746.8859086,
+    "ast_hash": "b2f51796badb0e7d8c4b17659a43ad01",
+    "semantic_hash": "b2f51796badb0e7d8c4b17659a43ad01"
+  },
+  "D:\\orion\\models\\orion_custom_lora\\vocab.json": {
+    "mtime": 1788370746.9159503,
+    "ast_hash": "613b8e4a622c4a2c90e9e1245fc540d6",
+    "semantic_hash": "613b8e4a622c4a2c90e9e1245fc540d6"
+  },
+  "D:\\orion\\models\\orion_custom_lora\\checkpoint-12\\adapter_config.json": {
+    "mtime": 1788370744.175211,
+    "ast_hash": "282f7c27205293d227891ddd0364171b",
+    "semantic_hash": "282f7c27205293d227891ddd0364171b"
+  },
+  "D:\\orion\\models\\orion_custom_lora\\checkpoint-12\\tokenizer.json": {
+    "mtime": 1788370744.746804,
+    "ast_hash": "aa2988694a177776324112349a8df055",
+    "semantic_hash": "aa2988694a177776324112349a8df055"
+  },
+  "D:\\orion\\models\\orion_custom_lora\\checkpoint-12\\tokenizer_config.json": {
+    "mtime": 1788370744.247386,
+    "ast_hash": "b2f51796badb0e7d8c4b17659a43ad01",
+    "semantic_hash": "b2f51796badb0e7d8c4b17659a43ad01"
+  },
+  "D:\\orion\\models\\orion_custom_lora\\checkpoint-12\\trainer_state.json": {
+    "mtime": 1788370745.141918,
+    "ast_hash": "0726dc3077aeb558100dda73953298de",
+    "semantic_hash": "0726dc3077aeb558100dda73953298de"
+  },
+  "D:\\orion\\models\\orion_custom_lora\\checkpoint-12\\vocab.json": {
+    "mtime": 1788370744.3734796,
+    "ast_hash": "613b8e4a622c4a2c90e9e1245fc540d6",
+    "semantic_hash": "613b8e4a622c4a2c90e9e1245fc540d6"
+  },
+  "D:\\orion\\models\\orion_custom_lora\\checkpoint-3\\adapter_config.json": {
+    "mtime": 1787853859.6880076,
+    "ast_hash": "31b2ec1bf230db7690ae7cf9a5254a22",
+    "semantic_hash": "31b2ec1bf230db7690ae7cf9a5254a22"
+  },
+  "D:\\orion\\models\\orion_custom_lora\\checkpoint-3\\trainer_state.json": {
+    "mtime": 1787853859.7267027,
+    "ast_hash": "8d209d2afa02d7c522afac3f830088b6",
+    "semantic_hash": "8d209d2afa02d7c522afac3f830088b6"
+  },
+  "D:\\orion\\models\\orion_custom_lora\\merges.txt": {
+    "mtime": 1788370746.9844787,
+    "ast_hash": "72dacf1de43bc354dc3c521e44ed0b24",
+    "semantic_hash": "72dacf1de43bc354dc3c521e44ed0b24"
+  },
+  "D:\\orion\\models\\orion_custom_lora\\README.md": {
+    "mtime": 1788370745.7445998,
+    "ast_hash": "a372643ec552a2a9a9bb41d1002bc6ad",
+    "semantic_hash": "a372643ec552a2a9a9bb41d1002bc6ad"
+  },
+  "D:\\orion\\models\\orion_custom_lora\\checkpoint-12\\merges.txt": {
+    "mtime": 1788370744.4616816,
+    "ast_hash": "72dacf1de43bc354dc3c521e44ed0b24",
+    "semantic_hash": "72dacf1de43bc354dc3c521e44ed0b24"
+  },
+  "D:\\orion\\models\\orion_custom_lora\\checkpoint-12\\README.md": {
+    "mtime": 1788370742.1472747,
+    "ast_hash": "9cb59a4b994f95a832aa58422469f16d",
+    "semantic_hash": "9cb59a4b994f95a832aa58422469f16d"
+  },
+  "D:\\orion\\models\\orion_custom_lora\\checkpoint-3\\README.md": {
+    "mtime": 1787853858.90052,
+    "ast_hash": "a7a04383e582ab6b93641c8466ddfc1e",
+    "semantic_hash": "a7a04383e582ab6b93641c8466ddfc1e"
+  }
+}

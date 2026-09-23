@@ -1,0 +1,146 @@
+{
+  "experiment": "EXP-LEARN-001",
+  "data": "v783",
+  "design": "odor-code associative learning (KC ensembles)",
+  "duration_s": 0.4,
+  "drive_rate_hz": 200.0,
+  "n_odor_a_kc": 30,
+  "n_odor_b_kc": 30,
+  "repetition": 1,
+  "sensory_probe": {
+    "label": "sensory_probe_GRNs",
+    "n_spiking": 382,
+    "n_active_kc": 0,
+    "mbon_active": 1,
+    "mbon_spikes": 1,
+    "all_mbon_spikes": {
+      "123598": 1
+    },
+    "synapses_modified_at_load": 0,
+    "wall_s": 116.75143527984619
+  },
+  "baseline_odorA": {
+    "label": "baseline_odorA",
+    "n_spiking": 42,
+    "n_active_kc": 30,
+    "mbon_active": 6,
+    "mbon_spikes": 41,
+    "all_mbon_spikes": {
+      "100958": 7,
+      "19102": 11,
+      "127676": 12,
+      "93462": 1,
+      "32109": 6,
+      "10231": 4
+    },
+    "synapses_modified_at_load": 0,
+    "wall_s": 150.08638381958008
+  },
+  "baseline_odorB": {
+    "label": "baseline_odorB",
+    "n_spiking": 42,
+    "n_active_kc": 30,
+    "mbon_active": 6,
+    "mbon_spikes": 31,
+    "all_mbon_spikes": {
+      "19102": 8,
+      "127676": 7,
+      "58118": 1,
+      "93462": 2,
+      "132484": 4,
+      "95630": 9
+    },
+    "synapses_modified_at_load": 0,
+    "wall_s": 151.4828803539276
+  },
+  "acquisition": {
+    "label": "acquisition_odorA",
+    "n_spiking": 393,
+    "n_active_kc": 30,
+    "mbon_active": 18,
+    "mbon_spikes": 69,
+    "all_mbon_spikes": {
+      "59405": 1,
+      "23092": 1,
+      "107063": 1,
+      "31316": 1,
+      "100958": 9,
+      "19102": 12,
+      "121531": 1,
+      "127676": 13,
+      "131322": 1,
+      "58118": 1,
+      "93462": 3,
+      "9580": 1,
+      "32109": 15,
+      "108921": 2,
+      "127353": 1,
+      "132484": 1,
+      "95630": 1,
+      "10231": 4
+    },
+    "synapses_modified_at_load": 0,
+    "wall_s": 153.62517428398132
+  },
+  "reward": {
+    "signal_type": "reward",
+    "label": "EXP-LEARN-001 reward (odor A)",
+    "active_kc": 30,
+    "synapses_modified": 2880,
+    "total_experiences": 1
+  },
+  "recall_odorA": {
+    "label": "recall_odorA_learned",
+    "n_spiking": 471,
+    "n_active_kc": 30,
+    "mbon_active": 17,
+    "mbon_spikes": 72,
+    "all_mbon_spikes": {
+      "59405": 2,
+      "23092": 1,
+      "107063": 1,
+      "31316": 1,
+      "100958": 8,
+      "135787": 1,
+      "19102": 13,
+      "121531": 1,
+      "127676": 13,
+      "131322": 2,
+      "58118": 2,
+      "93462": 3,
+      "9580": 2,
+      "32109": 14,
+      "127353": 2,
+      "95630": 1,
+      "10231": 5
+    },
+    "synapses_modified_at_load": 339,
+    "wall_s": 155.9680950641632
+  },
+  "recall_odorB": {
+    "label": "recall_odorB_control",
+    "n_spiking": 45,
+    "n_active_kc": 30,
+    "mbon_active": 6,
+    "mbon_spikes": 31,
+    "all_mbon_spikes": {
+      "19102": 9,
+      "127676": 7,
+      "58118": 1,
+      "93462": 3,
+      "132484": 3,
+      "95630": 8
+    },
+    "synapses_modified_at_load": 339,
+    "wall_s": 158.9440631866455
+  },
+  "learn_factor": 1.7561,
+  "control_drift": 1.0,
+  "synapses_with_modified_weights": 2880,
+  "sensory_reaches_kc": false,
+  "sensory_reaches_mbon": true,
+  "learned": true,
+  "control_stable": true,
+  "measured": true,
+  "mock": false
+}

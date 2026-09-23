@@ -1,0 +1,15 @@
+{
+  "experiment": "NECTAR-003",
+  "control": "degclass-conn",
+  "seed": 0,
+  "dt_ms": null,
+  "measured": true,
+  "mock": false,
+  "baseline_responders": 399,
+  "our_responders": 53,
+  "overlap_vs_ref": 21,
+  "precision": 0.3962,
+  "recall": 0.0469,
+  "overlap_vs_baseline": 21,
+  "wall_s": 56.0
+}
