@@ -1,5 +1,7 @@
 # ORION default configuration.
-# Every value below can be overridden by environment variables (see .env.example).
+# Only `paths.data_dir` (ORION_DATA_DIR) and `autonomy.default_mode`
+# (ORION_AUTONOMY_MODE) are overridable by environment variables — see
+# .env.example. Everything else must be edited here.
 # All money values are INTEGER PAISE (₹1 = 100 paise, ₹200 = 20000 paise).
 
 orion:

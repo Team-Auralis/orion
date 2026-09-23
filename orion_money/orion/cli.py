@@ -338,6 +338,7 @@ def cmd_dry_run(args) -> int:
     from orion.scoring import OpportunityScorer
     from orion.strategy import StrategyService
 
+    init_db()  # fresh checkouts have no schema yet; doctor did this before
     cfg = get_config()
     with get_session() as s:
         ledger.seed_capital(s, cfg.orion.starting_capital)
