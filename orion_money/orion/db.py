@@ -117,6 +117,9 @@ _DEFERRED_COLUMNS: dict[str, dict[str, str]] = {
         "started_at": "VARCHAR(32)",
         "finished_at": "VARCHAR(32)",
     },
+    "approval_requests": {
+        "consumed_at": "VARCHAR(32)",
+    },
 }
 
 

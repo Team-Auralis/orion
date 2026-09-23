@@ -554,6 +554,56 @@ def record_revenue(
     )
 
 
+def record_verified_payout(
+    session,
+    amount_paise: int,
+    source: str,
+    reference: str,
+    evidence_ref: str,
+    confirmed_by: str,
+    correlation_id: Optional[str] = None,
+) -> LedgerEntry:
+    """Record a human-confirmed real payout, VERIFIED by hard evidence.
+
+    The sanction path for real income in assisted mode: the human executed
+    the external step and can point at payout evidence (CSV path, platform
+    transaction/payout id, ...). ``evidence_ref`` MUST be a non-empty string
+    — no evidence, no VERIFIED revenue (``ValueError``). The entry is written
+    as VERIFIED revenue with ``verification_method="human_confirmed_payout"``
+    and ``confidence=1.0``; the evidence ref + confirmer are stored in the
+    entry metadata for audit. Account numbers are never logged — keep
+    ``evidence_ref`` a generic reference.
+    """
+    if not evidence_ref or not str(evidence_ref).strip():
+        raise ValueError(
+            "evidence_ref is required — never verify a payout without evidence"
+        )
+    entry = record_revenue(
+        session,
+        amount_paise,
+        source=source,
+        reference=reference,
+        verification_method="human_confirmed_payout",
+        confidence=1.0,
+        correlation_id=correlation_id,
+    )
+    entry.metadata_json = json.dumps(
+        {"evidence_ref": str(evidence_ref), "confirmed_by": str(confirmed_by)}
+    )
+    session.flush()
+    log.info(
+        "verified payout recorded",
+        extra={
+            "amount_paise": amount_paise,
+            "source": source,
+            "reference": reference,
+            "evidence_ref": evidence_ref,
+            "confirmed_by": confirmed_by,
+        },
+    )
+    return entry
+
+
 def record_fee(
     session,
     amount_paise: int,

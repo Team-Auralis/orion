@@ -1,7 +1,7 @@
 """ORION command-line interface — ``python -m orion.cli``.
 
 Commands: start, stop, status, doctor, dry-run, opportunities, strategies,
-experiments, ledger, approve, reject, kill, logs.
+experiments, ledger, approve, reject, confirm-payout, kill, logs.
 
 Exit codes: 0 success, 1 user error, 2 runtime error.
 
@@ -19,6 +19,7 @@ import subprocess
 import sys
 import time
 import traceback
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Optional
 
@@ -70,6 +71,34 @@ def _build_parser() -> _Parser:
     for name in ("approve", "reject"):
         p = sub.add_parser(name, help=f"{name} an approval request")
         p.add_argument("id", type=int, help="approval request id")
+    p = sub.add_parser(
+        "confirm-payout",
+        help="record a human-confirmed real payout from evidence (VERIFIED revenue)",
+    )
+    p.add_argument(
+        "--amount-paise",
+        type=int,
+        help="amount in integer paise, e.g. 30000 = ₹300.00 (exactly one of --amount/--amount-paise)",
+    )
+    p.add_argument(
+        "--amount",
+        type=str,
+        help="amount in rupees decimal, e.g. 300.00 = ₹300.00, converted internally "
+        "(exactly one of --amount/--amount-paise)",
+    )
+    p.add_argument("--source", required=True, help="platform that paid out")
+    p.add_argument(
+        "--evidence",
+        required=True,
+        help="payout evidence reference: CSV path, transaction/payout id, platform "
+        "record id — never account numbers",
+    )
+    p.add_argument(
+        "--reference",
+        default="",
+        help="optional ledger reference (default: payout:<amount_paise>)",
+    )
+    p.add_argument("--confirmed-by", default="cli", help="who confirmed (default: cli)")
     sub.add_parser("kill", help="engage the global kill switch")
     p = sub.add_parser("logs", help="tail data/logs/orion.log")
     p.add_argument("--lines", type=int, default=40)
@@ -539,6 +568,84 @@ def cmd_reject(args) -> int:
     return EXIT_OK
 
 
+def _payout_amount_paise(args) -> int:
+    """Resolve exactly one of --amount-paise / --amount (rupees) to paise."""
+    if (args.amount_paise is None) == (args.amount is None):
+        raise ValueError(
+            "pass exactly one of --amount-paise (integer paise) "
+            "or --amount (rupees decimal)"
+        )
+    if args.amount_paise is not None:
+        amount_paise = int(args.amount_paise)
+    else:
+        try:
+            amount_paise = int(round(Decimal(args.amount) * 100))
+        except (InvalidOperation, ValueError, TypeError, ArithmeticError):
+            raise ValueError(
+                f"--amount must be a rupees decimal (e.g. 300.00), got {args.amount!r}"
+            ) from None
+    if amount_paise <= 0:
+        raise ValueError(f"amount must be positive, got {amount_paise} paise")
+    return amount_paise
+
+
+def cmd_confirm_payout(args) -> int:
+    """Human-evidence revenue path: record VERIFIED income from a payout ref."""
+    from orion import events, ledger
+
+    amount_paise = _payout_amount_paise(args)
+    evidence = (args.evidence or "").strip()
+    if not evidence:
+        raise ValueError(
+            "--evidence is required — never verify a payout without evidence"
+        )
+    reference = args.reference or f"payout:{amount_paise}"
+
+    print(f"confirm payout: {fmt_paise(amount_paise)} from {args.source}")
+    print(f"  reference: {reference}")
+    print(f"  evidence:  {evidence}")
+    answer = input("Type CONFIRM to record this verified payout: ")
+    if answer.strip() != "CONFIRM":
+        print("aborted — nothing was recorded", file=sys.stderr)
+        return EXIT_USER
+
+    init_db()
+    with get_session() as s:
+        entry = ledger.record_verified_payout(
+            s,
+            amount_paise,
+            source=args.source,
+            reference=reference,
+            evidence_ref=evidence,
+            confirmed_by=args.confirmed_by,
+        )
+        summary = ledger.summary(s)
+    events.publish(
+        "ledger_write",
+        agent="ledger",
+        entity_id=entry.id,
+        metadata={
+            "type": entry.type,
+            "status": entry.status,
+            "amount_paise": entry.amount_paise,
+            "evidence_ref": evidence,
+        },
+    )
+    print(f"recorded #{entry.id} {entry.status} payout {fmt_paise(amount_paise)}")
+    print("summary:")
+    print(
+        f"  capital: {fmt_paise(summary['capital'])}   "
+        f"available: {fmt_paise(summary['available_cash'])}   "
+        f"spent: {fmt_paise(summary['spent'])}"
+    )
+    print(
+        f"  verified revenue: {fmt_paise(summary['verified_revenue'])}   "
+        f"pending revenue: {fmt_paise(summary['pending_revenue'])}   "
+        f"net profit: {fmt_paise(summary['net_profit'])}"
+    )
+    return EXIT_OK
+
+
 def cmd_kill(args) -> int:
     result = KillSwitchService().kill(reason="manual kill via CLI")
     print(f"kill switch engaged: {result}")
@@ -575,6 +682,7 @@ _HANDLERS = {
     "ledger": cmd_ledger,
     "approve": cmd_approve,
     "reject": cmd_reject,
+    "confirm-payout": cmd_confirm_payout,
     "kill": cmd_kill,
     "logs": cmd_logs,
 }

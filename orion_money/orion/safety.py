@@ -170,6 +170,12 @@ class ApprovalService:
     ``dry_run_auto_approve``. Callers MUST NOT perform real side effects for
     dry-run approvals — the safety engine only reports; execution is the
     caller's job.
+
+    Real modes (manual/assisted/autonomous) never auto-approve: requests
+    stay PENDING until a human decides. An approved ``spend`` funds exactly
+    one ledger write — the executor stamps ``consumed_at`` (see
+    orion.api._execute_approved_spend) and a second approve() refuses because
+    the record is no longer PENDING.
     """
 
     def _dry_run_active(self) -> bool:

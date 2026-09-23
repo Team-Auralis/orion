@@ -38,7 +38,7 @@ from orion.experiments import ExperimentService
 from orion.ledger import fmt_paise
 from orion.log import get_logger
 from orion.memory import query as memory_query
-from orion.models import Opportunity
+from orion.models import Opportunity, utc_now_iso
 from orion.router import ModelRouter
 from orion.safety import ApprovalService, Decision, SafetyEngine
 from orion.scoring import OpportunityScorer
@@ -269,6 +269,7 @@ def _approval_payload(record) -> dict[str, Any]:
         "decision_reason": record.decision_reason,
         "created_at": record.created_at,
         "decided_at": record.decided_at,
+        "consumed_at": record.consumed_at,
         "expires_at": record.expires_at,
     }
 
@@ -418,6 +419,22 @@ class RevenueRequest(BaseModel):
     reference: str = ""
     verification_method: Optional[str] = None
     confidence: float = 0.0
+    correlation_id: Optional[str] = None
+
+
+class ConfirmPayoutRequest(BaseModel):
+    """Human-supplied evidence for real income (the sanctioned payout path).
+
+    ``evidence_ref`` is mandatory and must be a real reference (payout CSV
+    path, transaction/payout id). Empty/whitespace evidence is refused —
+    without evidence a payout is never marked VERIFIED.
+    """
+
+    amount_paise: int = Field(gt=0)
+    source: str = Field(min_length=1)
+    reference: str = Field(min_length=1)
+    evidence_ref: str = Field(min_length=1)
+    confirmed_by: str = Field(min_length=1)
     correlation_id: Optional[str] = None
 
 
@@ -645,6 +662,35 @@ def api_spend(req: SpendRequest):
         }
 
 
+def _revenue_result(
+    entry, summary, correlation_id=None, *, evidence_ref=None
+) -> dict[str, Any]:
+    """Publish the ledger_write event and build the shared revenue response."""
+    metadata: dict[str, Any] = {
+        "type": entry.type,
+        "status": entry.status,
+        "amount_paise": entry.amount_paise,
+    }
+    if evidence_ref:
+        metadata["evidence_ref"] = evidence_ref
+    _publish(
+        "ledger_write",
+        agent="ledger",
+        entity_id=entry.id,
+        metadata=metadata,
+        correlation_id=correlation_id,
+    )
+    return {
+        "entry": _entry_payload(entry),
+        "status": entry.status,
+        "verified": entry.status == "VERIFIED",
+        "verified_revenue_paise": summary["verified_revenue"],
+        "verified_revenue_formatted": fmt_paise(summary["verified_revenue"]),
+        "available_cash_paise": summary["available_cash"],
+        "available_cash_formatted": fmt_paise(summary["available_cash"]),
+    }
+
+
 @app.post("/api/ledger/revenue")
 def api_revenue(req: RevenueRequest):
     with get_session() as s:
@@ -658,26 +704,28 @@ def api_revenue(req: RevenueRequest):
             correlation_id=req.correlation_id,
         )
         summary = ledger.summary(s)
-    _publish(
-        "ledger_write",
-        agent="ledger",
-        entity_id=entry.id,
-        metadata={
-            "type": entry.type,
-            "status": entry.status,
-            "amount_paise": entry.amount_paise,
-        },
-        correlation_id=req.correlation_id,
+    return _revenue_result(entry, summary, req.correlation_id)
+
+
+@app.post("/api/ledger/confirm-payout")
+def api_confirm_payout(req: ConfirmPayoutRequest):
+    """Sanctioned 'I got paid, here's the proof' — VERIFIED revenue gated by
+    hard evidence. The only revenue path besides the existing verified
+    record_revenue that can mark VERIFIED."""
+    with get_session() as s:
+        entry = ledger.record_verified_payout(
+            s,
+            req.amount_paise,
+            source=req.source,
+            reference=req.reference,
+            evidence_ref=req.evidence_ref,
+            confirmed_by=req.confirmed_by,
+            correlation_id=req.correlation_id,
+        )
+        summary = ledger.summary(s)
+    return _revenue_result(
+        entry, summary, req.correlation_id, evidence_ref=req.evidence_ref
     )
-    return {
-        "entry": _entry_payload(entry),
-        "status": entry.status,
-        "verified": entry.status == "VERIFIED",
-        "verified_revenue_paise": summary["verified_revenue"],
-        "verified_revenue_formatted": fmt_paise(summary["verified_revenue"]),
-        "available_cash_paise": summary["available_cash"],
-        "available_cash_formatted": fmt_paise(summary["available_cash"]),
-    }
 
 
 # ---------------------------------------------------------------------------
@@ -810,9 +858,14 @@ def _execute_approved_spend(record, session) -> Optional[Any]:
 
     The approval IS the authorization; the ledger write still runs through
     ledger.spend() which re-enforces the single/daily/total-loss guardrails.
+    An approval funds exactly ONE spend: ``consumed_at`` is stamped on the
+    first execution, and any later attempt (a second approve() call has
+    already failed — the record is no longer PENDING) raises here too.
     """
     if record.kind != "spend" or record.status != "APPROVED":
         return None
+    if record.consumed_at is not None:
+        raise ApiError(f"approval {record.id} already consumed", 400)
     if record.cost_paise is None or record.cost_paise <= 0:
         raise ApiError(f"spend approval {record.id} has no valid cost_paise", 400)
     payload = json.loads(record.payload_json) if record.payload_json else {}
@@ -824,6 +877,8 @@ def _execute_approved_spend(record, session) -> Optional[Any]:
         reference=f"approval:{record.id}",
         correlation_id=record.correlation_id,
     )
+    record.consumed_at = utc_now_iso()
+    session.flush()
     _publish(
         "ledger_write",
         agent="ledger",

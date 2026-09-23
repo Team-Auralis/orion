@@ -146,6 +146,7 @@ never touched.
 | `experiments` | list experiments |
 | `ledger` | balance summary + recent ledger entries |
 | `approve <id>` / `reject <id>` | decide a pending approval request |
+| `confirm-payout --amount 300.00 --source <platform> --evidence <ref>` | record a human-confirmed VERIFIED payout from evidence |
 | `kill` | engage the global kill switch (blocks ALL financial endpoints) |
 | `logs [--lines N]` | tail `data/logs/orion.log` |
 
@@ -165,6 +166,7 @@ parallel `*_formatted` ₹ string — display those, never re-derive client-side
 | GET/POST | `/api/ledger` | balance summary + entries (PATCH-less; POST spends below) |
 | POST | `/api/ledger/spend` | record an expense → policy + approval → SIMULATED in dry_run |
 | POST | `/api/ledger/revenue` | record revenue with verification method + confidence |
+| POST | `/api/ledger/confirm-payout` | record a human-confirmed VERIFIED payout from `evidence_ref` (sanctioned income path) |
 | GET/POST | `/api/opportunities` | list (filter `?status=&limit=`) / manually submit for decision |
 | POST | `/api/opportunities/scan` | run connectors → `{created, scored, total}` |
 | GET/POST | `/api/strategies` | list with performance / propose |
@@ -189,11 +191,36 @@ with `ORION_API_TARGET` if your API lives elsewhere.
 |---|---|
 | `dry_run` | observe + plan only. Spends are SIMULATED, approvals auto-approve with `dry_run_auto_approve`, no real side effects |
 | `manual` | all risky actions wait in the approval queue for a human |
-| `assisted` | agent can act but stops for approvals on L2+ |
+| `assisted` | agent can act but stops for approvals on L2+; **approvals are real** — spend only after human approve, income verified via `confirm-payout` evidence (see [Going live](#going-live-assisted-mode)) |
 | `autonomous` | agent executes within policy guardrails without human steps |
 
 Set via `ORION_AUTONOMY_MODE` (env) or `config/default.yaml` →
 `autonomy.default_mode`.
+
+---
+
+## Going live (assisted mode)
+
+`dry_run` stays the default until you opt in — nothing changes unless you set
+`ORION_AUTONOMY_MODE=assisted`:
+
+```bash
+export ORION_AUTONOMY_MODE=assisted   # PowerShell: $env:ORION_AUTONOMY_MODE="assisted"
+python -m orion.cli status            # mode: assisted
+```
+
+What changes: approvals stop auto-approving. A spend now creates a **PENDING**
+approval and moves no money until a human approves. The real loop is:
+
+1. Spend is proposed → an approval request sits PENDING.
+2. You execute the real-world purchase (ORION never does this for you).
+3. `orion approve <id>` — the ledger SPEND is written now, and exactly once:
+   an approval is consumed by its first spend (a second approve is refused).
+4. When the platform pays out, record the real income with evidence:
+   `orion confirm-payout --amount 300.00 --source upwork --evidence <payout-id>`
+   (or `POST /api/ledger/confirm-payout`). Revenue only becomes VERIFIED
+   (spendable) when a non-empty `evidence_ref` — CSV path, transaction id,
+   payout record id — is supplied. No evidence, no verified revenue.
 
 ---
 

@@ -104,7 +104,9 @@ class KillSwitch(TimestampMixin, Base):
 class ApprovalRequest(TimestampMixin, Base):
     """Approval queue record. Lifecycle: PENDING -> APPROVED | REJECTED,
     and PENDING past ``expires_at`` becomes EXPIRED (see orion.safety).
-    All money columns are INTEGER PAISE.
+    A spend approval is consumed exactly once: ``consumed_at`` is stamped
+    by the ledger executor when the approved spend actually writes. All
+    money columns are INTEGER PAISE.
     """
 
     __tablename__ = "approval_requests"
@@ -130,6 +132,9 @@ class ApprovalRequest(TimestampMixin, Base):
     decision: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
     decision_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     decided_at: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    # Set by the executor after the approved ledger write — one approval
+    # funds exactly one spend (double-approve cannot double-spend).
+    consumed_at: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
 
 
 class Opportunity(TimestampMixin, Base):

@@ -22,7 +22,14 @@ risk_guardrails:
   gambling_allowed: false       # agent may never gamble
 
 # Autonomy modes: dry_run | manual | assisted | autonomous.
-# dry_run: agent observes and plans but never executes money moves.
+# dry_run (default): observe + plan only; approvals auto-approve with
+#   decision dry_run_auto_approve and never execute real money moves.
+# assisted: approvals are REAL — an approved spend happens only after a
+#   human approves, the human executes the external step, and VERIFIED
+#   income is recorded via `orion confirm-payout` (or
+#   POST /api/ledger/confirm-payout) with payout evidence.
+# manual: all risky actions wait in the approval queue for a human.
+# autonomous: agent executes within policy guardrails without human steps.
 autonomy:
   default_mode: dry_run
 
