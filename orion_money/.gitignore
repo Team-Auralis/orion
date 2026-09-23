@@ -1,0 +1,16 @@
+# runtime data (SQLite DB, logs) — keep the .gitkeep placeholder
+data/*
+!data/.gitkeep
+
+# frontend build artifacts
+frontend/node_modules/
+frontend/dist/
+
+# python
+__pycache__/
+.venv/
+*.pyc
+
+# secrets / local env — keep the .env.example template (parent repo ignores .env.*)
+.env
+!.env.example

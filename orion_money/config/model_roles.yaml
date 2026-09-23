@@ -1,0 +1,36 @@
+# ORION LLM role configuration.
+# Ollama is OPTIONAL — the whole system must keep working when no Ollama
+# server is reachable (see ORION_FORCE_NO_OLLAMA in .env.example). These
+# settings are only used by the orchestrator/browser/coding/analyst roles in
+# later tasks; model calls fail gracefully to a "no LLM" stub when absent.
+#
+# Defaults target a local Ollama server on 127.0.0.1:11434 with qwen2.5:7b.
+
+roles:
+  orchestrator:
+    model: qwen2.5:7b
+    temperature: 0.3
+    max_tokens: 2048
+    base_url: http://127.0.0.1:11434
+    timeout_seconds: 120
+
+  browser:
+    model: qwen2.5:7b
+    temperature: 0.2
+    max_tokens: 1024
+    base_url: http://127.0.0.1:11434
+    timeout_seconds: 60
+
+  coding:
+    model: qwen2.5:7b
+    temperature: 0.1
+    max_tokens: 4096
+    base_url: http://127.0.0.1:11434
+    timeout_seconds: 180
+
+  analyst:
+    model: qwen2.5:7b
+    temperature: 0.1
+    max_tokens: 2048
+    base_url: http://127.0.0.1:11434
+    timeout_seconds: 120

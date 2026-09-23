@@ -1,0 +1,38 @@
+# ORION default configuration.
+# Every value below can be overridden by environment variables (see .env.example).
+# All money values are INTEGER PAISE (₹1 = 100 paise, ₹200 = 20000 paise).
+
+orion:
+  name: orion
+  currency: INR
+  # Seed capital injected at first DB bootstrap, in paise (₹200).
+  starting_capital: 20000
+  # Profit target the agent is trying to reach, in paise (₹10,000).
+  target: 1000000
+
+# Hard risk guardrails enforced by the economic engine before any spend.
+risk_guardrails:
+  max_single_spend: 2000        # paise — ceiling for any single SPEND (₹20)
+  max_daily_spend: 5000         # paise — ceiling for cumulative SPEND per UTC day (₹50)
+  max_total_loss: 20000         # paise — ceiling for cumulative unrecovered loss (₹200)
+  borrowing_allowed: false      # agent may never borrow money
+  leverage_allowed: false       # agent may never use leverage
+  gambling_allowed: false       # agent may never gamble
+
+# Autonomy modes: dry_run | manual | assisted | autonomous.
+# dry_run: agent observes and plans but never executes money moves.
+autonomy:
+  default_mode: dry_run
+
+# Filesystem paths (relative to the project root unless absolute).
+paths:
+  data_dir: data
+  log_dir: logs                # under data_dir
+  db_file: orion.db            # under data_dir
+
+# Scheduler cadences (seconds) for the APScheduler loop started in later tasks.
+scheduler:
+  tick_seconds: 60
+  opportunity_scan_seconds: 300
+  revenue_reconcile_seconds: 600
+  memory_sweep_seconds: 3600

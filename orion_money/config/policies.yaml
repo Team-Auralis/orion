@@ -1,0 +1,43 @@
+# ORION risk policy matrix.
+# Maps risk levels to required approval states, and every agent action class to
+# a risk level. The orchestrator consults this file before executing any action.
+
+# Risk level -> approval state.
+#   AUTO      : may execute autonomously.
+#   APPROVAL  : requires a human/approval-record before execution.
+#   BLOCKED   : never allowed, regardless of approval.
+levels:
+  L0: AUTO
+  L1: AUTO
+  L2: APPROVAL
+  L3: APPROVAL
+  L4: BLOCKED
+
+# Action classes and the risk level they carry.
+# Low level = read/report; mid = spend & external effects; high = irreversible.
+actions:
+  read_only_query: L0
+  metadata_lookup: L0
+  local_log_entry: L0
+  schedule_job: L1
+  coding_edit_repo: L1
+  browse_internal: L1
+  reserve_funds: L2
+  spend: L2                    # up to risk_guardrails.max_single_spend
+  external_api_call: L2
+  browser_browse_external: L2
+  spend_large: L3              # above guardrails, requires APPROVAL
+  acquire_service: L3
+  deploy: L3
+  spend_huge: L4
+  borrowing: L4
+  leverage: L4
+  gambling: L4
+
+# Domains the browser tool may visit (empty = fully open, which is NOT advised).
+domain_allowlist:
+  - example.com
+
+# Approval records expire after this many hours; expired approvals must be
+# re-approved before the reserved action may execute.
+approval_ttl_hours: 24

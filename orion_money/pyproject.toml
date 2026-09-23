@@ -1,0 +1,19 @@
+[project]
+name = "orion"
+version = "0.1.0"
+description = "ORION economic agent backend — autonomous agent that earns, spends and accounts for money."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic>=2.7",
+    "SQLAlchemy>=2.0",
+    "PyYAML",
+    "httpx",
+    "pytest",
+    "pytest-asyncio",
+    "apscheduler",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
