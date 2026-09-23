@@ -52,9 +52,16 @@ actions:
   leverage: L4
   gambling: L4
 
-# Domains the browser tool may visit (empty = fully open, which is NOT advised).
-domain_allowlist:
-  - example.com
+# Browser controller settings (orion.browser).
+browser:
+  # Driver: "mock" (deterministic offline fixtures, no network) or
+  # "playwright" (lazy-loaded; raises unless playwright is installed).
+  driver: mock
+  # Domains the browser tool may visit, https-only (empty = fully open,
+  # which is NOT advised). Any domain not listed here is blocked before
+  # navigation.
+  domain_allowlist:
+    - example.com
 
 # Approval records expire after this many hours; expired approvals must be
 # re-approved before the reserved action may execute.

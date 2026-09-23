@@ -133,12 +133,56 @@ class ApprovalRequest(TimestampMixin, Base):
 
 
 class Opportunity(TimestampMixin, Base):
+    """Discovered revenue opportunity.
+
+    Lifecycle (see orion.discovery.OpportunityStatus):
+    DISCOVERED -> SCORED -> PENDING -> APPROVED -> REJECTED -> EXECUTED ->
+    CLOSED. Suspicious offers go DISCOVERED -> SCORED -> REJECTED and are
+    kept out of the approval flow. All money columns are INTEGER PAISE.
+    ``content_hash`` dedupes re-scans: same normalized title+source+
+    description updates ``last_seen`` on the existing row, never inserts.
+    """
+
     __tablename__ = "opportunities"
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     kind: Mapped[str] = mapped_column(String(64), nullable=False, default="generic")
     payload_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    status: Mapped[str] = mapped_column(String(32), nullable=False, default="open")
+    status: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="DISCOVERED", index=True
+    )
+    # Normalized offer identity (sha256 of title+source+description).
+    content_hash: Mapped[str] = mapped_column(
+        String(64), nullable=False, default="", index=True
+    )
+    source: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    source_connector: Mapped[str] = mapped_column(
+        String(64), nullable=False, default=""
+    )
+    url: Mapped[str] = mapped_column(String(1024), nullable=False, default="")
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    estimated_value_paise: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0
+    )
+    cost_paise: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    deadline: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    required_skills_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    automation_allowed: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )
+    platform_notes: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    demand_hint: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    competition_hint: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    # Scoring (orion.scoring — pure numeric, never an LLM).
+    score_0_100: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    factors_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    suspicious: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    suspicious_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    rejected_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    last_seen: Mapped[str] = mapped_column(
+        String(32), default=utc_now_iso, nullable=False
+    )
 
 
 class Strategy(TimestampMixin, Base):

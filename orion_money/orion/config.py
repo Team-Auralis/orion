@@ -33,6 +33,7 @@ _ENV_OVERRIDES = {
 # Pydantic models
 # ---------------------------------------------------------------------------
 
+
 class OrionInfo(BaseModel):
     name: str = "orion"
     currency: str = "INR"
@@ -74,14 +75,31 @@ class ModelRole(BaseModel):
     timeout_seconds: int = 120
 
 
+class BrowserPolicy(BaseModel):
+    """Browser controller settings (policies.yaml ``browser:``)."""
+
+    driver: str = "mock"  # mock | playwright
+    # https-only domain allowlist; empty falls back to the legacy
+    # top-level ``domain_allowlist`` (empty there too = fully open).
+    domain_allowlist: list[str] = []
+
+
 class Policies(BaseModel):
     levels: dict[str, str] = {
-        "L0": "AUTO", "L1": "AUTO",
-        "L2": "APPROVAL", "L3": "APPROVAL", "L4": "BLOCKED",
+        "L0": "AUTO",
+        "L1": "AUTO",
+        "L2": "APPROVAL",
+        "L3": "APPROVAL",
+        "L4": "BLOCKED",
     }
     actions: dict[str, str] = {}
-    domain_allowlist: list[str] = []
+    domain_allowlist: list[str] = []  # legacy top-level key
     approval_ttl_hours: int = 24
+    browser: BrowserPolicy = BrowserPolicy()
+
+    def browser_domains(self) -> list[str]:
+        """Effective browser allowlist: browser.domain_allowlist, else legacy."""
+        return self.browser.domain_allowlist or self.domain_allowlist
 
 
 class ModelRoles(BaseModel):
@@ -89,6 +107,41 @@ class ModelRoles(BaseModel):
 
     def role(self, name: str) -> ModelRole:
         return self.roles.get(name, ModelRole())
+
+
+class Scoring(BaseModel):
+    """Opportunity scoring weights (config/default.yaml ``scoring:``).
+    Pure numeric — never an LLM. Defaults sum to 100."""
+
+    expected_value: float = 30
+    demand_confidence: float = 15
+    competition_risk: float = 10
+    execution_cost: float = 10
+    safety_compat: float = 15
+    time_to_revenue: float = 10
+    automation_feasibility: float = 10
+
+    def as_weights(self) -> dict[str, float]:
+        return {
+            "expected_value": self.expected_value,
+            "demand_confidence": self.demand_confidence,
+            "competition_risk": self.competition_risk,
+            "execution_cost": self.execution_cost,
+            "safety_compat": self.safety_compat,
+            "time_to_revenue": self.time_to_revenue,
+            "automation_feasibility": self.automation_feasibility,
+        }
+
+
+class ConnectorEntry(BaseModel):
+    enabled: bool = False
+
+
+class Connectors(BaseModel):
+    """Per-connector enable flags (config/default.yaml ``connectors:``)."""
+
+    mock: ConnectorEntry = ConnectorEntry(enabled=True)
+    real_marketplace: ConnectorEntry = ConnectorEntry(enabled=False)
 
 
 class Config(BaseModel):
@@ -99,6 +152,8 @@ class Config(BaseModel):
     scheduler: Scheduler = Scheduler()
     policies: Policies = Policies()
     model_roles: ModelRoles = ModelRoles()
+    scoring: Scoring = Scoring()
+    connectors: Connectors = Connectors()
 
     @property
     def data_dir(self) -> Path:
@@ -120,6 +175,7 @@ class Config(BaseModel):
 # ---------------------------------------------------------------------------
 # Loading helpers
 # ---------------------------------------------------------------------------
+
 
 def _load_yaml(name: str) -> dict[str, Any]:
     """Load a YAML file, returning {} on any failure (missing/parse error)."""
