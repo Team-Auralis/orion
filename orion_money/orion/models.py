@@ -38,6 +38,7 @@ class TimestampMixin:
 # Ledger (append-only money log)
 # ---------------------------------------------------------------------------
 
+
 class LedgerEntry(TimestampMixin, Base):
     __tablename__ = "ledger_entries"
 
@@ -50,15 +51,20 @@ class LedgerEntry(TimestampMixin, Base):
     # Event-type dependent: revenue uses revenue statuses; others use
     # lifecycle states (CONFIRMED/ACTIVE/COMPLETED/OPEN/APPLIED/...).
     status: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
-    verification_method: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    verification_method: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
     confidence: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     metadata_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    correlation_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
+    correlation_id: Mapped[Optional[str]] = mapped_column(
+        String(64), nullable=True, index=True
+    )
 
 
 # ---------------------------------------------------------------------------
 # System / safety
 # ---------------------------------------------------------------------------
+
 
 class SchemaVersion(TimestampMixin, Base):
     __tablename__ = "schema_version"
@@ -94,15 +100,35 @@ class KillSwitch(TimestampMixin, Base):
 # Stubs for later tasks (minimal: id + name/type + JSON payload + status)
 # ---------------------------------------------------------------------------
 
+
 class ApprovalRequest(TimestampMixin, Base):
+    """Approval queue record. Lifecycle: PENDING -> APPROVED | REJECTED,
+    and PENDING past ``expires_at`` becomes EXPIRED (see orion.safety).
+    All money columns are INTEGER PAISE.
+    """
+
     __tablename__ = "approval_requests"
 
     kind: Mapped[str] = mapped_column(String(64), nullable=False)
+    why: Mapped[str] = mapped_column(Text, nullable=False, default="")
     payload_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    status: Mapped[str] = mapped_column(String(32), nullable=False, default="pending")
-    created_by: Mapped[str] = mapped_column(String(64), nullable=False, default="system")
+    cost_paise: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    potential_revenue_paise: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True
+    )
+    risk_level: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    destination: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    correlation_id: Mapped[Optional[str]] = mapped_column(
+        String(64), nullable=True, index=True
+    )
+    expires_at: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="PENDING")
+    created_by: Mapped[str] = mapped_column(
+        String(64), nullable=False, default="system"
+    )
     decided_by: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     decision: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    decision_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     decided_at: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
 
 
@@ -159,4 +185,6 @@ class ToolCall(TimestampMixin, Base):
     args_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     result_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="pending")
-    correlation_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
+    correlation_id: Mapped[Optional[str]] = mapped_column(
+        String(64), nullable=True, index=True
+    )

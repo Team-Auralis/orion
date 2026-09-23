@@ -15,20 +15,38 @@ levels:
 
 # Action classes and the risk level they carry.
 # Low level = read/report; mid = spend & external effects; high = irreversible.
+# The safety matrix (orion.safety) resolves each action to
+#   (level, default_decision)  by combining this map with `levels` above:
+#   e.g. spend -> L2 -> APPROVAL, create_account -> L4 -> BLOCKED.
+# Unknown action classes get a conservative L2/APPROVAL default in code.
 actions:
+  # L0 READ_ONLY — local reads, no side effects.
   read_only_query: L0
   metadata_lookup: L0
-  local_log_entry: L0
+  research: L0
+  browser_read: L0
+  # L1 LOCAL_WRITE — writes that stay inside the sandbox.
+  local_log_entry: L1
   schedule_job: L1
   coding_edit_repo: L1
+  create_file: L1
+  run_test: L1
   browse_internal: L1
+  # L2 EXTERNAL_COMMUNICATION — touches the outside world, needs approval.
   reserve_funds: L2
   spend: L2                    # up to risk_guardrails.max_single_spend
+  send_message: L2
   external_api_call: L2
   browser_browse_external: L2
+  # L3 FINANCIAL — real money commitments.
+  purchase: L3
   spend_large: L3              # above guardrails, requires APPROVAL
   acquire_service: L3
+  contract: L3
   deploy: L3
+  publish: L3
+  # L4 HIGH_IMPACT — irreversible / never allowed autonomously.
+  create_account: L4
   spend_huge: L4
   borrowing: L4
   leverage: L4
