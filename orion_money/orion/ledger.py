@@ -64,6 +64,15 @@ log = get_logger("ledger")
 
 VERIFIED_CONFIDENCE_THRESHOLD = 0.9
 
+
+def fmt_paise(paise: int) -> str:
+    """The one place paise become ₹ — `fmt_paise(123456)` -> '₹1,234.56'."""
+    amount = int(paise)
+    sign = "-" if amount < 0 else ""
+    absolute = abs(amount)
+    return f"{sign}₹{absolute // 100:,}.{absolute % 100:02d}"
+
+
 CAPITAL_KEY = "capital"
 SEED_SETTING_KEY = "capital_seeded"
 

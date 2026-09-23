@@ -24,7 +24,7 @@ from typing import Optional
 
 from orion.config import get_config
 from orion.db import get_session, init_db
-from orion.ledger import EventType, get_ledger
+from orion.ledger import EventType, fmt_paise, get_ledger
 from orion.log import get_logger
 from orion.safety import ApprovalService
 from orion.security import KillSwitchService
@@ -35,14 +35,6 @@ log = get_logger("cli")
 EXIT_OK = 0
 EXIT_USER = 1
 EXIT_RUNTIME = 2
-
-
-def fmt_paise(paise: int) -> str:
-    """The one place paise become ₹ — `fmt_paise(123456)` -> '₹1,234.56'."""
-    amount = int(paise)
-    sign = "-" if amount < 0 else ""
-    absolute = abs(amount)
-    return f"{sign}₹{absolute // 100:,}.{absolute % 100:02d}"
 
 
 # ---------------------------------------------------------------------------

@@ -151,6 +151,18 @@ class Connectors(BaseModel):
     real_marketplace: ConnectorEntry = ConnectorEntry(enabled=False)
 
 
+class Api(BaseModel):
+    """HTTP API settings (orion/api.py, served by orion/main.py).
+
+    ``port`` defaults to 8765 to avoid the commonly-occupied 8000;
+    ``cors_origins`` lists the browser origins allowed to call the API.
+    """
+
+    host: str = "127.0.0.1"
+    port: int = 8765
+    cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+
+
 class Config(BaseModel):
     orion: OrionInfo = OrionInfo()
     risk_guardrails: RiskGuardrails = RiskGuardrails()
@@ -162,6 +174,7 @@ class Config(BaseModel):
     model_roles: ModelRoles = ModelRoles()
     scoring: Scoring = Scoring()
     connectors: Connectors = Connectors()
+    api: Api = Api()
 
     @property
     def data_dir(self) -> Path:
