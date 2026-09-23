@@ -86,6 +86,7 @@ def init_db() -> None:
 
     engine = get_engine()
     Base.metadata.create_all(engine)
+    _ensure_columns(engine)
 
     with get_session() as session:
         latest = (
@@ -103,3 +104,34 @@ def init_db() -> None:
             )
             log.info("schema version recorded", extra={"version": SCHEMA_VERSION})
     log.debug("init_db complete", extra={"db": str(get_config().db_path)})
+
+
+# Columns added after the first bootstrap. ``create_all`` never ALTERs an
+# existing table, so pre-existing databases need the columns injected here
+# (all names are code constants — no user input reaches the DDL).
+_DEFERRED_COLUMNS: dict[str, dict[str, str]] = {
+    "jobs": {
+        "attempts": "INTEGER NOT NULL DEFAULT 0",
+        "error": "TEXT",
+        "priority": "INTEGER NOT NULL DEFAULT 0",
+        "started_at": "VARCHAR(32)",
+        "finished_at": "VARCHAR(32)",
+    },
+}
+
+
+def _ensure_columns(engine) -> None:
+    """ALTER in columns that older bootstraps of this schema are missing."""
+    from sqlalchemy import inspect
+
+    inspector = inspect(engine)
+    for table, columns in _DEFERRED_COLUMNS.items():
+        if not inspector.has_table(table):
+            continue
+        existing = {col["name"] for col in inspector.get_columns(table)}
+        for name, ddl in columns.items():
+            if name in existing:
+                continue
+            with engine.begin() as conn:
+                conn.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}")
+            log.info("schema column added", extra={"table": table, "column": name})

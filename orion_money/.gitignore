@@ -2,6 +2,11 @@
 data/*
 !data/.gitkeep
 
+# workspace scratch tree — keep the .gitkeep placeholder (dirs are
+# recreated at startup by `python -m orion.cli start`)
+workspace/*
+!workspace/.gitkeep
+
 # frontend build artifacts
 frontend/node_modules/
 frontend/dist/

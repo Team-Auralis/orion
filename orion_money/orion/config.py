@@ -67,6 +67,13 @@ class Scheduler(BaseModel):
     memory_sweep_seconds: int = 3600
 
 
+class Jobs(BaseModel):
+    """Persistent job queue settings (config/default.yaml ``jobs:``)."""
+
+    max_attempts: int = 3  # attempt cap; requeue_failed() stops at this
+    poll_seconds: int = 5  # worker idle poll interval
+
+
 class ModelRole(BaseModel):
     model: str = "qwen2.5:7b"
     temperature: float = 0.2
@@ -150,6 +157,7 @@ class Config(BaseModel):
     autonomy: Autonomy = Autonomy()
     paths: Paths = Paths()
     scheduler: Scheduler = Scheduler()
+    jobs: Jobs = Jobs()
     policies: Policies = Policies()
     model_roles: ModelRoles = ModelRoles()
     scoring: Scoring = Scoring()

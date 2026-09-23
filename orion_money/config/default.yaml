@@ -32,10 +32,15 @@ paths:
 
 # Scheduler cadences (seconds) for the APScheduler loop started in later tasks.
 scheduler:
-  tick_seconds: 60
-  opportunity_scan_seconds: 300
-  revenue_reconcile_seconds: 600
-  memory_sweep_seconds: 3600
+  tick_seconds: 60                # main loop heartbeat
+  opportunity_scan_seconds: 300   # connector rescan interval
+  revenue_reconcile_seconds: 600  # revenue reconciliation sweep
+  memory_sweep_seconds: 3600      # memory maintenance sweep
+
+# Persistent job queue (orion.jobs): QUEUED -> RUNNING -> SUCCESS/FAILED.
+jobs:
+  max_attempts: 3      # attempt cap — requeue_failed() will not retry past this
+  poll_seconds: 5      # worker poll interval when the queue is empty
 
 # Opportunity scoring weights (PURE NUMERIC — never an LLM).
 #   score_0_100 = 100 * sum(weight_i * factor_i) / sum(weight_i)

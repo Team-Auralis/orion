@@ -227,12 +227,71 @@ class MemoryItem(TimestampMixin, Base):
 
 
 class Job(TimestampMixin, Base):
+    """Persistent queue row. Lifecycle: QUEUED -> RUNNING -> SUCCESS |
+    FAILED | CANCELLED, plus WAITING_APPROVAL (awaiting a human decision).
+    ``attempts`` counts executions; a job is never rerun past
+    ``jobs.max_attempts`` (see orion.jobs).
+    """
+
     __tablename__ = "jobs"
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     job_type: Mapped[str] = mapped_column(String(64), nullable=False, default="generic")
     payload_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    status: Mapped[str] = mapped_column(String(32), nullable=False, default="queued")
+    status: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="QUEUED", index=True
+    )
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    priority: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    started_at: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    finished_at: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+
+
+class StrategyRun(TimestampMixin, Base):
+    """One recorded execution of a Strategy — the evidence base for ranking
+    (orion.strategy). All money columns are INTEGER PAISE.
+    ``profit_per_hour_paise`` is derived (profit / time_hours) when the
+    caller does not supply it.
+    """
+
+    __tablename__ = "strategy_runs"
+
+    strategy_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    capital_used_paise: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    time_hours: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    opportunities_checked: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0
+    )
+    responses: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    wins: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    losses: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    revenue_paise: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    fees_paise: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    profit_paise: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    profit_per_hour_paise: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0
+    )
+    failure_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    notes: Mapped[str] = mapped_column(Text, nullable=False, default="")
+
+
+class ExperimentResult(TimestampMixin, Base):
+    """Outcome of one Experiment (orion.experiments). ``delta_paise`` only
+    counts when ``supporting_evidence_id`` points at a real ledger/evidence
+    row — otherwise it is zeroed with a ``warning`` (anti-hallucination).
+    """
+
+    __tablename__ = "experiment_results"
+
+    experiment_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    observed_outcome: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    delta_paise: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    supporting_evidence_id: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True
+    )
+    failure_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    warning: Mapped[str] = mapped_column(Text, nullable=False, default="")
 
 
 class ToolCall(TimestampMixin, Base):
