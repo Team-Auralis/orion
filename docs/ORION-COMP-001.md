@@ -1,6 +1,6 @@
 # ORION-COMP-001 — Capability per GB benchmark, v1 (measurement scaffold)
 
-_Generated 2026-09-23T08:01:37Z from `logs/training_runs.jsonl` by `scripts/report/comp001_report.py`. Regenerable; re-running overwrites this file and appends NO ledger row._
+_Generated 2026-09-23T08:03:01Z from `logs/training_runs.jsonl` by `scripts/report/comp001_report.py`. Regenerable; re-running overwrites this file and appends NO ledger row._
 
 > **Verdict: NOT READY / SCAFFOLD** — every arm has probe score 0.0 (a real, measured 0/20), so every capability-per-GB number in this edition is 0. This report is a **measurement methodology + honest baseline**, not a capability claim.
 
