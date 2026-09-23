@@ -33,7 +33,17 @@ transient HF cache is redirected under `data/training/corpus/.cache-build/`
 Usage:
     python scripts/training/corpus_builder.py --target-tokens 60_000_000
     python scripts/training/corpus_builder.py --target-tokens 60_000_000 --dry-run
+    python scripts/training/corpus_builder.py --top-up --target-tokens 60_000_000
     python scripts/training/corpus_builder.py --check-leak "some eval sentence"
+
+`--top-up` appends MORE real train rows from the same sources (resuming where
+the previous build stopped, per manifest) to grow the measured train-token
+count. It never deletes existing shards, forces every new row into `train-*`
+(so val/test stay frozen), and near-exact dedups every new row against ALL
+existing corpus text (train + val + test) so no duplicated content or
+test/val contamination can enter. The top-up budget is computed from the real
+BPE tokenizer's measured bytes/token on the current train shards, so
+`--target-tokens` means the TOTAL corpus train-token target.
 """
 
 from __future__ import annotations
@@ -287,22 +297,25 @@ class ShardWriter:
     """Buffered top-level jsonl shard writer: {split}-{abbr}-part-NNNNN.jsonl.
 
     Records a base manifest entry (path/split/rows/bytes/sha256) per flushed
-    shard; source provenance is attached by the caller.
+    shard; source provenance is attached by the caller. `start_parts` seeds
+    the next part index per (split, abbr) so a top-up run continues numbering
+    where the previous build stopped instead of overwriting existing shards.
     """
 
-    def __init__(self, corpus_dir: Path):
+    def __init__(self, corpus_dir: Path, start_parts: dict | None = None):
         self.corpus_dir = corpus_dir
-        self.parts: dict[tuple[str, str], int] = {}
+        self.parts: dict[tuple[str, str], int] = dict(start_parts or {})
         self.bufs: dict[tuple[str, str], list[str]] = {}
         self.buf_bytes: dict[tuple[str, str], int] = {}
         self.entries: list[dict] = []
 
     def add(self, split: str, abbr: str, json_line: str) -> None:
         k = (split, abbr)
-        if k not in self.parts:
-            self.parts[k] = 0
+        if k not in self.bufs:
             self.bufs[k] = []
             self.buf_bytes[k] = 0
+        if k not in self.parts:
+            self.parts[k] = 0
         self.bufs[k].append(json_line)
         self.buf_bytes[k] += len(json_line.encode("utf-8"))
         if self.buf_bytes[k] >= BUFFER_SHARDS_BYTES:
@@ -615,6 +628,383 @@ def build(target_tokens: int, source_names: list[str]) -> dict:
     return manifest
 
 
+# --- top-up ------------------------------------------------------------------
+# Top-up grows ONLY the train shards with more REAL rows from the same legal
+# sources, resuming where the previous build stopped. Honesty rules are the
+# same as the base build: no duplication/templating/synthesis - every new row
+# is real source text that near-exact-dedup against the whole existing corpus.
+
+
+_SLICE_RE = re.compile(r"rows (\d+)\.\.(\d+)")
+
+
+def _last_consumed_row(manifest: dict, source_name: str) -> int:
+    """Highest source row idx the previous build already consumed (resume)."""
+    repo_id = next(
+        (s["repo_id"] for s in SOURCES if s["name"] == source_name), source_name
+    )
+    last = -1
+    for sh in manifest.get("shards", []):
+        if sh.get("source_dataset") != repo_id:
+            continue
+        if "last_source_row" in sh:
+            last = max(last, int(sh["last_source_row"]))
+        m = _SLICE_RE.search(sh.get("slice", ""))
+        if m:
+            last = max(last, int(m.group(2)))
+    for s in manifest.get("top_up", {}).get("sources", []):
+        if s.get("source") == source_name and "last_row" in s:
+            last = max(last, int(s["last_row"]))
+    return last
+
+
+def _existing_parts(corpus_dir: Path) -> dict[tuple[str, str], int]:
+    """Highest existing part index per (split, abbr) from on-disk shards."""
+    parts: dict[tuple[str, str], int] = {}
+    for p in corpus_dir.glob("*-part-*.jsonl"):
+        head, num = p.name[: -len(".jsonl")].rsplit("-part-", 1)
+        split, abbr = head.split("-", 1)
+        idx = int(num)
+        parts[(split, abbr)] = max(parts.get((split, abbr), -1), idx)
+    return parts
+
+
+def _load_existing_dedup_keys(corpus_dir: Path) -> tuple[set[str], int]:
+    """(normalized-key set, doc count) over EVERY existing shard (train/val/
+    test) - the cross-shard dedup seed. Rows equal to any existing text are
+    dropped, which also enforces the test/val contamination check."""
+    keys: set[str] = set()
+    n = 0
+    for p in sorted(corpus_dir.glob("*-part-*.jsonl")):
+        with open(p, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    doc = json.loads(line).get("text", "")
+                except json.JSONDecodeError:
+                    continue
+                if not isinstance(doc, str) or not doc:
+                    continue
+                keys.add(normalize_key(doc))
+                n += 1
+    return keys, n
+
+
+def _measure_train_tokens() -> tuple[int, int]:
+    """(train_tokens, train_bytes) with the real 10,240 BPE over train shards.
+
+    The gate measures with this same tokenizer, so the top-up budget MUST use
+    the same ruler. Abort when the tokenizer is missing rather than guess.
+    """
+    sys.path.insert(0, str(REPO_ROOT))
+    sys.path.insert(0, str(REPO_ROOT / "scripts" / "training"))
+    try:
+        import orion_corpus
+    except Exception as exc:  # pragma: no cover - environment failure
+        print(f"[corpus][ABORT] cannot import orion_corpus for budgeting: {exc!r}")
+        sys.exit(2)
+    files, source, is_real = orion_corpus.resolve_corpus(CORPUS_DIR)
+    if source != "corpus-shards":
+        print("[corpus][ABORT] no real corpus shards found - nothing to top up.")
+        sys.exit(2)
+    if not orion_corpus.BPE_TOKENIZER_JSON.exists():
+        print(
+            f"[corpus][ABORT] real BPE tokenizer missing "
+            f"({orion_corpus.BPE_TOKENIZER_JSON}) - cannot budget honestly. "
+            "Train it first with scripts/training/bpe_tokenizer.py."
+        )
+        sys.exit(2)
+    tok = orion_corpus.load_bpe_tokenizer()
+    train = orion_corpus.train_shards(files)
+    tokens, _ = orion_corpus.count_corpus_tokens(tok, train)
+    tbytes = sum(p.stat().st_size for p in train)
+    return tokens, tbytes
+
+
+def top_up(target_tokens: int, source_names: list[str]) -> dict:
+    """Append more real train rows from the same sources toward a TOTAL
+    train-token target; never deletes existing shards. Returns the manifest."""
+    start_free = free_disk_gb()
+    if not MANIFEST_PATH.exists():
+        print("[corpus][ABORT] no manifest.json - run the base build first.")
+        sys.exit(2)
+    manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+
+    selected = []
+    for name in source_names:
+        spec = next((s for s in SOURCES if s["name"] == name), None)
+        if not spec:
+            print(
+                f"[corpus][ABORT] unknown source '{name}'. "
+                f"Known: {[s['name'] for s in SOURCES]}."
+            )
+            sys.exit(2)
+        selected.append(spec)
+
+    _stage_cache_env()
+    ensure_disk("download stage", PEAK_CACHE_GB)
+
+    cur_tokens, cur_train_bytes = _measure_train_tokens()
+    if cur_tokens >= target_tokens:
+        print(
+            f"[corpus] already at {cur_tokens:,} train tokens >= target "
+            f"{target_tokens:,}; nothing to top up."
+        )
+        _cleanup_cache()
+        return manifest
+    observed = cur_train_bytes / max(cur_tokens, 1)
+    add_tokens = target_tokens - cur_tokens
+    add_bytes = int(add_tokens * observed * BUDGET_SAFETY)
+    print(
+        f"[corpus] TOP-UP total target={target_tokens:,} train tokens | "
+        f"current={cur_tokens:,} | additional={add_tokens:,} tokens "
+        f"(measured {observed:.3f} bytes/token on current train shards)"
+    )
+    print(
+        f"[corpus] top-up budget = {add_bytes:,} bytes "
+        f"({add_bytes / 1024**2:.0f} MB of NEW real text; "
+        f"safety {BUDGET_SAFETY:.2f}x)"
+    )
+
+    fraction = sum(s["mix_fraction"] for s in selected)
+    caps = {s["name"]: int(add_bytes * s["mix_fraction"] / fraction) for s in selected}
+
+    dedup_keys, existing_docs = _load_existing_dedup_keys(CORPUS_DIR)
+    print(
+        f"[corpus] cross-shard dedup seeded with {existing_docs:,} existing "
+        "docs (train+val+test) - repeats and val/test overlaps are dropped"
+    )
+
+    start_parts = {
+        (split, abbr): idx + 1
+        for (split, abbr), idx in _existing_parts(CORPUS_DIR).items()
+    }
+    writer = ShardWriter(CORPUS_DIR, start_parts=start_parts)
+
+    stats = {
+        "pulled": 0,
+        "short": 0,
+        "binary": 0,
+        "dup_existing": 0,
+        "dup_new": 0,
+        "kept": 0,
+        "bytes_kept": 0,
+        "words_kept": 0,
+    }
+    top_ups = []
+    new_keys: set[str] = set()
+
+    for spec in selected:
+        resume_after = _last_consumed_row(manifest, spec["name"])
+        lic, lic_src = dataset_license(spec["repo_id"], spec["license_fallback"])
+        cap = caps[spec["name"]]
+        src_stats = {k: 0 for k in stats}
+        first_new = last_new = None
+        src_bytes = 0
+        shard_start = len(writer.entries)
+        print(
+            f"[corpus] {spec['name']}: resuming after source row {resume_after:,} "
+            f"| cap {cap / 1024**2:.1f} MB of new text"
+        )
+        try:
+            for row_idx, text in iter_source_rows(spec):
+                if row_idx <= resume_after:
+                    continue
+                stats["pulled"] += 1
+                src_stats["pulled"] += 1
+                if first_new is None:
+                    first_new = row_idx
+                last_new = row_idx
+                reason = filter_reason(text)
+                if reason == "short":
+                    stats["short"] += 1
+                    src_stats["short"] += 1
+                    continue
+                if reason == "binary":
+                    stats["binary"] += 1
+                    src_stats["binary"] += 1
+                    continue
+                for piece in chunk_doc(text):
+                    key = normalize_key(piece)
+                    if key in dedup_keys:
+                        if key in new_keys:
+                            stats["dup_new"] += 1
+                            src_stats["dup_new"] += 1
+                        else:
+                            stats["dup_existing"] += 1
+                            src_stats["dup_existing"] += 1
+                        continue
+                    dedup_keys.add(key)
+                    new_keys.add(key)
+                    # Top-up grows ONLY train; val/test stay frozen.
+                    split = "train"
+                    line = json.dumps({"text": piece}, ensure_ascii=False)
+                    writer.add(split, spec["abbr"], line)
+                    nbytes = len(line.encode("utf-8"))
+                    stats["kept"] += 1
+                    stats["bytes_kept"] += nbytes
+                    stats["words_kept"] += len(piece.split())
+                    src_stats["kept"] += 1
+                    src_stats["bytes_kept"] += nbytes
+                    src_bytes += nbytes
+                if src_bytes >= cap:
+                    print(
+                        f"[corpus] {spec['name']}: top-up cap reached "
+                        f"({src_bytes / 1024**2:.1f} MB of {cap / 1024**2:.1f} MB)"
+                    )
+                    break
+                if stats["bytes_kept"] >= add_bytes:
+                    break
+        except Exception as exc:
+            print(f"[corpus][WARN] source '{spec['name']}' failed mid-stream: {exc!r}")
+        writer.flush_all()
+
+        for entry in writer.entries[shard_start:]:
+            entry.update(
+                {
+                    "source_dataset": spec["repo_id"],
+                    "source_config": spec["config"] or "(default)",
+                    "source_split": spec["split"],
+                    "slice": (
+                        f"TOP-UP streaming slice rows {first_new}..{last_new} of the "
+                        "source split (resumed after the base build); near-exact dedup "
+                        "vs ALL existing corpus shards (train/val/test) applied"
+                    ),
+                    "last_source_row": last_new,
+                    "top_up": True,
+                    "transformation": (
+                        "none (exact source text); oversized docs chunked at "
+                        "paragraph boundaries without adding/removing text"
+                    ),
+                    "license": lic,
+                    "license_source": lic_src,
+                    "license_note": spec["license_note"],
+                    "download_url": spec["doc_url"],
+                }
+            )
+        top_ups.append(
+            {
+                "source": spec["name"],
+                "repo": spec["repo_id"],
+                "config": spec["config"] or "(default)",
+                "split": spec["split"],
+                "license": lic,
+                "resumed_after_row": resume_after,
+                "last_row": last_new,
+                "rows_pulled": src_stats["pulled"],
+                "rows_kept": src_stats["kept"],
+                "rows_skipped_existing_dup": src_stats["dup_existing"],
+                "rows_skipped_new_dup": src_stats["dup_new"],
+                "short_dropped": src_stats["short"],
+                "binary_dropped": src_stats["binary"],
+                "bytes_kept": src_stats["bytes_kept"],
+                "doc_url": spec["doc_url"],
+            }
+        )
+        log_disk(f"source {spec['name']}")
+        if stats["bytes_kept"] >= add_bytes:
+            print("[corpus] top-up text budget reached; stopping further sources")
+            break
+
+    if stats["kept"] == 0:
+        _cleanup_cache()
+        print(
+            "[corpus][ABORT] top-up kept 0 rows after cross-shard dedup - no "
+            "new real text was available past the resume point. Reporting "
+            "measured numbers, nothing fabricated."
+        )
+        sys.exit(3)
+
+    # Refresh every shard entry (old + new) from disk so manifest rows/bytes/
+    # sha256 are exactly truthful (previous build entries were stale).
+    manifest["shards"] = manifest["shards"] + writer.entries
+    for sh in manifest["shards"]:
+        p = CORPUS_DIR / sh["path"]
+        if not p.exists():
+            continue
+        data = p.read_bytes()
+        sh["rows"] = data.count(b"\n")
+        sh["bytes"] = len(data)
+        sh["sha256"] = sha256_bytes(data)
+    manifest["total_texts"] = sum(sh["rows"] for sh in manifest["shards"])
+    manifest["total_bytes"] = sum(sh["bytes"] for sh in manifest["shards"])
+    manifest["split_counts"] = {}
+    for sh in manifest["shards"]:
+        manifest["split_counts"][sh["split"]] = (
+            manifest["split_counts"].get(sh["split"], 0) + sh["rows"]
+        )
+    train_bytes = sum(
+        sh["bytes"] for sh in manifest["shards"] if sh["split"] == "train"
+    )
+    manifest["rough_word_count"] += stats["words_kept"]
+    manifest["estimated_bpe_tokens"] = int(train_bytes / CHARS_PER_TOKEN)
+    manifest["token_count_note"] = (
+        "HEURISTIC estimate only (train bytes / 2.1 chars-per-token). The "
+        "REAL train-only token count is measured by "
+        "scripts/training/bpe_tokenizer.py --gate-only; pass/fail uses the "
+        "real count."
+    )
+    manifest["top_up"] = {
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "target_tokens_total": target_tokens,
+        "current_train_tokens": cur_tokens,
+        "observed_bytes_per_token": round(observed, 4),
+        "additional_tokens_target": add_tokens,
+        "additional_bytes_budget": add_bytes,
+        "dedup": {
+            "method": (
+                "near-exact cross-shard (whitespace-normalized, lowercase "
+                "full-doc set) against every existing shard incl. val/test"
+            ),
+            "existing_docs_seeded": existing_docs,
+            "dup_existing_dropped": stats["dup_existing"],
+            "dup_new_dropped": stats["dup_new"],
+        },
+        "filters": {
+            "min_doc_chars": MIN_DOC_CHARS,
+            "short_dropped": stats["short"],
+            "binary_dropped": stats["binary"],
+        },
+        "split_policy": (
+            "Top-up rows are all written to train-* shards; existing val/test "
+            "shards are untouched, and rows whose text matches an existing "
+            "val/test doc are dropped (contamination check)."
+        ),
+        "sources": top_ups,
+    }
+    MANIFEST_PATH.write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+    print(f"[corpus] wrote manifest.json ({len(manifest['shards'])} shard entries)")
+
+    _cleanup_cache()
+    end_free = log_disk("build complete")
+    print(
+        f"[corpus] FREE DISK before={start_free:.2f} GB -> after={end_free:.2f} GB "
+        f"(spent {start_free - end_free:.2f} GB)"
+    )
+
+    print("\n[corpus] top-up summary:")
+    print(
+        f"  {'source':<22} {'pulled':>9} {'kept':>9} {'x-dedup':>8} "
+        f"{'new-dup':>8} {'MB added':>9}"
+    )
+    for t in top_ups:
+        print(
+            f"  {t['source']:<22} {t['rows_pulled']:>9,} {t['rows_kept']:>9,} "
+            f"{t['rows_skipped_existing_dup']:>8,} {t['rows_skipped_new_dup']:>8,} "
+            f"{t['bytes_kept'] / 1024**2:>8.1f}"
+        )
+    print(
+        f"[corpus] NOTE: run 'python scripts/training/bpe_tokenizer.py "
+        "--corpus data/training/corpus --gate-only' to record the real "
+        "train-only token count and verdict."
+    )
+    return manifest
+
+
 # --- dry run ----------------------------------------------------------------
 
 
@@ -676,6 +1066,14 @@ def main() -> int:
         help="comma-separated source names: wikitext, fineweb-edu, pile-uncopyrighted",
     )
     ap.add_argument(
+        "--top-up",
+        action="store_true",
+        help=(
+            "append more REAL train rows from the same sources toward the "
+            "--target-tokens total; never deletes existing shards"
+        ),
+    )
+    ap.add_argument(
         "--dry-run", action="store_true", help="print the plan, do not download"
     )
     ap.add_argument(
@@ -690,6 +1088,10 @@ def main() -> int:
 
     if args.dry_run:
         dry_run(args.target_tokens, source_names)
+        return 0
+
+    if args.top_up:
+        top_up(args.target_tokens, source_names)
         return 0
 
     if args.check_leak:
