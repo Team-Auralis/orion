@@ -6,9 +6,20 @@ sparsity) from random init, on CPU, over the resolved ORION corpus with the
 real BPE tokenizer (models/tokenizer_bpe) trained in T2.
 
 --model-size selects the architecture: `10m` (COMP-001 checkpoint budget,
-8M-12M params) or `100m` (T4 custom run, 90M-115M params, GQA 12x4 heads).
+8M-12M params) or `100m` (T4 custom run, 90M-115M params, GQA 12x4 heads,
+11 layers at the real 10,240-token BPE vocab).
 Every run is recorded through scripts/repro.py::record_experiment as
-experiment "comp-001-10m" or "comp-001-custom-100m".
+experiment "comp-001-10m" or "comp-001-custom-100m-real".
+
+Real-corpus training contract (T4):
+  - Corpus rows are read via orion_corpus.row_text (raw `text` or SFT rows);
+    the BPE tokenizer from models/tokenizer_bpe (vocab 10,240) always.
+  - --train-token-budget caps how many corpus tokens the run consumes: rows
+    are read from train-* shards only until the budget is reached or the
+    shards are exhausted. val-*/test-* shards are never trained on (they are
+    held out; their hash is recorded for the contamination story).
+  - Runs are bounded (PARTIAL_FIRST_PASS on this CPU box); the ledger row
+    records the exact tokens_seen vs corpus_total and an honest scope label.
 
   - Qwen2Config: vocab = actual BPE vocab from tokenizer, hidden 256 /
     mlp 1024 / 8 layers / 4 heads -> ~9.15M params (10m); hidden 768 /
@@ -60,10 +71,11 @@ from orion_runner.loader import tokenize_samples, pack_sequences  # noqa: E402
 from scripts.repro import record_experiment, gather_repro_ctx  # noqa: E402
 
 OUT_DIR = REPO_ROOT / "models" / "comp001" / "10m"
-OUT_DIR_100M = REPO_ROOT / "models" / "comp001" / "100m"
+OUT_DIR_100M = REPO_ROOT / "models" / "comp001" / "100m-real"
 TOKENIZER_DIR = REPO_ROOT / "models" / "tokenizer_bpe"
 RAM_GUARD_GB = 3.0  # hard ceiling: abort the run if peak RSS exceeds this
 MAX_LEN = 512
+MAX_EVAL_BLOCKS = 400  # held-out val eval cap (wall guard; full val = 314 blocks)
 PAD_ID, BOS_ID, EOS_ID = 0, 1, 2  # from bpe_tokenizer.py special-token order
 
 # Tuned so the constructed model lands inside the 8M-12M budget (measured:
@@ -83,12 +95,15 @@ MODEL_CFG = dict(
 )
 
 # T4: ~100M variant - GQA 12 heads x 4 KV heads to hold params/memory down.
-# Measured 106,103,040 params with the real 1471-token BPE vocab (90M-115M).
+# At the REAL 10,240-token BPE vocab the 12-layer config would be ~119.6M
+# params (every extra embedding id costs 2 x hidden_size for emb + lm_head) -
+# over the 115M ceiling. Dropping to 11 layers keeps the 4x MLP ratio and
+# head_dim 64: ~110.9M params with vocab 10,240 (90M-115M, verified at runtime).
 MODEL_CFG_100M = dict(
     vocab_size=None,
     hidden_size=768,
     intermediate_size=3072,
-    num_hidden_layers=12,
+    num_hidden_layers=11,
     num_attention_heads=12,
     num_key_value_heads=4,
     max_position_embeddings=MAX_LEN,
@@ -124,7 +139,18 @@ def arg_parser() -> argparse.ArgumentParser:
     ap.add_argument("--lr", type=float, default=1e-3, help="AdamW learning rate")
     ap.add_argument("--seed", type=int, default=42, help="torch/random seed")
     ap.add_argument(
-        "--ckpt-every", type=int, default=5, help="checkpoint every N steps"
+        "--ckpt-every",
+        type=int,
+        default=100,
+        help="checkpoint every N steps (default 100; each checkpoint stores "
+        "model + optimizer state, ~1.3 GB for the 100m variant)",
+    )
+    ap.add_argument(
+        "--train-token-budget",
+        type=int,
+        default=1_000_000,
+        help="cap on corpus tokens read for this run: rows are consumed from "
+        "train-* shards until the budget is reached or they are exhausted",
     )
     ap.add_argument(
         "--resume",
@@ -150,8 +176,15 @@ def build_model(vocab_size: int, seed: int, size: str = "10m"):
     return model, cfg, n_params
 
 
-def load_data():
-    """Resolve corpus + real BPE tokenizer; fail loudly, never surrogate."""
+def load_data(budget: int):
+    """Resolve the REAL corpus + BPE tokenizer; train on train-* shards only.
+
+    Reads jsonl rows from `orion_corpus.train_shards(files)` until `budget`
+    corpus tokens have been consumed (or the shards are exhausted); val-/test-*
+    shards are never read for training. Val shards are loaded separately for
+    the held-out eval. Exits loudly on the smoke fallback / missing tokenizer
+    - this harness never surrogates.
+    """
     files, source, is_real = orion_corpus.resolve_corpus()
     if not is_real or not orion_corpus.bpe_tokenizer_available():
         raise SystemExit(
@@ -160,21 +193,59 @@ def load_data():
         )
     tokenizer = orion_corpus.load_bpe_compat()
     vocab = tokenizer.vocab_size
-    samples = orion_corpus.load_samples(files)
     corpus_sha = orion_corpus.corpus_sha256(files)
+
+    train_files = orion_corpus.train_shards(files)
+    val_files = sorted(p for p in files if p.name.startswith("val-"))
+    test_files = sorted(p for p in files if p.name.startswith("test-"))
+    val_test_sha = orion_corpus.corpus_sha256(val_files + test_files)
     print(
-        f"[DATA] source={source} shards={[p.name for p in files]} "
-        f"corpus_sha256={corpus_sha[:16]}... samples={len(samples)} "
-        f"vocab={vocab}"
+        f"[DATA] source={source} vocab={vocab} corpus_sha256={corpus_sha[:16]}... "
+        f"train_shards={[p.name for p in train_files]} "
+        f"val_shards={[p.name for p in val_files]} "
+        f"test_shards={[p.name for p in test_files]} "
+        f"val_test_sha256={val_test_sha[:16]}..."
     )
-    if len(samples) < 2:
-        raise SystemExit("[DATA] corpus too small for a train/eval split")
-    split = max(1, int(len(samples) * 0.75))
-    return tokenizer, vocab, samples, split, files, corpus_sha
+
+    # Budgeted train-row read: consume rows until the token budget is hit.
+    train_rows, slice_tokens = [], 0
+    for path in train_files:
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                row = json.loads(line)
+                train_rows.append(row)
+                slice_tokens += len(tokenizer.encode(orion_corpus.row_text(row)).ids)
+                if slice_tokens >= budget:
+                    break
+        if slice_tokens >= budget:
+            break
+    val_rows = orion_corpus.load_samples(val_files)
+    print(
+        f"[DATA] train rows={len(train_rows)} (slice_tokens={slice_tokens:,}) "
+        f"| val rows={len(val_rows)}"
+    )
+    if not train_rows:
+        raise SystemExit("[DATA] no train rows resolved under the token budget")
+    return (
+        tokenizer,
+        vocab,
+        train_rows,
+        val_rows,
+        files,
+        train_files,
+        corpus_sha,
+        val_test_sha,
+        slice_tokens,
+    )
 
 
-def make_blocks(rows, tokenizer, fmt):
-    samples = tokenize_samples(rows, tokenizer, fmt, max_len=MAX_LEN, truncation=True)
+def make_blocks(rows, tokenizer):
+    """Tokenize corpus rows (raw `text` or SFT rows via row_text) and pack."""
+    samples = tokenize_samples(
+        rows, tokenizer, orion_corpus.row_text, max_len=MAX_LEN, truncation=True
+    )
     return pack_sequences(
         samples,
         max_len=MAX_LEN,
@@ -187,6 +258,16 @@ def make_blocks(rows, tokenizer, fmt):
 
 def real_tokens(blocks) -> int:
     return sum(sum(b["attention_mask"]) for b in blocks)
+
+
+def _plateaued(losses, window=20, tol=0.006) -> bool:
+    """True when the last `window` losses barely improve on the window before
+    them - used to label a bounded run as CONVERGED_ON_BUDGET."""
+    if len(losses) < 2 * window:
+        return False
+    prev = sum(losses[-2 * window : -window]) / window
+    last = sum(losses[-window:]) / window
+    return last >= prev * (1 - tol)
 
 
 def checkpoint_dir(step: int) -> Path:
@@ -363,7 +444,7 @@ def main() -> int:
     global OUT_DIR
     OUT_DIR = OUT_DIR_100M if args.model_size == "100m" else OUT_DIR
     experiment_name = (
-        "comp-001-custom-100m" if args.model_size == "100m" else "comp-001-10m"
+        "comp-001-custom-100m-real" if args.model_size == "100m" else "comp-001-10m"
     )
 
     start_time = time.time()
@@ -374,34 +455,55 @@ def main() -> int:
         f"\n{'=' * 70}"
     )
 
-    # --- data + tokenizer (BPE from T2; real corpus; never surrogate) -------
-    tokenizer, vocab, samples, split, files, corpus_sha = load_data()
-    train_rows, eval_rows = samples[:split], samples[split:]
-    train_blocks = make_blocks(train_rows, tokenizer, orion_corpus.format_sample)
-    eval_blocks = make_blocks(eval_rows, tokenizer, orion_corpus.format_sample)
+    # --- data + tokenizer (BPE vocab 10240 from T2; real corpus; train-* only)
+    (
+        tokenizer,
+        vocab,
+        train_rows,
+        val_rows,
+        files,
+        train_files,
+        corpus_sha,
+        val_test_sha,
+        slice_tokens,
+    ) = load_data(args.train_token_budget)
+    eval_split_label = "val-shards"
+    if not val_rows:
+        # No val-* shards (legacy single-file corpus): hold out 20% of the slice.
+        print("[DATA] no val-* shards; holding out 20% of train rows for eval")
+        eval_split_label = "train-holdout"
+        holdout = max(1, int(len(train_rows) * 0.8))
+        val_rows, train_rows = train_rows[holdout:], train_rows[:holdout]
+    train_blocks = make_blocks(train_rows, tokenizer)
+    eval_blocks = make_blocks(val_rows, tokenizer)
+    eval_blocks = eval_blocks[:MAX_EVAL_BLOCKS]
+    if not eval_blocks:
+        raise SystemExit("[DATA] no held-out eval blocks available")
     per_epoch = len(train_blocks)
-    total_tokens = real_tokens(train_blocks) * args.epochs
+    block_tokens = [sum(b["attention_mask"]) for b in train_blocks]
+    tokens_per_epoch = sum(block_tokens)
+    eval_tokens = real_tokens(eval_blocks)
     print(
-        f"[DATA] train samples={len(train_rows)} eval samples={len(eval_rows)} "
-        f"| train blocks={per_epoch} eval blocks={len(eval_blocks)} "
-        f"| tokens/epoch={real_tokens(train_blocks)} total={total_tokens}"
+        f"[DATA] train rows={len(train_rows)} val rows={len(val_rows)} "
+        f"| train blocks={per_epoch} ({tokens_per_epoch:,} tok/epoch, "
+        f"slice_tokens_read={slice_tokens:,}) "
+        f"| eval blocks={len(eval_blocks)} ({eval_tokens:,} tokens, "
+        f"split={eval_split_label})"
     )
 
     # --- corpus-adequacy gate (T2 verdict from the ledger, read before run) --
     gate = read_gate_verdict()
     gate_verdict = gate.get("verdict", "UNKNOWN")
-    corpus_tokens = gate.get("actual_tokens", real_tokens(train_blocks))
+    gate_run_id = gate.get("run_id", "")
+    corpus_tokens = gate.get("actual_tokens", 0) or 0
+    if corpus_tokens <= 0:
+        corpus_tokens, _ = orion_corpus.count_corpus_tokens(tokenizer, train_files)
     required_tokens = gate.get(
         "required_tokens_for_100m", orion_corpus.REQUIRED_TOKENS_FOR_100M
     )
-    run_status = (
-        "SMOKE_RUN"
-        if args.model_size == "100m" and gate_verdict != "ADEQUATE"
-        else "COMPLETED"
-    )
     print(
-        f"[GATE] ledger verdict={gate_verdict} corpus_tokens={corpus_tokens:,} "
-        f"required_tokens_for_100m={required_tokens:,} -> status={run_status}"
+        f"[GATE] ledger run={gate_run_id} verdict={gate_verdict} "
+        f"corpus_tokens={corpus_tokens:,} required_tokens_for_100m={required_tokens:,}"
     )
 
     # --- model (dense from scratch) -----------------------------------------
@@ -424,6 +526,7 @@ def main() -> int:
         "threads": args.threads,
         "max_len": MAX_LEN,
         "batch_size": 1,
+        "train_token_budget": args.train_token_budget,
     }
 
     # --- optimizer + optional resume ----------------------------------------
@@ -431,11 +534,13 @@ def main() -> int:
     losses = []
     start_step = 0
     resumed_from = None
+    ckpt_last_loss = None
     if args.resume:
         ckpt = find_latest_checkpoint() if args.resume == "auto" else Path(args.resume)
         if ckpt is None or not (ckpt / "checkpoint.pt").exists():
             raise SystemExit(f"[RESUME] checkpoint not found: {args.resume}")
-        start_step, _ = load_checkpoint(ckpt, model, optimizer)
+        start_step, loaded_losses = load_checkpoint(ckpt, model, optimizer)
+        ckpt_last_loss = loaded_losses[-1] if loaded_losses else None
         resumed_from = str(ckpt)
     total_steps = (
         start_step + args.epochs * per_epoch
@@ -480,7 +585,14 @@ def main() -> int:
             save_checkpoint(step, model, optimizer, cfg, hparams, losses)
 
     train_seconds = time.time() - train_start
-    tokens_per_sec = total_tokens / train_seconds if train_seconds > 0 else 0.0
+    final_step = len(losses)
+    full_cycles, rem = divmod(final_step, per_epoch)
+    tokens_seen = full_cycles * tokens_per_epoch + sum(block_tokens[:rem])
+    inv_tokens = sum(
+        block_tokens[(start_step + i) % per_epoch]
+        for i in range(final_step - start_step)
+    )
+    tokens_per_sec = inv_tokens / train_seconds if train_seconds > 0 else 0.0
     starting_loss = losses[0]
     ending_loss = losses[-1]
     reduction_pct = (
@@ -491,9 +603,40 @@ def main() -> int:
     print(
         f"[TRAIN] loss {starting_loss:.4f} -> {ending_loss:.4f} "
         f"({reduction_pct:+.2f}%) | {tokens_per_sec:.1f} tok/s "
-        f"({train_seconds:.1f}s) | peak RSS {peak_rss / 1024**2:.1f} MB"
+        f"({train_seconds:.1f}s) | tokens_seen {tokens_seen:,} "
+        f"| peak RSS {peak_rss / 1024**2:.1f} MB"
     )
     assert ending_loss < starting_loss, "training must demonstrate loss reduction"
+
+    # --- resume verification: the continued loss must NOT reset to init ----
+    resume_verified = False
+    if resumed_from and ckpt_last_loss is not None:
+        first_continued = losses[start_step] if len(losses) > start_step else None
+        warm = (
+            first_continued is not None
+            and abs(first_continued - ckpt_last_loss) < 0.5 * ckpt_last_loss
+        )
+        resume_verified = bool(warm)
+        print(
+            f"[RESUME-VERIFY] checkpoint loss {ckpt_last_loss:.4f} -> first "
+            f"continued step loss "
+            f"{'n/a' if first_continued is None else f'{first_continued:.4f}'} "
+            f"(not reset: {warm}) -> resume_verified={resume_verified}"
+        )
+
+    # --- honest scope label for a bounded run -------------------------------
+    if args.model_size == "100m" and gate_verdict != "ADEQUATE":
+        run_status = "SMOKE_RUN"
+    elif _plateaued(losses):
+        run_status = "CONVERGED_ON_BUDGET"
+    elif tokens_seen < corpus_tokens:
+        run_status = "PARTIAL_FIRST_PASS"
+    else:
+        run_status = "COMPLETED"
+    print(
+        f"[STATUS] scope={run_status} (tokens_seen={tokens_seen:,} < "
+        f"corpus_total={corpus_tokens:,})"
+    )
 
     # --- held-out eval -------------------------------------------------------
     model.eval()
@@ -506,7 +649,10 @@ def main() -> int:
                 float(model(input_ids=input_ids, labels=labels).loss.item())
             )
     eval_loss = sum(eval_losses) / len(eval_losses)
-    print(f"[EVAL] held-out eval loss (n={len(eval_blocks)}): {eval_loss:.4f}")
+    print(
+        f"[EVAL] held-out {eval_split_label} loss (n={len(eval_blocks)} "
+        f"blocks, {eval_tokens:,} tokens): {eval_loss:.4f}"
+    )
 
     trained_delta = weight_delta(init_weights, snapshot_weights(model))
     output_differs = trained_delta > 1e-4
@@ -538,7 +684,7 @@ def main() -> int:
         "dataset_path": str(files[0]),
         "tokenizer_path": str(TOKENIZER_DIR / "tokenizer.json"),
         "dataset_hash": corpus_sha,
-        "num_samples": len(samples),
+        "num_samples": len(train_rows),
         "seed": args.seed,
         "epochs": args.epochs,
         "learning_rate": args.lr,
@@ -555,7 +701,22 @@ def main() -> int:
         "param_count": n_params,
         "peak_rss_mb": round(peak_rss / 1024**2, 1),
         "tokens_per_sec": round(tokens_per_sec, 1),
-        "train_tokens": total_tokens,
+        "train_tokens": tokens_seen,
+        "tokens_seen": tokens_seen,
+        "epochs_seen": round(tokens_seen / tokens_per_epoch, 4)
+        if tokens_per_epoch
+        else 0.0,
+        "corpus_total_tokens": corpus_tokens,
+        "train_token_budget": args.train_token_budget,
+        "slice_tokens_read": slice_tokens,
+        "val_test_sha256": val_test_sha,
+        "train_shard_files": [p.name for p in train_files],
+        "val_shard_files": sorted(p.name for p in files if p.name.startswith("val-")),
+        "test_shard_files": sorted(p.name for p in files if p.name.startswith("test-")),
+        "eval_split": eval_split_label,
+        "val_eval_blocks": len(eval_blocks),
+        "val_eval_tokens": eval_tokens,
+        "gate_run_id": gate_run_id,
         "perplexity": round(perplexity, 4),
         "inference_tok_per_s": round(inference_tok_per_s, 2),
         "inference_new_tokens": INFERENCE_NEW_TOKENS,
@@ -573,6 +734,7 @@ def main() -> int:
         "resumed": bool(resumed_from),
         "resume_from_step": start_step,
         "resume_checkpoint": resumed_from or "",
+        "resume_verified": resume_verified,
         "vocab_size": vocab,
         "config": cfg,
         "loss_history": [round(x, 4) for x in losses],
@@ -587,6 +749,7 @@ def main() -> int:
         "max_steps": args.max_steps,
         "lr": args.lr,
         "seed": args.seed,
+        "train_token_budget": args.train_token_budget,
         "vocab_size": vocab,
         "hidden_size": cfg["hidden_size"],
         "intermediate_size": cfg["intermediate_size"],
