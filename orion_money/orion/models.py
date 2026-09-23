@@ -158,7 +158,16 @@ class Experiment(TimestampMixin, Base):
 
 
 class MemoryItem(TimestampMixin, Base):
-    """Discriminated memory rows: kind ∈ fact|belief|hypothesis|evidence."""
+    """Discriminated memory rows: kind ∈ fact|belief|hypothesis|evidence.
+
+    kind-specific columns (see orion.memory for semantics):
+    * ``verified``  — FACTS only: True when the fact is confirmed, either by
+      explicit verification or by linkage to a supporting evidence row.
+    * ``status``    — HYPOTHESES only: proposed | confirmed | refuted.
+    * ``direction`` — EVIDENCE only: supports | contradicts.
+    * ``reference`` — EVIDENCE: ledger entry id / experiment id it observes;
+      FACTS: the evidence row id (``evidence:<id>``) that verified it.
+    """
 
     __tablename__ = "memory_items"
 
@@ -167,6 +176,10 @@ class MemoryItem(TimestampMixin, Base):
     payload_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     confidence: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     source: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="")
+    direction: Mapped[str] = mapped_column(String(16), nullable=False, default="")
+    reference: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
 
 class Job(TimestampMixin, Base):
