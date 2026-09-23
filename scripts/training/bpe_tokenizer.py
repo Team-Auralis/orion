@@ -82,10 +82,15 @@ def train_bpe(corpus_dir: Path, vocab_size: int, output_dir: Path) -> dict:
         f"{len(canonical_bytes)}-byte canonical form (GPT-2 leading-space convention)"
     )
 
-    total, unique = orion_corpus.count_corpus_tokens(tokenizer, files)
+    # Gate measures train shards only (val/test must not inflate the verdict);
+    # report the full-corpus number separately for transparency.
+    train_files = orion_corpus.train_shards(files)
+    total, unique = orion_corpus.count_corpus_tokens(tokenizer, train_files)
+    all_total, _ = orion_corpus.count_corpus_tokens(tokenizer, files)
     trained_vocab = tokenizer.get_vocab_size()
     print(
-        f"[bpe] trained vocab={trained_vocab:,} | total corpus tokens={total:,} "
+        f"[bpe] trained vocab={trained_vocab:,} | train-shard tokens={total:,} "
+        f"| all-shard tokens={all_total:,} "
         f"| unique tokens seen={unique:,} ({unique / trained_vocab:.2%} coverage)"
     )
 

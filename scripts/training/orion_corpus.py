@@ -143,6 +143,15 @@ def num_documents(files) -> int:
     return sum(1 for _ in iter_texts(files))
 
 
+def train_shards(files) -> list:
+    """Shards the model will actually train on: `train-*` when present
+    (T1 corpus layout), else every resolved shard (legacy single-file corpus).
+    The adequacy gate must measure train data only - val/test must never
+    inflate the ADEQUATE count."""
+    train = [p for p in files if p.name.startswith("train-")]
+    return train or list(files)
+
+
 # --- BPE tokenizer loading / HF-ish shim ------------------------------------
 
 
@@ -257,7 +266,8 @@ def emit_adequacy_gate(
     if actual_tokens is None or vocab_size is None:
         tok = load_bpe_tokenizer()
         if actual_tokens is None:
-            actual_tokens, _ = count_corpus_tokens(tok, files)
+            # Train shards only: val/test must not inflate the verdict.
+            actual_tokens, _ = count_corpus_tokens(tok, train_shards(files))
         if vocab_size is None:
             vocab_size = tok.get_vocab_size()
 
@@ -315,6 +325,9 @@ def emit_adequacy_gate(
     )
 
     print(f"[GATE] corpus source={source} shards={[p.name for p in files]}")
+    print(
+        f"[GATE] gate counted train shards only={[p.name for p in train_shards(files)]}"
+    )
     print(f"[GATE] corpus bytes={size:,} | sha256={sha[:16]}...")
     print(
         f"[GATE] tokenizer vocab={vocab_size:,} | actual_tokens={actual_tokens:,} "
