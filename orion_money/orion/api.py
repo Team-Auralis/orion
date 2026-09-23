@@ -979,6 +979,37 @@ def api_activity_recent(limit: int = 50):
     }
 
 
+# ---------------------------------------------------------------------------
+# Browser — research on the allowlist (L0, read-only, always sanitized)
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/browser/research")
+def api_browser_research(url: str):
+    """Load one allowlisted URL and return a sanitized read-only excerpt.
+
+    Blocked URLs (not on the allowlist / non-https) are a 403 with the
+    reason. Other failures return ``status: 0`` plus an ``error`` string.
+    ``text_excerpt`` is trimmed to 500 chars; page text is NEVER included
+    raw in any prompt — it is always the sanitized, boundary-merged form.
+    """
+    from orion.browser import BrowserController
+
+    ctrl = BrowserController()
+    result = ctrl.page(url)
+    if result.error is not None and result.error.startswith("blocked:"):
+        raise BlockedByPolicy(result.error, [result.error])
+    return {
+        "url": result.final_url,
+        "status": result.status_code,
+        "text_excerpt": result.text[:500],
+        "sanitized_markers": list(result.sanitized.suspicious_markers),
+        "screenshot_path": result.screenshot_path,
+        "error": result.error,
+        "sanitized": True,
+    }
+
+
 @app.get("/api/activity")
 async def api_activity(request: Request):
     """Server-Sent Events stream: replays recent history, then live events.

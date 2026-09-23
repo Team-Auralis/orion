@@ -1,7 +1,7 @@
 """ORION command-line interface — ``python -m orion.cli``.
 
 Commands: start, stop, status, doctor, dry-run, opportunities, strategies,
-experiments, ledger, approve, reject, confirm-payout, kill, logs.
+experiments, ledger, approve, reject, confirm-payout, kill, logs, research.
 
 Exit codes: 0 success, 1 user error, 2 runtime error.
 
@@ -102,6 +102,11 @@ def _build_parser() -> _Parser:
     sub.add_parser("kill", help="engage the global kill switch")
     p = sub.add_parser("logs", help="tail data/logs/orion.log")
     p.add_argument("--lines", type=int, default=40)
+
+    p = sub.add_parser(
+        "research", help="load one allowlisted URL and print trimmed page text"
+    )
+    p.add_argument("url", help="https URL on the browser allowlist (research only)")
     return parser
 
 
@@ -666,6 +671,29 @@ def cmd_logs(args) -> int:
     return EXIT_OK
 
 
+def cmd_research(args) -> int:
+    """One-shot research read: final URL, status, screenshot, trimmed text.
+
+    Research is L0 read-only: the page text is untrusted web content and is
+    never merged anywhere except through the labeled boundary helper.
+    """
+    from orion.browser import BrowserController
+
+    ctrl = BrowserController()
+    result = ctrl.page(args.url)
+    print("[UNTRUSTED WEB CONTENT — research only]")
+    print(f"final url: {result.final_url}")
+    print(f"status: {result.status_code}")
+    print(f"screenshot: {result.screenshot_path or '(none)'}")
+    if result.error is not None:
+        print(f"error: {result.error}", file=sys.stderr)
+        return EXIT_USER
+    print("---")
+    lines = [ln for ln in result.text.splitlines() if ln.strip()][:40]
+    print("\n".join(lines) if lines else "(no page text)")
+    return EXIT_OK
+
+
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
@@ -685,6 +713,7 @@ _HANDLERS = {
     "confirm-payout": cmd_confirm_payout,
     "kill": cmd_kill,
     "logs": cmd_logs,
+    "research": cmd_research,
 }
 
 

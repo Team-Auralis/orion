@@ -1,6 +1,7 @@
 # ORION default configuration.
-# Only `paths.data_dir` (ORION_DATA_DIR) and `autonomy.default_mode`
-# (ORION_AUTONOMY_MODE) are overridable by environment variables — see
+# Only `paths.data_dir` (ORION_DATA_DIR), `autonomy.default_mode`
+# (ORION_AUTONOMY_MODE), and `policies.browser.driver`
+# (ORION_BROWSER_DRIVER) are overridable by environment variables — see
 # .env.example. Everything else must be edited here.
 # All money values are INTEGER PAISE (₹1 = 100 paise, ₹200 = 20000 paise).
 

@@ -54,14 +54,23 @@ actions:
 
 # Browser controller settings (orion.browser).
 browser:
-  # Driver: "mock" (deterministic offline fixtures, no network) or
-  # "playwright" (lazy-loaded; raises unless playwright is installed).
+  # Driver: "mock" (deterministic offline fixtures, no network — default) or
+  # "playwright" (REAL headless chromium research browser; requires
+  # `pip install playwright && playwright install chromium`). Can be
+  # overridden with the ORION_BROWSER_DRIVER env var. Never silently
+  # falls back — driver=playwright without the package raises clearly.
   driver: mock
-  # Domains the browser tool may visit, https-only (empty = fully open,
-  # which is NOT advised). Any domain not listed here is blocked before
-  # navigation.
+  # Domains the browser tool may visit (empty = fully open, NOT advised).
+  # https-only (http allowed for localhost only). Any domain not listed
+  # here is blocked BEFORE navigation — this is the research allowlist:
+  # public pages only, research/read-only, never login walls or CAPTCHA.
   domain_allowlist:
-    - example.com
+    - gumroad.com      # public digital-product listings + pricing (TOS-permissive)
+    - ko-fi.com        # public creator product listings + pricing (TOS-permissive)
+    - wikipedia.org    # neutral reference material
+    - github.com       # public repos / READMEs / docs
+    - example.com      # IANA documentation domain (legacy mock host, tests)
+    - mock.localhost   # offline mock fixture host (tests; http allowed)
 
 # Approval records expire after this many hours; expired approvals must be
 # re-approved before the reserved action may execute.

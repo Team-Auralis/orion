@@ -19,9 +19,14 @@ Drivers (config ``browser.driver``):
   as :class:`~orion.connectors.mock.MockConnector`; paths containing
   ``injection``/``malicious`` serve a hostile fixture page, ``captcha``
   serves a challenge page.
-* ``playwright`` — lazy-imported ONLY when configured; missing package
-  raises ``browser.driver=playwright requires playwright installed``.
-  Driver failures propagate — screenshots never fake success.
+* ``playwright`` — REAL headless chromium navigation, lazy-imported ONLY
+  when configured; missing package raises ``browser.driver=playwright
+  requires playwright installed`` (never a silent fallback to mock).
+  Enforces https (http only for localhost), the allowlist before launch,
+  a 15s navigation timeout, status + final URL capture, innerText capped
+  at ~200k chars, and a screenshot under workspace/screenshots/{session}/
+  per loaded page. Driver failures propagate — screenshots never fake
+  success.
 
 Session tracking is light: an in-memory :class:`BrowserSession` (id,
 start/end, actions) plus structured log events per action.
@@ -30,14 +35,15 @@ start/end, actions) plus structured log events per action.
 from __future__ import annotations
 
 import html as html_lib
+import importlib.util
 import re
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, Optional
 from urllib.parse import urlparse
 
-from orion.config import get_config
+from orion.config import PROJECT_ROOT, get_config
 from orion.connectors.mock import MockConnector
 from orion.log import get_logger
 from orion.security import UntrustedContent, sanitize_web_content
@@ -138,23 +144,115 @@ def _html_to_text(body: str) -> str:
 # Real driver (lazy; never pretended)
 # ---------------------------------------------------------------------------
 
+_PW_TIMEOUT_MS = 15_000  # per-navigation cap; slow-ish pages get one shot
+_MAX_PAGE_TEXT = 200_000  # innerText length cap per captured page
+_WORKSPACE_SCREENSHOTS = PROJECT_ROOT / "workspace" / "screenshots"
 
-def _fetch_playwright(url: str) -> tuple[int, str, str]:
-    try:
+# Module-level Playwright runtime + chromium instance, launched once and
+# cached across calls (sync API is fine for a request/response controller).
+# Each page() call opens and closes its own context, so tabs never leak.
+_PW_RUNTIME: Any = None
+_PW_BROWSER: Any = None
+
+
+def _is_localhost(host: str) -> bool:
+    """RFC-6761 localhost + loopback literals (http is allowed there)."""
+    return (
+        host == "localhost"
+        or host.endswith(".localhost")
+        or host
+        in (
+            "127.0.0.1",
+            "::1",
+        )
+    )
+
+
+def _playwright_browser():
+    """Return the cached headless chromium instance (launch once, reuse)."""
+    global _PW_RUNTIME, _PW_BROWSER
+    if _PW_BROWSER is None:
         from playwright.sync_api import sync_playwright
+
+        _PW_RUNTIME = sync_playwright().start()
+        _PW_BROWSER = _PW_RUNTIME.chromium.launch(headless=True)
+    return _PW_BROWSER
+
+
+def _playwright_error_reason(exc: Exception, url: str) -> str:
+    """Map a playwright failure to a readable reason for API/CLI display.
+
+    The mapping is duck-typed on the message/class so it works without
+    importing playwright (and is unit-testable without the package).
+    """
+    lowered = str(exc).lower()
+    if type(exc).__name__ == "TimeoutError":
+        return f"browser: navigation timeout after {_PW_TIMEOUT_MS}ms for {url}"
+    if "executable doesn't exist" in lowered or "executable does not exist" in lowered:
+        return "browser: playwright chromium not installed — run `playwright install chromium`"
+    if "cert" in lowered or "ssl" in lowered or "tls" in lowered:
+        return f"browser: TLS error for {url} ({exc})"
+    if "connection refused" in lowered or "econnrefused" in lowered:
+        return f"browser: connection refused for {url} ({exc})"
+    if "blocked" in lowered and "net::err" in lowered:
+        return f"browser: request blocked for {url} ({exc})"
+    return f"browser: fetch failed for {url} ({exc})"
+
+
+def _fetch_playwright(url: str, session_id: str) -> tuple[int, str, str, Optional[str]]:
+    """Real fetch via Playwright sync API.
+
+    Returns ``(status, final_url, page_text, screenshot_path)``. Raises with a
+    readable reason on any navigation failure (timeout, TLS, connection
+    refused, non-2xx status, missing browser binary) — failures never fake
+    success. The chromium launch is cached at module level.
+    """
+    try:
+        from playwright.sync_api import sync_playwright  # noqa: F401  (probe)
     except ImportError as exc:
         raise RuntimeError(
             "browser.driver=playwright requires playwright installed"
         ) from exc
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
+
+    try:
+        browser = _playwright_browser()
+    except Exception as exc:  # e.g. chromium binary missing at first launch
+        raise RuntimeError(_playwright_error_reason(exc, url)) from exc
+
+    context = browser.new_context()
+    try:
+        page = context.new_page()
         try:
-            page = browser.new_page()
-            response = page.goto(url, wait_until="load")
-            status = response.status if response is not None else 0
-            return status, page.url, page.content()
-        finally:
-            browser.close()
+            response = page.goto(url, wait_until="load", timeout=_PW_TIMEOUT_MS)
+        except Exception as exc:  # timeout / TLS / connection refused / DNS
+            raise RuntimeError(_playwright_error_reason(exc, url)) from exc
+
+        status = response.status if response is not None else 0
+        if not 200 <= status < 300:
+            raise RuntimeError(f"browser: http error status {status} for {url}")
+
+        final_url = page.url
+        text = ""
+        try:
+            text = page.evaluate("() => document.body ? document.body.innerText : ''")
+        except Exception:  # noqa: BLE001 — empty body is still an empty capture
+            text = ""
+        text = (text or "").strip()[:_MAX_PAGE_TEXT]
+
+        shot = None
+        try:
+            shot_dir = _WORKSPACE_SCREENSHOTS / session_id
+            shot_dir.mkdir(parents=True, exist_ok=True)
+            shot = shot_dir / f"page_{uuid.uuid4().hex[:12]}.png"
+            page.screenshot(path=str(shot))
+            shot = str(shot)
+        except Exception:  # noqa: BLE001 — a screenshot failure is not a fetch failure
+            log.warning("screenshot failed", extra={"url": url})
+            shot = None
+
+        return status, final_url, text, shot
+    finally:
+        context.close()
 
 
 # ---------------------------------------------------------------------------
@@ -207,20 +305,24 @@ class BrowserController:
     def _block_reason(self, url: str) -> Optional[str]:
         """Return why ``url`` may not be visited, or ``None`` when allowed."""
         parsed = urlparse(url)
-        if parsed.scheme != "https":
-            return f"blocked: https-only (got {parsed.scheme or 'no scheme'})"
         host = (parsed.hostname or "").lower()
+        if parsed.scheme != "https" and not (
+            parsed.scheme == "http" and _is_localhost(host)
+        ):
+            return f"blocked: https-only (got {parsed.scheme or 'no scheme'})"
         allow = [d.lower() for d in self.allowlist()]
         if allow and not any(host == d or host.endswith("." + d) for d in allow):
             return f"blocked: domain {host!r} not in browser.domain_allowlist"
         return None
 
-    def _fetch(self, url: str) -> tuple[int, str, str]:
+    def _fetch(
+        self, url: str, session_id: Optional[str] = None
+    ) -> tuple[int, str, str, Optional[str]]:
         name = self.driver_name
         if name == "mock":
-            return 200, url, _fixture_for(url)
+            return 200, url, _fixture_for(url), None
         if name == "playwright":
-            return _fetch_playwright(url)
+            return _fetch_playwright(url, session_id or "manual")
         raise ValueError(
             f"unknown browser.driver {name!r} — use 'mock' or 'playwright'"
         )
@@ -249,7 +351,9 @@ class BrowserController:
                 error=reason,
             )
         try:
-            status, final_url, body = self._fetch(url)
+            status, final_url, body, screenshot = self._fetch(
+                url, self.session.session_id
+            )
         except Exception as exc:  # driver failure: reported, never faked
             log.warning("browser fetch failed", extra={"url": url, "error": str(exc)})
             return BrowserPageResult(
@@ -257,14 +361,17 @@ class BrowserController:
                 sanitized=sanitize_web_content(""),
                 status_code=0,
                 final_url=url,
+                screenshot_path=None,
                 error=str(exc),
             )
-        text = _html_to_text(body)
+        # Real driver returns innerText already; mock returns raw fixture HTML.
+        text = body if self.driver_name == "playwright" else _html_to_text(body)
         return BrowserPageResult(
             text=text,
             sanitized=sanitize_web_content(text),
             status_code=status,
             final_url=final_url,
+            screenshot_path=screenshot,
             error=None,
         )
 
@@ -285,7 +392,7 @@ class BrowserController:
         reason = self._block_reason(url)
         if reason is not None:
             raise ValueError(reason)
-        status, final_url, _ = self._fetch(url)  # failures propagate
+        status, final_url, _, _ = self._fetch(url)  # failures propagate
         if status == 0 or status >= 400:
             raise RuntimeError(
                 f"screenshot failed: driver returned status {status} for {url}"
@@ -299,3 +406,82 @@ class BrowserController:
             encoding="utf-8",
         )
         return str(path)
+
+
+# ---------------------------------------------------------------------------
+# Research convenience API (L0 read-only artifacts)
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class ResearchCapture:
+    """One read-only research capture: text excerpt + sanitizer markers.
+
+    ``error`` set => the page was never loaded (blocked/failed). These are
+    L0 artifacts: they influence nothing, spend nothing, and are merged into
+    prompts only via :func:`orion.security.merge_with_boundary`.
+    """
+
+    url: str
+    status: int
+    text_excerpt: str
+    sanitized_markers: list[str]
+    screenshot_path: Optional[str] = None
+    error: Optional[str] = None
+
+
+def research_pages(
+    urls: list[str], allowlist_override: Optional[list[str]] = None
+) -> list[ResearchCapture]:
+    """Open each URL via the controller; one :class:`ResearchCapture` each.
+
+    Standalone read-only helper (used later by discovery connectors): never
+    spends, never bypasses gates, every page is sanitized through
+    :func:`orion.security.sanitize_web_content`.
+    """
+    ctrl = BrowserController(allowlist=allowlist_override)
+    captures: list[ResearchCapture] = []
+    for url in urls:
+        result = ctrl.page(url)
+        captures.append(
+            ResearchCapture(
+                url=result.final_url,
+                status=result.status_code,
+                text_excerpt=result.text[:500],
+                sanitized_markers=list(result.sanitized.suspicious_markers),
+                screenshot_path=result.screenshot_path,
+                error=result.error,
+            )
+        )
+    return captures
+
+
+def driver_health() -> dict[str, Any]:
+    """Report the configured browser driver: mock | playwright | missing."""
+    name = get_config().policies.browser.driver
+    if name == "mock":
+        return {
+            "driver": "mock",
+            "available": True,
+            "detail": "offline fixture driver (no network)",
+        }
+    if name == "playwright":
+        installed = importlib.util.find_spec("playwright") is not None
+        if not installed:
+            return {
+                "driver": "playwright",
+                "available": False,
+                "detail": "playwright not installed — `pip install playwright` "
+                "then `playwright install chromium`",
+            }
+        return {
+            "driver": "playwright",
+            "available": True,
+            "detail": "playwright installed; `playwright install chromium` "
+            "may still be needed",
+        }
+    return {
+        "driver": name,
+        "available": False,
+        "detail": f"unknown driver {name!r} — use 'mock' or 'playwright'",
+    }

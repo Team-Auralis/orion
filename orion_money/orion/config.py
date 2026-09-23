@@ -26,6 +26,7 @@ CONFIG_DIR = PROJECT_ROOT / "config"
 _ENV_OVERRIDES = {
     "ORION_DATA_DIR": ("paths", "data_dir"),
     "ORION_AUTONOMY_MODE": ("autonomy", "default_mode"),
+    "ORION_BROWSER_DRIVER": ("policies", "browser", "driver"),
 }
 
 
@@ -217,22 +218,37 @@ def _load_yaml(name: str) -> dict[str, Any]:
 
 
 def _apply_env_overrides(data: dict[str, Any]) -> None:
-    """Mutate ``data`` in place with any set environment overrides."""
-    for env_var, (section, key) in _ENV_OVERRIDES.items():
+    """Mutate ``data`` in place with any set environment overrides.
+
+    Each override maps an env var to a nested key path, e.g.
+    ``("policies", "browser", "driver")``; empty/unset vars are ignored so
+    YAML remains the default.
+    """
+    for env_var, path in _ENV_OVERRIDES.items():
         value = os.environ.get(env_var, "").strip()
-        if value:
-            data.setdefault(section, {})[key] = value
+        if not value:
+            continue
+        node: dict[str, Any] = data
+        for part in path[:-1]:
+            child = node.setdefault(part, {})
+            if not isinstance(child, dict):
+                child = {}
+                node[part] = child
+            node = child
+        node[path[-1]] = value
 
 
 def _load_config() -> Config:
     defaults: dict[str, Any] = _load_yaml("default.yaml")
     policies = _load_yaml("policies.yaml")
     model_roles = _load_yaml("model_roles.yaml")
-    _apply_env_overrides(defaults)
 
     merged = dict(defaults)
     merged["policies"] = policies
     merged["model_roles"] = model_roles
+    # Env overrides must run on the FULL merge (policies.yaml is merged above;
+    # ORION_BROWSER_DRIVER targets policies.browser.driver, not defaults).
+    _apply_env_overrides(merged)
     return Config.model_validate(merged)
 
 
