@@ -163,6 +163,12 @@ class Api(BaseModel):
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
 
+class Security(BaseModel):
+    """Credential vault settings (config/default.yaml ``security:``)."""
+
+    vault_backend: str = "auto"  # auto | keyring | file
+
+
 class Config(BaseModel):
     orion: OrionInfo = OrionInfo()
     risk_guardrails: RiskGuardrails = RiskGuardrails()
@@ -175,6 +181,7 @@ class Config(BaseModel):
     scoring: Scoring = Scoring()
     connectors: Connectors = Connectors()
     api: Api = Api()
+    security: Security = Security()
 
     @property
     def data_dir(self) -> Path:

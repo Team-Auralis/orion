@@ -7,6 +7,11 @@ handler on top. Use :func:`get_logger` everywhere; the console handler keeps
 extra fields in ``key=value`` form. Nothing here may be imported from
 ``orion.config`` with a hard dependency, so logging works even if config is
 mid-bootstrap; the data dir is resolved through ``get_config()`` at first use.
+
+Secret scrubbing: ``setup_logging`` calls ``orion.secrets.install_redaction_filter``
+so every stored vault value is stripped from records on all streams. This
+imports ``orion.secrets`` (which imports only stdlib + ``orion.config``, never
+this module), so there is no circular dependency.
 """
 
 from __future__ import annotations
@@ -20,6 +25,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from orion.config import get_config
+from orion.secrets import install_redaction_filter
 
 # Standard logging.LogRecord attributes we never treat as "extra" fields.
 _RESERVED = frozenset(
@@ -117,6 +123,7 @@ def setup_logging() -> None:
         console.setFormatter(ConsoleFormatter())
         logger.addHandler(console)
 
+    install_redaction_filter()
     _logging_configured = True
 
 

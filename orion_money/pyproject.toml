@@ -15,5 +15,10 @@ dependencies = [
     "apscheduler",
 ]
 
+[project.optional-dependencies]
+# OS-keyring credential vault (orion/secrets.py). Base install stays
+# dependency-light; `pip install -e ".[secrets]"` enables it.
+secrets = ["keyring"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
