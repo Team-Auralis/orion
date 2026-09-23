@@ -222,6 +222,32 @@ approval and moves no money until a human approves. The real loop is:
    (spendable) when a non-empty `evidence_ref` — CSV path, transaction id,
    payout record id — is supplied. No evidence, no verified revenue.
 
+### Gumroad (Milestone B)
+
+Platform policy for Gumroad is recorded in `config/platforms.yaml`
+(`research_policy: api_only`, official REST API v2 only) and the credential
+vault CLI is ready:
+
+```bash
+python -m orion.cli vault health                    # backend + writable check
+python -m orion.cli vault set gumroad_token         # then paste the token (hidden stdin)
+python -m orion.cli vault list                      # names only (masked values)
+python -m orion.cli vault get gumroad_token         # mask only — never the raw token
+python -m orion.cli vault delete gumroad_token
+```
+
+- **Get a token**: Gumroad dashboard → Settings → Advanced → API (generate a
+  personal access token with the `edit_products` / `view_sales` / `account`
+  scopes). Store it as `gumroad_token` with the `vault set` command above,
+  pasting the value on stdin so it never lands in shell history.
+- **Never scrape gumroad.com** — their ToS clause 14(e) bans automated
+  crawling, so the browser allowlist excludes it and all Gumroad data comes
+  from the official API only.
+- **Publishing requires a connected payment method on the account** — this is
+  the "real money" moment: payout **receiving**, never a deposit. Gumroad
+  lists prices in USD; ORION ledgers stay in INR via `confirm-payout` FX at
+  receiving time.
+
 ---
 
 ## Financial safety model

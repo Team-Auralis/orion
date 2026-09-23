@@ -94,3 +94,11 @@ api:
 #             scrubbed from all logs by the redaction filter).
 security:
   vault_backend: auto
+
+# Product pricing tiers (USD cents) for product generation.
+# Used when spec provides price_tier instead of explicit price_usd_cents.
+product_pricing:
+  low: 500        # $5.00
+  medium: 1500    # $15.00
+  high: 3000      # $30.00
+  premium: 5000   # $50.00

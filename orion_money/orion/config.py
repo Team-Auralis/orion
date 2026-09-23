@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 # Project root = parent of the config/ directory and the orion/ package.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -117,6 +117,42 @@ class ModelRoles(BaseModel):
         return self.roles.get(name, ModelRole())
 
 
+class Platform(BaseModel):
+    """One real-world platform's automation policy (config/platforms.yaml).
+
+    Records HOW automation may touch the platform (official API vs browser),
+    which API/auth to use, and what the human must do by hand. Never a
+    scraping license — ``research_policy: api_only`` platforms are read
+    via their official API only.
+    """
+
+    automation_allowed: bool = False
+    api_base: str = ""
+    api_version: str = ""
+    auth: str = ""
+    uses_oauth_scopes: list[str] = []
+    research_policy: str = ""  # browser | api_only | none
+    create_product_via_api: str = ""  # yes | no | conditional
+    publish_requires_payout_account: bool = False
+    price_currency: str = ""
+    prohibited_categories_note: str = ""
+    verdict_source: str = ""
+    verdict_date: str = ""
+
+    @field_validator("verdict_date", mode="before")
+    @classmethod
+    def _stringify_verdict_date(cls, value):
+        # YAML parses an unquoted 2026-09-23 as a datetime.date; keep the
+        # field a plain ISO string so dates never leak as datetime objects.
+        return value.isoformat() if not isinstance(value, str) else value
+
+
+class Platforms(BaseModel):
+    """All platform policies, keyed by platform name."""
+
+    platforms: dict[str, Platform] = {}
+
+
 class Scoring(BaseModel):
     """Opportunity scoring weights (config/default.yaml ``scoring:``).
     Pure numeric — never an LLM. Defaults sum to 100."""
@@ -179,10 +215,17 @@ class Config(BaseModel):
     jobs: Jobs = Jobs()
     policies: Policies = Policies()
     model_roles: ModelRoles = ModelRoles()
+    platforms: Platforms = Platforms()
     scoring: Scoring = Scoring()
     connectors: Connectors = Connectors()
     api: Api = Api()
     security: Security = Security()
+    product_pricing: dict[str, int] = {
+        "low": 500,
+        "medium": 1500,
+        "high": 3000,
+        "premium": 5000,
+    }
 
     @property
     def data_dir(self) -> Path:
@@ -199,6 +242,11 @@ class Config(BaseModel):
     def db_path(self) -> Path:
         d = Path(self.paths.db_file)
         return d if d.is_absolute() else self.data_dir / d
+
+    def platform(self, name: str) -> Optional[dict[str, Any]]:
+        """Platform policy dict for ``name``, or ``None`` when unknown."""
+        found = self.platforms.platforms.get(name)
+        return found.model_dump() if found else None
 
 
 # ---------------------------------------------------------------------------
@@ -242,10 +290,12 @@ def _load_config() -> Config:
     defaults: dict[str, Any] = _load_yaml("default.yaml")
     policies = _load_yaml("policies.yaml")
     model_roles = _load_yaml("model_roles.yaml")
+    platforms = _load_yaml("platforms.yaml")
 
     merged = dict(defaults)
     merged["policies"] = policies
     merged["model_roles"] = model_roles
+    merged["platforms"] = {"platforms": platforms.get("platforms", {})}
     # Env overrides must run on the FULL merge (policies.yaml is merged above;
     # ORION_BROWSER_DRIVER targets policies.browser.driver, not defaults).
     _apply_env_overrides(merged)

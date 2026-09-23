@@ -1,0 +1,19 @@
+# ORION platform policy — single source of truth for real-world platforms.
+# Each platform stanza records HOW automation may touch that platform
+# (official API only? browser research? what the human must do by hand).
+# Loaded by orion/config.py (Config.platform("name")); missing file => { }.
+
+platforms:
+  gumroad:
+    automation_allowed: true        # official API only
+    api_base: https://api.gumroad.com
+    api_version: v2
+    auth: token                     # personal access token in the vault (key: gumroad_token)
+    uses_oauth_scopes: [edit_products, view_sales, account]
+    research_policy: api_only       # NEVER scrape gumroad.com web pages (ToS 14e)
+    create_product_via_api: conditional   # documented create endpoint; may 404 → human dashboard draft
+    publish_requires_payout_account: true # enable() needs a connected payment method
+    price_currency: USD             # Gumroad lists in USD; ledgers stay INR via confirm-payout FX at receiving
+    prohibited_categories_note: no AI-service-resale, no PLR/MRR, no third-party resale, original content only
+    verdict_source: https://gumroad.com/terms (clause 14e) + https://gumroad.com/api + https://gumroad.com/prohibited
+    verdict_date: 2026-09-23

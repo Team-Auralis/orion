@@ -309,3 +309,32 @@ class ToolCall(TimestampMixin, Base):
     correlation_id: Mapped[Optional[str]] = mapped_column(
         String(64), nullable=True, index=True
     )
+
+
+# ---------------------------------------------------------------------------
+# Product generation (B2)
+# ---------------------------------------------------------------------------
+
+
+class Product(TimestampMixin, Base):
+    """Generated digital product ready for publishing.
+
+    Lifecycle: GENERATED -> QUALITY_FAILED | READY_TO_PUBLISH -> PUBLISHED.
+    Content is written to workspace/products/{id}/ and registered here with
+    all metadata needed for marketplace publishing (price, license, hash, etc.).
+    All money columns are INTEGER USD CENTS.
+    """
+
+    __tablename__ = "products"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    spec_json: Mapped[str] = mapped_column(Text, nullable=False)
+    content_path: Mapped[str] = mapped_column(String(512), nullable=False)
+    file_hash: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    quality_passed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    price_usd_cents: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    status: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="GENERATED", index=True
+    )
+    metadata_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

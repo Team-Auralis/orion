@@ -64,13 +64,18 @@ browser:
   # https-only (http allowed for localhost only). Any domain not listed
   # here is blocked BEFORE navigation — this is the research allowlist:
   # public pages only, research/read-only, never login walls or CAPTCHA.
+  # gumroad.com and ko-fi.com were REMOVED: Gumroad ToS clause 14(e) bans
+  # automated crawling of gumroad.com web pages, so the Gumroad connector
+  # reads the official REST API instead (config/platforms.yaml,
+  # research_policy: api_only) — never the research browser.
   domain_allowlist:
-    - gumroad.com      # public digital-product listings + pricing (TOS-permissive)
-    - ko-fi.com        # public creator product listings + pricing (TOS-permissive)
     - wikipedia.org    # neutral reference material
     - github.com       # public repos / READMEs / docs
     - example.com      # IANA documentation domain (legacy mock host, tests)
     - mock.localhost   # offline mock fixture host (tests; http allowed)
+  # browser.research_notes: platform-to-verify pages (gumroad.com, ko-fi.com,
+  # …) must be read via their OFFICIAL APIs only, never the browser research
+  # driver — a platform policy stanza in config/platforms.yaml decides.
 
 # Approval records expire after this many hours; expired approvals must be
 # re-approved before the reserved action may execute.

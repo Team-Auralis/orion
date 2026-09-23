@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import json
 import os
 import shutil
 import subprocess
@@ -107,6 +108,80 @@ def _build_parser() -> _Parser:
         "research", help="load one allowlisted URL and print trimmed page text"
     )
     p.add_argument("url", help="https URL on the browser allowlist (research only)")
+
+    # product subcommands
+    prod = sub.add_parser("product", help="product generation commands")
+    prod_sub = prod.add_subparsers(dest="product_command", required=True)
+
+    p = prod_sub.add_parser("generate", help="generate a new digital product")
+    p.add_argument(
+        "--kind",
+        required=True,
+        choices=["template", "notes", "tool", "asset_pack", "checklist", "starter_kit"],
+    )
+    p.add_argument("--title", required=True, help="product title")
+    p.add_argument("--description", required=True, help="product description")
+    p.add_argument("--audience", required=True, help="target audience")
+    p.add_argument("--features", default="", help="comma-separated features")
+    p.add_argument("--hours", type=float, default=1.0, help="estimated hours to create")
+    p.add_argument("--difficulty", choices=["easy", "medium", "hard"], default="medium")
+    p.add_argument(
+        "--tier", choices=["low", "medium", "high", "premium"], help="price tier"
+    )
+    p.add_argument("--price-cents", type=int, help="explicit price in USD cents")
+    p.add_argument("--tags", default="", help="comma-separated tags")
+    p.add_argument("--license", choices=["MIT", "CC0", "custom"], default="MIT")
+
+    p = prod_sub.add_parser("list", help="list generated products")
+    p.add_argument("--status", help="filter by status")
+
+    p = prod_sub.add_parser("show", help="show product details")
+    p.add_argument("id", help="product ID")
+
+    v = sub.add_parser(
+        "vault",
+        help="credential vault: set / list / get / delete / health",
+        description="Credential vault (orion.secrets.SecretVault). Secret "
+        "values are never printed: get/list show a masked (•••last4) form only.",
+    )
+    vsub = v.add_subparsers(dest="vault_command", required=True)
+    p = vsub.add_parser(
+        "set",
+        help="store a secret (value argument or hidden stdin paste)",
+        description="Store a secret. Pass the value as an argument OR omit it "
+        "and paste the value on stdin (hidden when the terminal allows it) — "
+        "the stdin form avoids shell history. The stored value is never printed.",
+    )
+    p.add_argument("name", help="secret name, e.g. gumroad_token")
+    p.add_argument(
+        "value",
+        nargs="?",
+        default=None,
+        help="secret value (omit to paste on stdin)",
+    )
+    p = vsub.add_parser(
+        "list",
+        help="list stored secret names (masked values)",
+        description="List stored secret names with their masked (last-4) values.",
+    )
+    p = vsub.add_parser(
+        "get",
+        help="print the masked value for one secret",
+        description="Print the masked value (•••last4) for one secret — never "
+        "the raw value. A missing secret prints a clear message and exits 0.",
+    )
+    p.add_argument("name", help="secret name")
+    p = vsub.add_parser(
+        "delete",
+        help="delete a stored secret",
+        description="Delete a stored secret (missing names are a no-op).",
+    )
+    p.add_argument("name", help="secret name")
+    p = vsub.add_parser(
+        "health",
+        help="vault backend + writable check",
+        description="Report the vault backend and whether it is reachable/writable.",
+    )
     return parser
 
 
@@ -694,9 +769,202 @@ def cmd_research(args) -> int:
     return EXIT_OK
 
 
+def cmd_product_generate(args) -> int:
+    """Generate a new digital product from spec."""
+    from orion.products import ProductSpec, generate_product
+
+    features = (
+        [f.strip() for f in args.features.split(",") if f.strip()]
+        if args.features
+        else []
+    )
+    tags = [t.strip() for t in args.tags.split(",") if t.strip()] if args.tags else []
+
+    spec = ProductSpec(
+        kind=args.kind,
+        title=args.title,
+        description=args.description,
+        target_audience=args.audience,
+        features=features,
+        estimated_hours_to_create=args.hours,
+        difficulty=args.difficulty,
+        price_tier=args.tier,
+        price_usd_cents=args.price_cents,
+        tags=tags,
+        license=args.license,
+    )
+
+    try:
+        product = generate_product(spec)
+    except ValueError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return EXIT_USER
+    except Exception as e:
+        print(f"error: generation failed: {e}", file=sys.stderr)
+        return EXIT_RUNTIME
+
+    print(f"product_id: {product.id}")
+    print(f"path: {product.content_path}")
+    print(f"status: {product.status}")
+    print(f"quality_passed: {product.quality_passed}")
+    print(f"price_usd_cents: {product.price_usd_cents}")
+    return EXIT_OK
+
+
+def cmd_product_list(args) -> int:
+    """List generated products."""
+    from orion.products import list_products
+
+    products = list_products(status=args.status)
+    if not products:
+        print("no products")
+        return EXIT_OK
+
+    for p in products:
+        size_kb = p.size_bytes / 1024
+        print(
+            f"#{p.id:<12} [{p.status:<16}] ${p.price_usd_cents / 100:.2f}  {size_kb:.1f}KB  {json.loads(p.spec_json).get('title', 'untitled')[:50]}"
+        )
+    return EXIT_OK
+
+
+def cmd_product_show(args) -> int:
+    """Show product details."""
+    from orion.products import get_product
+    import json
+
+    product = get_product(args.id)
+    if not product:
+        print(f"product {args.id} not found", file=sys.stderr)
+        return EXIT_USER
+
+    spec = json.loads(product.spec_json)
+    meta = json.loads(product.metadata_json) if product.metadata_json else {}
+
+    print(f"id:          {product.id}")
+    print(f"title:       {spec.get('title')}")
+    print(f"kind:        {spec.get('kind')}")
+    print(f"audience:    {spec.get('target_audience')}")
+    print(f"difficulty:  {spec.get('difficulty')}")
+    print(f"hours:       {spec.get('estimated_hours_to_create')}")
+    print(f"features:    {', '.join(spec.get('features', [])) or 'none'}")
+    print(f"tags:        {', '.join(spec.get('tags', [])) or 'none'}")
+    print(f"license:     {spec.get('license')}")
+    print(
+        f"price:       ${product.price_usd_cents / 100:.2f} ({product.price_usd_cents} cents)"
+    )
+    print(f"status:      {product.status}")
+    print(f"quality:     {'passed' if product.quality_passed else 'failed'}")
+    print(f"size:        {product.size_bytes} bytes")
+    print(f"hash:        {product.file_hash[:16]}...")
+    print(f"path:        {product.content_path}")
+    print(f"created:     {product.created_at}")
+    if meta.get("quality_reasons"):
+        print(f"quality issues: {', '.join(meta['quality_reasons'])}")
+    if meta.get("degraded_reason"):
+        print(f"degraded:      {meta['degraded_reason']}")
+    return EXIT_OK
+
+
+def _vault_value(args) -> str:
+    """Resolve the secret for ``vault set``: explicit arg, else stdin paste."""
+    if args.value is not None:
+        value = args.value
+    else:
+        from getpass import getpass
+
+        print("Paste value (input hidden if available):", end="", flush=True)
+        value = getpass("")
+    value = value.strip()
+    if not value:
+        raise ValueError(f"no value provided for {args.name!r}")
+    return value
+
+
+def cmd_vault_set(args) -> int:
+    """Store a secret — the value is never printed."""
+    from orion.secrets import get_vault
+
+    vault = get_vault()
+    value = _vault_value(args)  # may raise ValueError (caught -> exit 1)
+    vault.set(args.name, value)
+    print(f"stored {args.name} in vault (backend={vault.backend})")
+    return EXIT_OK
+
+
+def cmd_vault_list(args) -> int:
+    from orion.secrets import get_vault
+
+    vault = get_vault()
+    names = vault.list_names()
+    if not names:
+        print(f"vault is empty (backend={vault.backend})")
+        return EXIT_OK
+    print(f"stored secrets (backend={vault.backend}):")
+    for name in names:
+        print(f"  {name:<24} {vault.mask(name)}")
+    return EXIT_OK
+
+
+def cmd_vault_get(args) -> int:
+    from orion.secrets import get_vault
+
+    vault = get_vault()
+    masked = vault.mask(args.name)
+    if not masked:
+        print(f"{args.name}: not in vault (mask unknown)")
+        return EXIT_OK
+    print(masked)
+    return EXIT_OK
+
+
+def cmd_vault_delete(args) -> int:
+    from orion.secrets import get_vault
+
+    vault = get_vault()
+    if not vault.has(args.name):
+        print(f"{args.name}: not in vault — nothing to delete")
+        return EXIT_OK
+    vault.delete(args.name)
+    print(f"deleted {args.name} from vault (backend={vault.backend})")
+    return EXIT_OK
+
+
+def cmd_vault_health(args) -> int:
+    from orion.secrets import get_vault
+
+    health = get_vault().health()
+    print(f"backend={health['backend']} ok={health['ok']} detail={health['detail']}")
+    return EXIT_OK if health["ok"] else EXIT_USER
+
+
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
+
+_VAULT_HANDLERS = {
+    "set": cmd_vault_set,
+    "list": cmd_vault_list,
+    "get": cmd_vault_get,
+    "delete": cmd_vault_delete,
+    "health": cmd_vault_health,
+}
+
+
+def cmd_vault(args) -> int:
+    return _VAULT_HANDLERS[args.vault_command](args)
+
+
+_PRODUCT_HANDLERS = {
+    "generate": cmd_product_generate,
+    "list": cmd_product_list,
+    "show": cmd_product_show,
+}
+
+
+def cmd_product(args) -> int:
+    return _PRODUCT_HANDLERS[args.product_command](args)
+
 
 _HANDLERS = {
     "start": cmd_start,
@@ -714,6 +982,8 @@ _HANDLERS = {
     "kill": cmd_kill,
     "logs": cmd_logs,
     "research": cmd_research,
+    "vault": cmd_vault,
+    "product": cmd_product,
 }
 
 
@@ -726,6 +996,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         except (AttributeError, ValueError):
             pass
     ensure_workspace_dirs()
+    init_db()  # ensure schema is up to date
     parser = _build_parser()
     try:
         args = parser.parse_args(argv)

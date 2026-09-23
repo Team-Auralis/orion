@@ -39,7 +39,7 @@ def test_init_db_idempotent(db):
 
         rows = session.query(SchemaVersion).all()
         assert len(rows) == 1
-        assert rows[0].version == 1
+        assert rows[0].version == 2
 
 
 # ---------------------------------------------------------------------------
