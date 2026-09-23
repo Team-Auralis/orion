@@ -31,8 +31,9 @@ sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 sys.path.insert(0, str(REPO_ROOT / "scripts" / "training"))
 
+import numpy as np  # noqa: E402
 import torch  # noqa: E402
-from transformers import Qwen2ForCausalLM  # noqa: E402
+from transformers import Qwen2Config, Qwen2ForCausalLM  # noqa: E402
 
 import orion_corpus  # noqa: E402
 
@@ -124,10 +125,94 @@ def safe(text: str) -> str:
     return text.encode("ascii", "replace").decode("ascii")
 
 
+# GGUF tensor name -> HF state-dict key (reverse of the in-repo converter map).
+_GGUF_TO_HF = {
+    "token_embd.weight": "model.embed_tokens.weight",
+    "output_norm.weight": "model.norm.weight",
+    "output.weight": "lm_head.weight",
+}
+for _i in range(64):
+    _GGUF_TO_HF[f"blk.{_i}.attn_norm.weight"] = (
+        f"model.layers.{_i}.input_layernorm.weight"
+    )
+    _GGUF_TO_HF[f"blk.{_i}.ffn_norm.weight"] = (
+        f"model.layers.{_i}.post_attention_layernorm.weight"
+    )
+    for _src, _dst in (
+        ("attn_q.weight", "self_attn.q_proj.weight"),
+        ("attn_q.bias", "self_attn.q_proj.bias"),
+        ("attn_k.weight", "self_attn.k_proj.weight"),
+        ("attn_k.bias", "self_attn.k_proj.bias"),
+        ("attn_v.weight", "self_attn.v_proj.weight"),
+        ("attn_v.bias", "self_attn.v_proj.bias"),
+        ("attn_output.weight", "self_attn.o_proj.weight"),
+        ("ffn_gate.weight", "mlp.gate_proj.weight"),
+        ("ffn_down.weight", "mlp.down_proj.weight"),
+        ("ffn_up.weight", "mlp.up_proj.weight"),
+    ):
+        _GGUF_TO_HF[f"blk.{_i}.{_src}"] = f"model.layers.{_i}.{_dst}"
+
+SUPPORTED_GGUF_QTYPES = ("F16", "F32", "Q4_0", "Q8_0")
+
+
+def _gguf_tensor_to_np(t) -> np.ndarray:
+    """Dequantize one gguf ReaderTensor back to an fp32 numpy array."""
+    from gguf.constants import GGMLQuantizationType as T
+    from gguf.quants import dequantize
+
+    if t.tensor_type == T.F32:
+        return np.ascontiguousarray(t.data, dtype=np.float32)
+    if t.tensor_type == T.F16:
+        return np.ascontiguousarray(t.data, dtype=np.float16).astype(np.float32)
+    if t.tensor_type in (T.Q4_0, T.Q8_0):
+        packed = np.ascontiguousarray(t.data, dtype=np.uint8)
+        return dequantize(packed, t.tensor_type).astype(np.float32)
+    raise ValueError(f"unsupported gguf quant type {t.tensor_type} for probe")
+
+
+def load_gguf_state_dict(gguf_path: Path) -> dict:
+    """Load a GGUF file (f16/q8_0/q4_0) into an HF state-dict via the gguf
+    python package dequantization path -- no llama.cpp runtime required."""
+    from gguf import GGUFReader
+
+    reader = GGUFReader(str(gguf_path))
+    missing = []
+    state = {}
+    for t in reader.tensors:
+        key = _GGUF_TO_HF.get(t.name)
+        if key is None:
+            missing.append(t.name)
+            continue
+        arr = _gguf_tensor_to_np(t)
+        state[key] = torch.from_numpy(arr)
+    return state, missing
+
+
+def build_gguf_model(gguf_path: Path, hf_dir: Path):
+    """Qwen2ForCausalLM restored from a GGUF (weights dequantized to fp32).
+
+    GGUF linear/embed tensors are stored in the same (out, in) / (vocab, dim)
+    layouts as the HF model, so state-dict keys load 1:1 (verified by the
+    converter's round-trip probe_max_abs_err.)
+    """
+    cfg = Qwen2Config.from_pretrained(str(hf_dir))
+    model = Qwen2ForCausalLM(cfg)
+    state, missing = load_gguf_state_dict(gguf_path)
+    model.load_state_dict(state, strict=True)
+    model.eval()
+    return model, missing
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
         "--model", required=True, help="HF export dir (config.json + model.safetensors)"
+    )
+    ap.add_argument(
+        "--gguf",
+        default=None,
+        help="optional .gguf file to probe instead of the HF dir; dequantized "
+        "to fp32 via the gguf python package (f16/q8_0/q4_0 only)",
     )
     ap.add_argument(
         "--tokenizer",
@@ -137,12 +222,32 @@ def main() -> int:
     args = ap.parse_args()
 
     model_dir = Path(args.model)
-    if not (model_dir / "config.json").exists() and not model_dir.is_file():
-        raise SystemExit(
-            f"[PROBE] no HF export found at {model_dir} (need config.json)"
-        )
-    tokenizer = orion_corpus.load_bpe_compat()
-    model = Qwen2ForCausalLM.from_pretrained(str(model_dir))
+    if args.gguf:
+        gguf_path = Path(args.gguf)
+        if re.search(r"q[1-6]_k(_[sm])?|iq[1-4]_", gguf_path.name, re.I):
+            # K-quant / lower-bit gguf: only llama.cpp can produce these, and
+            # the gguf python package cannot dequantize them -> not measurable.
+            print(
+                "[PROBE] lower-bit / K-quant gguf: quality not measurable "
+                "without llama.cpp; not_measured_requires_llama.cpp"
+            )
+            return 0
+        if not gguf_path.is_file():
+            raise SystemExit(f"[PROBE] no gguf file at {gguf_path}")
+        tokenizer = orion_corpus.load_bpe_compat()
+        model, missing = build_gguf_model(gguf_path, model_dir)
+        if missing:
+            print(
+                f"[PROBE] warning: {len(missing)} gguf tensors unmapped: {missing[:5]}"
+            )
+        model_dir = gguf_path  # keep a human-readable label below
+    else:
+        if not (model_dir / "config.json").exists():
+            raise SystemExit(
+                f"[PROBE] no HF export found at {model_dir} (need config.json)"
+            )
+        tokenizer = orion_corpus.load_bpe_compat()
+        model = Qwen2ForCausalLM.from_pretrained(str(model_dir))
     model.eval()
 
     n_items = len(PROBE_ITEMS)
