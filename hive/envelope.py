@@ -1,9 +1,8 @@
 """DeviceEnvelope: the declared capability contract for one hive device.
 
-This is the seam where real machines/phones slot in later: a device describes
+This is the seam where real machines/phones slot in: a device describes
 itself (role, cpu/ram budgets, measured tok/s, transport) and the coordinator
-dispatches work by role + capability. Nothing here is tied to the localhost
-simulation except the default transport string.
+dispatches work by role + capability. Supports multiprocessing pipes and TCP sockets.
 """
 
 from __future__ import annotations
@@ -51,6 +50,7 @@ def declare_device(
     cpu_threads_budget: int,
     ram_mb_budget: int = 768,
     tps: float = 0.0,
+    transport: str = "multiprocessing-pipe",
 ) -> DeviceEnvelope:
     if role not in ROLES:
         raise ValueError(f"unknown hive role {role!r}")
@@ -60,5 +60,6 @@ def declare_device(
         cpu_threads_budget=cpu_threads_budget,
         ram_mb_budget=ram_mb_budget,
         tokens_per_sec_estimate=tps,
+        transport=transport,
         platform=f"{platform.system()}-{platform.machine()}",
     )

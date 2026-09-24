@@ -1,14 +1,17 @@
 """CLI entry: `python -m hive.run [--help]`.
 
-Run one simulated fleet training session and record it in the ORION
+Run one simulated or network fleet training session and record it in the ORION
 experiment ledger (logs/training_runs.jsonl) via scripts/repro.py.
 
 Examples:
-    python -m hive.run --model tiny --workers 2 --rounds 3 --tokens 60000 \
-        --dropout-every 2 --scope verified-mechanics
-    python -m hive.run --model tiny --workers 1 --rounds 6 --tokens 120000
-    python -m hive.run --model 10m --workers 2 --rounds 1 --tokens 15000 \
-        --scope verified-mechanics
+    # 1. Local single-worker baseline (10M model):
+    python -m hive.run --model 10m --workers 1 --rounds 6 --tokens 60000 --scope single-baseline
+
+    # 2. Local 2-worker simulation baseline (10M model):
+    python -m hive.run --model 10m --workers 2 --rounds 6 --tokens 60000 --scope simulated-baseline
+
+    # 3. Real LAN Coordinator listening for 1 remote network worker (+ 1 local worker):
+    python -m hive.run --model 10m --workers 2 --network-workers 1 --listen-host 0.0.0.0 --rounds 6 --tokens 60000 --scope lan-baseline
 """
 
 import argparse
@@ -34,15 +37,44 @@ from scripts.repro import record_experiment  # noqa: E402
 
 def parse_args(argv=None):
     ap = argparse.ArgumentParser(
-        prog="hive.run", description="ORION-HIVE simulated heterogeneous fleet training"
+        prog="hive.run", description="ORION-HIVE simulated or network fleet training"
     )
-    ap.add_argument("--model", choices=("tiny", "10m"), default="tiny")
+    ap.add_argument("--model", choices=("phone", "tiny", "10m", "30m"), default="tiny")
     ap.add_argument(
         "--workers",
         type=int,
         default=2,
-        choices=(1, 2, 4),
-        help="fleet size (4 = 2x primary + eval + lightweight)",
+        help="fleet size (1, 2, 4 or custom count with network workers)",
+    )
+    ap.add_argument(
+        "--network-workers",
+        type=int,
+        default=0,
+        help="number of remote network workers connecting over TCP",
+    )
+    ap.add_argument(
+        "--listen-host",
+        type=str,
+        default=None,
+        help="IP address to bind coordinator for network workers (e.g. 0.0.0.0 or LAN IP)",
+    )
+    ap.add_argument(
+        "--listen-port",
+        type=int,
+        default=8765,
+        help="TCP port to bind coordinator for network workers (default: 8765)",
+    )
+    ap.add_argument(
+        "--hf-dataset",
+        type=str,
+        default=None,
+        help="Hugging Face dataset name/repo to train on (e.g. wikitext, imdb)",
+    )
+    ap.add_argument(
+        "--sqlite-db",
+        type=str,
+        default=None,
+        help="Path to custom SQLite database file for dataset extraction",
     )
     ap.add_argument("--rounds", type=int, default=6, help="aggregation rounds")
     ap.add_argument(
@@ -78,7 +110,7 @@ def parse_args(argv=None):
         "--scope",
         type=str,
         default="measured-simulation",
-        help="verified-mechanics | measured-simulation",
+        help="verified-mechanics | measured-simulation | single-baseline | lan-baseline",
     )
     return ap.parse_args(argv)
 
@@ -125,6 +157,11 @@ def main(argv=None) -> int:
         resume=args.resume,
         keep_ckpts=args.keep_ckpts,
         verbose=True,
+        listen_host=args.listen_host,
+        listen_port=args.listen_port,
+        network_workers=args.network_workers,
+        hf_dataset=args.hf_dataset,
+        sqlite_db=args.sqlite_db,
     )
     record = coord.run()
     record["hardware"] = _compat_hardware()
@@ -135,6 +172,7 @@ def main(argv=None) -> int:
     params = {
         "model": args.model,
         "workers": args.workers,
+        "network_workers": args.network_workers,
         "rounds": args.rounds,
         "tokens_per_round": args.tokens,
         "dropout_every": args.dropout_every,

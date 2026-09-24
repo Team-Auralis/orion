@@ -3,14 +3,19 @@ aggregation with a server-side optimizer, checkpointing, and metrics.
 
 Runs the whole fleet lifecycle and returns one metrics record per run, which
 `hive.run` records through scripts/repro.py::record_experiment.
+Supports both local simulated multiprocessing workers and real network/TCP workers.
 """
 
 import json
+import os
+import select
 import shutil
+import socket
 import time
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 import hashlib
 import psutil
@@ -28,7 +33,7 @@ from hive.envelope import (
     declare_device,
 )
 from hive.model import MAX_LEN, build_model
-from hive.transport import SimPipeTransport
+from hive.transport import SimPipeTransport, TcpSocketTransport, Transport
 from hive.worker import worker_main
 
 
@@ -48,8 +53,8 @@ THREADS = {ROLE_PRIMARY: 3, ROLE_EVAL: 1, ROLE_LIGHTWEIGHT: 1}
 class WorkerHandle:
     device_id: str
     role: str
-    proc: object
-    tx: SimPipeTransport
+    proc: Optional[object]
+    tx: Transport
     envelope: DeviceEnvelope
     alive: bool = True
 
@@ -87,6 +92,11 @@ class HiveCoordinator:
         resume=None,
         keep_ckpts=1,
         verbose=True,
+        listen_host: Optional[str] = None,
+        listen_port: int = 8765,
+        network_workers: int = 0,
+        hf_dataset: Optional[str] = None,
+        sqlite_db: Optional[str] = None,
     ):
         self.model_size = model_size
         self.workers = workers
@@ -101,7 +111,14 @@ class HiveCoordinator:
         self.resume_path = Path(resume) if resume else None
         self.keep_ckpts = keep_ckpts
         self.verbose = verbose
-        self.run_id = f"hive-{workers}w-{model_size}-{uuid.uuid4().hex[:8]}"
+        self.listen_host = listen_host
+        self.listen_port = listen_port
+        self.network_workers = network_workers
+        self.hf_dataset = hf_dataset
+        self.sqlite_db = sqlite_db
+
+        fleet_label = f"{workers}w" if not network_workers else f"{workers}w-net{network_workers}"
+        self.run_id = f"hive-{fleet_label}-{model_size}-{uuid.uuid4().hex[:8]}"
         self.run_dir = self.out_dir / self.run_id
         self.log = print if verbose else lambda *a, **k: None
 
@@ -114,12 +131,21 @@ class HiveCoordinator:
 
         # Fleet-wide data slice: every process builds the identical block list.
         t0 = time.time()
-        self.blocks, slice_tokens = load_train_blocks(self.tokens, self.seed)
-        self.val_blocks = load_val_blocks()
-        self.dataset_path = str(
-            orion_corpus.train_shards(orion_corpus.resolve_corpus()[0])[0]
+        self.blocks, slice_tokens = load_train_blocks(
+            self.tokens, self.seed, hf_dataset=self.hf_dataset, sqlite_db=self.sqlite_db
         )
-        self.dataset_hash = _sha256_file(self.dataset_path)
+        self.val_blocks = load_val_blocks()
+        if self.hf_dataset:
+            self.dataset_path = f"hf://{self.hf_dataset}"
+            self.dataset_hash = hashlib.sha256(self.hf_dataset.encode()).hexdigest()
+        elif self.sqlite_db:
+            self.dataset_path = str(self.sqlite_db)
+            self.dataset_hash = _sha256_file(self.sqlite_db)
+        else:
+            self.dataset_path = str(
+                orion_corpus.train_shards(orion_corpus.resolve_corpus()[0])[0]
+            )
+            self.dataset_hash = _sha256_file(self.dataset_path)
         self.log(
             f"[DATA] {len(self.blocks)} train blocks ({self._toks():,} tok/round "
             f"fleet-wide, slice read {slice_tokens:,}) | {len(self.val_blocks)} val blocks "
@@ -200,40 +226,89 @@ class HiveCoordinator:
     # ---- fleet ops ------------------------------------------------------------
 
     def _spawn_fleet(self):
-        import multiprocessing as mp
+        # 1. Spawn local simulated pipe workers if configured
+        local_workers = self.workers - self.network_workers
+        if local_workers > 0:
+            import multiprocessing as mp
 
-        for i, (role, threads) in enumerate(topology(self.workers)):
-            parent, child = mp.Pipe(duplex=True)
-            env = declare_device(
-                device_id=f"dev-{i}-{role[:3]}",
-                role=role,
-                cpu_threads_budget=threads,
-            )
-            proc = mp.Process(
-                target=worker_main,
-                args=(child, env, self.seed, self.model_size, self.tokens, self.seed),
-                name=f"hive-{env.device_id}",
-            )
-            proc.start()
-            tx = SimPipeTransport(parent)
-            handle = WorkerHandle(
-                device_id=env.device_id, role=role, proc=proc, tx=tx, envelope=env
-            )
-            t0 = time.time()
-            hello = tx.recv()  # capability probe (worker measures its own tok/s)
-            assert hello["type"] == "hello", hello
+            for i, (role, threads) in enumerate(topology(local_workers)):
+                parent, child = mp.Pipe(duplex=True)
+                env = declare_device(
+                    device_id=f"dev-{i}-{role[:3]}",
+                    role=role,
+                    cpu_threads_budget=threads,
+                )
+                proc = mp.Process(
+                    target=worker_main,
+                    args=(
+                        child,
+                        env,
+                        self.seed,
+                        self.model_size,
+                        self.tokens,
+                        self.seed,
+                        self.hf_dataset,
+                        self.sqlite_db,
+                    ),
+                    name=f"hive-{env.device_id}",
+                )
+                proc.start()
+                tx = SimPipeTransport(parent)
+                handle = WorkerHandle(
+                    device_id=env.device_id, role=role, proc=proc, tx=tx, envelope=env
+                )
+                t0 = time.time()
+                hello = tx.recv()  # capability probe (worker measures its own tok/s)
+                assert hello["type"] == "hello", hello
+                self.log(
+                    f"[REGISTER] {hello['envelope'].device_id} "
+                    f"role={hello['envelope'].role} threads={hello['envelope'].cpu_threads_budget} "
+                    f"tps={hello['envelope'].tokens_per_sec_estimate:.0f} blocks={hello['n_blocks']} "
+                    f"in {time.time() - t0:.1f}s"
+                )
+                handle.envelope = hello["envelope"]
+                self.handles.append(handle)
+                if handle.role == ROLE_EVAL:
+                    self.eval_handle = handle
+                else:
+                    self.trainers.append(handle)
+
+        # 2. Accept network TCP workers if configured
+        if self.network_workers > 0 and self.listen_host:
+            server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            server_sock.bind((self.listen_host, self.listen_port))
+            server_sock.listen(self.network_workers)
             self.log(
-                f"[REGISTER] {hello['envelope'].device_id} "
-                f"role={hello['envelope'].role} threads={hello['envelope'].cpu_threads_budget} "
-                f"tps={hello['envelope'].tokens_per_sec_estimate:.0f} blocks={hello['n_blocks']} "
-                f"in {time.time() - t0:.1f}s"
+                f"[NETWORK] Coordinator listening on {self.listen_host}:{self.listen_port} "
+                f"for {self.network_workers} network workers..."
             )
-            handle.envelope = hello["envelope"]
-            self.handles.append(handle)
-            if handle.role == ROLE_EVAL:
-                self.eval_handle = handle
-            else:
-                self.trainers.append(handle)
+            for _ in range(self.network_workers):
+                client_sock, client_addr = server_sock.accept()
+                tx = TcpSocketTransport(client_sock)
+                t0 = time.time()
+                hello = tx.recv()
+                assert hello["type"] == "hello", hello
+                env = hello["envelope"]
+                handle = WorkerHandle(
+                    device_id=env.device_id,
+                    role=env.role,
+                    proc=None,
+                    tx=tx,
+                    envelope=env,
+                )
+                self.log(
+                    f"[REGISTER NET] {env.device_id} from {client_addr} "
+                    f"role={env.role} threads={env.cpu_threads_budget} "
+                    f"tps={env.tokens_per_sec_estimate:.0f} blocks={hello['n_blocks']} "
+                    f"in {time.time() - t0:.1f}s"
+                )
+                self.handles.append(handle)
+                if handle.role == ROLE_EVAL:
+                    self.eval_handle = handle
+                else:
+                    self.trainers.append(handle)
+            server_sock.close()
 
     def _shares(self):
         """Work shares proportional to each trainer's measured tok/s (role-based
@@ -284,7 +359,9 @@ class HiveCoordinator:
             victim = self.trainers[(r // self.dropout_every) % len(self.trainers)]
             time.sleep(0.2)
             self.log(f"[DROPOUT] terminating {victim.device_id} mid-round {r}")
-            victim.proc.terminate()
+            if victim.proc:
+                victim.proc.terminate()
+            victim.tx.close()
             victim.alive = False  # its update never arrives; counted as a failure below
 
         collect_t0 = time.time()
@@ -300,8 +377,8 @@ class HiveCoordinator:
                 continue
             try:
                 msg = h.tx.recv()
-            except EOFError:
-                self.log(f"[FAIL] {h.device_id} pipe EOF (crashed) (round {r})")
+            except (EOFError, ConnectionResetError, BrokenPipeError):
+                self.log(f"[FAIL] {h.device_id} pipe/socket EOF (crashed) (round {r})")
                 h.alive = False
                 failed += 1
                 continue
@@ -353,12 +430,15 @@ class HiveCoordinator:
         self.solver.zero_grad(set_to_none=True)
 
     def _evaluate(self):
-        if self.eval_handle:
-            self.eval_handle.tx.send(
-                {"type": "eval", "weights": self.model.state_dict()}
-            )
-            msg = self.eval_handle.tx.recv()
-            return msg.get("val_loss", float("nan"))
+        if self.eval_handle and self.eval_handle.alive:
+            try:
+                self.eval_handle.tx.send(
+                    {"type": "eval", "weights": self.model.state_dict()}
+                )
+                msg = self.eval_handle.tx.recv()
+                return msg.get("val_loss", float("nan"))
+            except Exception:
+                pass
         vl, _ = eval_blocks(self.model, self.val_blocks, self.batch)
         return vl
 
@@ -428,7 +508,7 @@ class HiveCoordinator:
         import multiprocessing as mp
 
         for i, h in enumerate(self.trainers):
-            if not h.alive:
+            if not h.alive and h.proc is not None:
                 parent, child = mp.Pipe(duplex=True)
                 env = h.envelope.with_tps(h.envelope.tokens_per_sec_estimate)
                 proc = mp.Process(
@@ -440,6 +520,8 @@ class HiveCoordinator:
                         self.model_size,
                         self.tokens,
                         self.seed,
+                        self.hf_dataset,
+                        self.sqlite_db,
                     ),
                     name=f"hive-{env.device_id}-rejoin",
                 )
@@ -460,25 +542,29 @@ class HiveCoordinator:
     # ---- metrics / cleanup -------------------------------------------------------------
 
     def _poll_rss(self):
-        import multiprocessing as mp
-
         rss = psutil.Process().memory_info().rss
         for h in self.handles:
-            try:
-                rss = max(rss, psutil.Process(h.proc.pid).memory_info().rss)
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                pass
+            if h.proc:
+                try:
+                    rss = max(rss, psutil.Process(h.proc.pid).memory_info().rss)
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    pass
         self.peak_rss_mb = max(self.peak_rss_mb, rss / 1024**2)
 
     def _cleanup(self):
         for h in self.handles:
             try:
                 h.tx.send({"type": "stop"})
-                h.proc.join(timeout=10)
             except Exception:
                 pass
-            if h.proc.is_alive():
-                h.proc.terminate()
+            if h.proc:
+                try:
+                    h.proc.join(timeout=5)
+                except Exception:
+                    pass
+                if h.proc.is_alive():
+                    h.proc.terminate()
+            h.tx.close()
 
     @staticmethod
     def _dir_bytes(path):
@@ -510,7 +596,11 @@ class HiveCoordinator:
             "model_type": "hive-federated",
             "model_size": self.model_size,
             "n_params": self.n_params,
-            "topology": {"n_workers": self.workers, "roles": roles},
+            "topology": {
+                "n_workers": len(self.handles),
+                "roles": roles,
+                "transports": [h.envelope.transport for h in self.handles],
+            },
             "n_trainers": len(self.trainers),
             "rounds": self.rounds,
             "rounds_attempted": self.rounds,

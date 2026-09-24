@@ -1,11 +1,9 @@
 """Model construction for the hive sizes.
 
-`tiny`  = vocab 10240, hidden 64, 2 layers -> ~1.44M params (mechanics proof
-          and the controlled-work comparisons).
-`10m`   = the existing COMP-001 10m architecture (hidden 256, mlp 1024,
-         8 layers, 4 heads) at the real 10,240-token BPE vocab -> ~13.6M
-         params, ~54 MB fp32 state_dict.
-Both are plain dense Qwen2ForCausalLM from random init (CPU).
+`phone` = vocab 10240, hidden 48, 2 layers, seq 256 -> ~0.7M params (ultra-lightweight for mobile/termux/low-RAM devices)
+`tiny`  = vocab 10240, hidden 64, 2 layers, seq 512 -> ~1.44M params (mechanics proof and fast LAN tests)
+`10m`   = hidden 256, mlp 1024, 8 layers, 4 heads, seq 512 -> ~13.6M params (~54 MB state_dict, ideal for laptops)
+`30m`   = hidden 384, mlp 1536, 12 layers, 6 heads, seq 512 -> ~31.8M params (~127 MB state_dict, strong laptops/desktops)
 """
 
 import torch
@@ -15,6 +13,19 @@ PAD_ID, BOS_ID, EOS_ID = 0, 1, 2
 MAX_LEN = 512
 
 MODEL_CFG = {
+    "phone": dict(
+        vocab_size=10240,
+        hidden_size=48,
+        intermediate_size=192,
+        num_hidden_layers=2,
+        num_attention_heads=2,
+        num_key_value_heads=2,
+        max_position_embeddings=256,
+        pad_token_id=PAD_ID,
+        bos_token_id=BOS_ID,
+        eos_token_id=EOS_ID,
+        tie_word_embeddings=False,
+    ),
     "tiny": dict(
         vocab_size=10240,
         hidden_size=64,
@@ -35,6 +46,19 @@ MODEL_CFG = {
         num_hidden_layers=8,
         num_attention_heads=4,
         num_key_value_heads=4,
+        max_position_embeddings=MAX_LEN,
+        pad_token_id=PAD_ID,
+        bos_token_id=BOS_ID,
+        eos_token_id=EOS_ID,
+        tie_word_embeddings=False,
+    ),
+    "30m": dict(
+        vocab_size=10240,
+        hidden_size=384,
+        intermediate_size=1536,
+        num_hidden_layers=12,
+        num_attention_heads=6,
+        num_key_value_heads=6,
         max_position_embeddings=MAX_LEN,
         pad_token_id=PAD_ID,
         bos_token_id=BOS_ID,

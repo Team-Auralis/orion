@@ -1,15 +1,16 @@
-"""Corpus slice + block building, shared identically by coordinator and workers.
+"""Corpus and custom dataset slice + block building for ORION-HIVE.
 
-Every process builds the SAME deterministic block list from the same train-*
-shard slice (orion_corpus + orion_runner.loader, fixed seeds), so block
-indices handed out by the coordinator line up in every worker. Each worker
-keeps its own copy in memory - in the sim every "device" reads the fleet data
-from its local store, exactly like a real device would read its own disk.
+Supports:
+1. Standard local ORION corpus shards (`data/training/corpus/`)
+2. Hugging Face dataset streams/downloads (`--hf-dataset <name>`, e.g. `wikitext`, `openwebtext`, `imdb`, or custom repo)
+3. Custom databases (SQLite `.db` / `.sqlite`, PostgreSQL connection string, or JSONL / raw text directories)
 """
 
 import json
+import sqlite3
 import sys
 from pathlib import Path
+from typing import Optional
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 for _p in (
@@ -40,8 +41,55 @@ def resolve():
     return files, source
 
 
-def load_train_rows(budget: int):
-    """Rows from train-* shards until `budget` corpus tokens are consumed."""
+def load_from_sqlite(db_path: str, table: str = "texts", column: str = "text", budget: int = 120000):
+    """Load text samples directly from an SQLite database."""
+    tokenizer = orion_corpus.load_bpe_compat()
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    cur.execute(f"SELECT {column} FROM {table}")
+    rows, slice_tokens = [], 0
+    for r in cur:
+        text = str(r[0]) if r[0] else ""
+        if not text.strip():
+            continue
+        row = {"text": text, "provenance": f"sqlite://{db_path}/{table}"}
+        rows.append(row)
+        slice_tokens += len(tokenizer.encode(text).ids)
+        if slice_tokens >= budget:
+            break
+    conn.close()
+    return rows, slice_tokens, tokenizer
+
+
+def load_from_huggingface(dataset_name: str, config: Optional[str] = None, split: str = "train", text_column: str = "text", budget: int = 120000):
+    """Stream or load text rows directly from Hugging Face datasets."""
+    from datasets import load_dataset
+
+    tokenizer = orion_corpus.load_bpe_compat()
+    print(f"[DATASET] Streaming Hugging Face dataset {dataset_name} (split={split})...")
+    ds = load_dataset(dataset_name, config, split=split, streaming=True)
+    rows, slice_tokens = [], 0
+    for item in ds:
+        text = item.get(text_column, "")
+        if not text and "content" in item:
+            text = item["content"]
+        if not isinstance(text, str) or not text.strip():
+            continue
+        row = {"text": text, "provenance": f"hf://{dataset_name}/{split}"}
+        rows.append(row)
+        slice_tokens += len(tokenizer.encode(text).ids)
+        if slice_tokens >= budget:
+            break
+    return rows, slice_tokens, tokenizer
+
+
+def load_train_rows(budget: int, hf_dataset: Optional[str] = None, sqlite_db: Optional[str] = None):
+    """Rows from either custom HF dataset, SQLite DB, or default train-* shards until `budget` tokens are consumed."""
+    if hf_dataset:
+        return load_from_huggingface(hf_dataset, budget=budget)
+    if sqlite_db:
+        return load_from_sqlite(sqlite_db, budget=budget)
+
     files, _ = resolve()
     tokenizer = orion_corpus.load_bpe_compat()
     train_files = orion_corpus.train_shards(files)
@@ -61,14 +109,14 @@ def load_train_rows(budget: int):
     return rows, slice_tokens, tokenizer
 
 
-def build_blocks(rows, tokenizer, seed: int):
-    """Packed 512-token blocks with attention-mask token counts, deterministic."""
+def build_blocks(rows, tokenizer, seed: int, max_seq_len: int = MAX_LEN):
+    """Packed blocks with attention-mask token counts, deterministic."""
     samples = tokenize_samples(
-        rows, tokenizer, orion_corpus.row_text, max_len=MAX_LEN, truncation=True
+        rows, tokenizer, orion_corpus.row_text, max_len=max_seq_len, truncation=True
     )
     packed = pack_sequences(
         samples,
-        max_len=MAX_LEN,
+        max_len=max_seq_len,
         pad_id=PAD_ID,
         seed=seed,
         mask_boundaries=True,
@@ -90,17 +138,17 @@ def build_blocks(rows, tokenizer, seed: int):
     return blocks
 
 
-def load_train_blocks(budget: int, seed: int):
-    rows, slice_tokens, tokenizer = load_train_rows(budget)
-    return build_blocks(rows, tokenizer, seed), slice_tokens
+def load_train_blocks(budget: int, seed: int, hf_dataset: Optional[str] = None, sqlite_db: Optional[str] = None, max_seq_len: int = MAX_LEN):
+    rows, slice_tokens, tokenizer = load_train_rows(budget, hf_dataset=hf_dataset, sqlite_db=sqlite_db)
+    return build_blocks(rows, tokenizer, seed, max_seq_len=max_seq_len), slice_tokens
 
 
-def load_val_blocks(max_blocks: int = MAX_EVAL_BLOCKS):
+def load_val_blocks(max_blocks: int = MAX_EVAL_BLOCKS, max_seq_len: int = MAX_LEN):
     files, _ = resolve()
     val_files = sorted(p for p in files if p.name.startswith("val-"))
     rows = orion_corpus.load_samples(val_files)
     tokenizer = orion_corpus.load_bpe_compat()
-    return build_blocks(rows, tokenizer, seed=42)[:max_blocks]
+    return build_blocks(rows, tokenizer, seed=42, max_seq_len=max_seq_len)[:max_blocks]
 
 
 @torch.no_grad()

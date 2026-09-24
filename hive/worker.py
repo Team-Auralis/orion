@@ -1,8 +1,10 @@
-"""A hive worker process: one simulated device.
+"""A hive worker process: one simulated or network device.
 
-Separate multiprocessing.Process per device - real IPC over an OS pipe (the
-transport), which genuinely exercises serialization of model weights, not
-shared-memory threads. Role decides what work the device accepts:
+Supports:
+- Local multiprocessing pipe transport (SimPipeTransport)
+- Remote LAN TCP transport (TcpSocketTransport)
+
+Role decides what work the device accepts:
   primary_trainer / lightweight -> train tasks (disjoint token shards)
   eval                         -> held-out eval tasks only
 
@@ -17,14 +19,27 @@ Protocol (all payloads over the transport):
   coord  -> "stop"
 """
 
+import argparse
+import socket
+import sys
 import time
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+for _p in (
+    str(REPO_ROOT),
+    str(REPO_ROOT / "scripts"),
+    str(REPO_ROOT / "scripts" / "training"),
+):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 import torch
 
 from hive.data import eval_blocks, load_train_blocks, load_val_blocks
-from hive.envelope import ROLE_EVAL, DeviceEnvelope
+from hive.envelope import ROLE_EVAL, ROLE_PRIMARY, DeviceEnvelope, declare_device
 from hive.model import MODEL_CFG, MAX_LEN
-from hive.transport import SimPipeTransport
+from hive.transport import SimPipeTransport, TcpSocketTransport, Transport
 
 
 def _build_shell(cfg, seed: int):
@@ -85,16 +100,17 @@ def _local_train(model, blocks, idxs, lr, batch, round_seed):
     return total_tok, mean_loss
 
 
-def worker_main(
-    conn,
+def run_worker_loop(
+    tx: Transport,
     envelope: DeviceEnvelope,
     seed: int,
     model_size: str,
     budget: int,
     data_seed: int,
+    hf_dataset: str = None,
+    sqlite_db: str = None,
 ):
-    """Entry point for every hive device process (spawned via multiprocessing)."""
-    tx = SimPipeTransport(conn)
+    """Core worker loop given an active Transport (Pipe or TCP Socket)."""
     cfg = MODEL_CFG[model_size]
     model = _build_shell(cfg, seed)
 
@@ -105,14 +121,23 @@ def worker_main(
 
     # Local data: trainers build the train slice, eval builds held-out val.
     if envelope.role == ROLE_EVAL:
-        blocks = load_val_blocks()
+        blocks = load_val_blocks(max_seq_len=cfg["max_position_embeddings"])
     else:
-        blocks, _ = load_train_blocks(budget, data_seed)
+        blocks, _ = load_train_blocks(
+            budget,
+            data_seed,
+            hf_dataset=hf_dataset,
+            sqlite_db=sqlite_db,
+            max_seq_len=cfg["max_position_embeddings"],
+        )
     tx.send({"type": "hello", "envelope": envelope, "n_blocks": len(blocks)})
 
     while True:
-        msg = tx.recv()
-        mtype = msg["type"]
+        try:
+            msg = tx.recv()
+        except EOFError:
+            break
+        mtype = msg.get("type")
         if mtype == "probe":
             tx.send({"type": "hello", "envelope": envelope, "n_blocks": len(blocks)})
         elif mtype == "train":
@@ -149,3 +174,113 @@ def worker_main(
             break
         else:
             tx.send({"type": "error", "message": f"unknown message {mtype!r}"})
+
+
+def worker_main(
+    conn,
+    envelope: DeviceEnvelope,
+    seed: int,
+    model_size: str,
+    budget: int,
+    data_seed: int,
+    hf_dataset: str = None,
+    sqlite_db: str = None,
+):
+    """Entry point for simulated device process (spawned via multiprocessing)."""
+    tx = SimPipeTransport(conn)
+    try:
+        run_worker_loop(
+            tx,
+            envelope,
+            seed,
+            model_size,
+            budget,
+            data_seed,
+            hf_dataset=hf_dataset,
+            sqlite_db=sqlite_db,
+        )
+    finally:
+        tx.close()
+
+
+def main(argv=None):
+    """CLI entry point for running a worker on a remote laptop / node over TCP."""
+    parser = argparse.ArgumentParser(description="ORION-HIVE LAN Worker")
+    parser.add_argument(
+        "--host", type=str, required=True, help="Coordinator host / IP"
+    )
+    parser.add_argument(
+        "--port", type=int, default=8765, help="Coordinator port (default 8765)"
+    )
+    parser.add_argument(
+        "--device-id",
+        type=str,
+        default=f"laptop-{socket.gethostname()}",
+        help="Device ID",
+    )
+    parser.add_argument(
+        "--role",
+        type=str,
+        default=ROLE_PRIMARY,
+        choices=(ROLE_PRIMARY, ROLE_EVAL, "lightweight"),
+    )
+    parser.add_argument(
+        "--threads", type=int, default=3, help="CPU threads budget for worker"
+    )
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="10m",
+        choices=("phone", "tiny", "10m", "30m"),
+        help="Model architecture tier",
+    )
+    parser.add_argument(
+        "--budget", type=int, default=120000, help="Token budget for data slice"
+    )
+    parser.add_argument(
+        "--hf-dataset",
+        type=str,
+        default=None,
+        help="Optional Hugging Face dataset name",
+    )
+    parser.add_argument(
+        "--sqlite-db",
+        type=str,
+        default=None,
+        help="Optional SQLite DB path",
+    )
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--data-seed", type=int, default=42)
+
+    args = parser.parse_args(argv)
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    print(f"[WORKER] Connecting to coordinator at {args.host}:{args.port}...")
+    sock.connect((args.host, args.port))
+    print(f"[WORKER] Connected! Initializing transport and envelope...")
+
+    tx = TcpSocketTransport(sock)
+    env = declare_device(
+        device_id=args.device_id,
+        role=args.role,
+        cpu_threads_budget=args.threads,
+        transport="tcp-socket",
+    )
+    try:
+        run_worker_loop(
+            tx,
+            env,
+            seed=args.seed,
+            model_size=args.model,
+            budget=args.budget,
+            data_seed=args.data_seed,
+            hf_dataset=args.hf_dataset,
+            sqlite_db=args.sqlite_db,
+        )
+    finally:
+        tx.close()
+    print("[WORKER] Worker loop terminated gracefully.")
+
+
+if __name__ == "__main__":
+    main()
