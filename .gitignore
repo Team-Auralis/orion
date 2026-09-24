@@ -66,3 +66,10 @@ models/comp001/
 
 # Large binary docs — host externally
 *.pdf
+
+# Local caches (regenerable)
+.cache/
+
+# Model weights (any torch checkpoint)
+*.pt
+models/hive/
