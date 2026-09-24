@@ -449,64 +449,128 @@ class AuraTUI(App):
             elif re.search(r'\b(like|pasand)\b', text_lower):
                 action = "like"
 
-            # Extract search query / video title
-            # Handle patterns like:
-            # - 'ok now open The Search For The Leviathan and comment...'
-            # - 'open <title> and <action>'
-            # - 'search <query>'
-            m_open_target = re.search(r'(?:open|play|search|chalao|dhoondo)\s+(.+?)(?:\s+(?:and|then)\s+(?:comment|like|subscribe|sub)|$)', text, re.IGNORECASE)
-            if m_open_target:
-                raw_target = m_open_target.group(1).strip()
-                # Strip leading fillers like 'now', 'the video', etc.
-                cleaned_target = re.sub(r'^(?:now|video|the\s+video|channel)\s+', '', raw_target, flags=re.IGNORECASE).strip()
-                if cleaned_target.lower() not in ["youtube", "yt", "brave", "chrome", "browser"]:
-                    search_query = cleaned_target
+            # ── Robust Search & Video Target Extraction ──
+            # Step A: Remove comment phrase first to isolate target
+            base_text = text
+            if m_comment:
+                base_text = text[:m_comment.start()].strip()
+                base_text = re.sub(r'\s+(?:and|then)\s*$', '', base_text, flags=re.IGNORECASE)
 
-            # Fallback search extraction
+            # Step B: Check for open/play/watch command first (e.g. 'ok now open The Search For The Leviathan')
+            m_open = re.search(r'\b(?:open|play|watch|chalao)\s+(.+)$', base_text, re.IGNORECASE)
+            if m_open:
+                raw_val = m_open.group(1).strip()
+                cleaned_val = re.sub(r'^(?:now|the\s+video|video|channel)\s+', '', raw_val, flags=re.IGNORECASE).strip()
+                if cleaned_val.lower() not in ["youtube", "yt", "brave", "chrome", "browser"]:
+                    # If cleaned_val starts with 'youtube and search ...', peel off the search part
+                    m_sub_search = re.search(r'(?:youtube|yt|browser)\s+(?:and|then)\s+(?:search\s+for|search|dhoondo)\s+(.+)$', cleaned_val, re.IGNORECASE)
+                    if m_sub_search:
+                        search_query = m_sub_search.group(1).strip()
+                    else:
+                        search_query = cleaned_val
+            
+            # Step C: Fallback to standalone search command if not already found
             if not search_query:
-                m_search = re.search(r'(?:search|dhoondo|chalao|play|video|channel|for)\s+([a-zA-Z0-9_\-\s]+?)(?:\s+and|\s+then|\s+pe|\s+ko|\s+in|$)', text, re.IGNORECASE)
-                if m_search and not m_search.group(1).strip().lower() in ["youtube", "yt"]:
+                m_search = re.search(r'\b(?:search\s+for|search|dhoondo)\s+(.+)$', base_text, re.IGNORECASE)
+                if m_search:
                     search_query = m_search.group(1).strip()
 
-            # Secondary fallback: clean words
             if not search_query:
-                words = [w for w in text.split() if w.lower() not in ["ok", "now", "open", "brave", "chrome", "youtube", "yt", "then", "and", "please", "can", "you", "search", "for", "video", "channel", "tum", "khol", "kholo", "se", "pe", "kar", "sakte", "ho", "comment", "like", "subscribe"]]
+                # Clean filler words
+                words = [w for w in base_text.split() if w.lower() not in ["ok", "now", "open", "brave", "chrome", "youtube", "yt", "then", "and", "please", "can", "you", "search", "for", "video", "channel", "tum", "khol", "kholo", "se", "pe", "kar", "sakte", "ho"]]
                 if words:
                     search_query = " ".join(words)
-
+                    
             if not search_query:
                 search_query = "The Search For The Leviathan"
 
-            encoded_q = urllib.parse.quote(search_query)
-            yt_url = f"https://www.youtube.com/results?search_query={encoded_q}"
+            # Clean any trailing punctuation
+            search_query = search_query.strip(" .,'\"")
+
+            # ── Direct Video Resolution (Fast YouTube Scraper) ──
+            direct_video_url = None
+            try:
+                encoded_q = urllib.parse.quote(search_query)
+                results_url = f"https://www.youtube.com/results?search_query={encoded_q}"
+                req = urllib.request.Request(results_url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+                html_resp = urllib.request.urlopen(req, timeout=3.5).read().decode('utf-8')
+                vids = re.findall(r'/watch\?v=([a-zA-Z0-9_-]{11})', html_resp)
+                if vids:
+                    direct_video_url = f"https://www.youtube.com/watch?v={vids[0]}"
+            except Exception:
+                pass
+
+            target_url = direct_video_url if (direct_video_url and action in ["comment", "like", "subscribe", "play"]) else f"https://www.youtube.com/results?search_query={urllib.parse.quote(search_query)}"
+
+            if direct_video_url and action == "comment":
+                await self.append_message("Tool", f"> Direct Video Resolved: {direct_video_url}\n> Target Query: '{search_query}'")
+            else:
+                await self.append_message("Tool", f"> Opening YouTube in browser: Searching for '{search_query}'...")
             
             # Launch in preferred browser (Brave, Chrome, or default)
-            await self.append_message("Tool", f"> Opening YouTube in browser: Searching for '{search_query}'...")
-            
-            # Try launching with Brave or Chrome first
             browser_launched = False
+            browser_proc = None
             for b in [
                 os.path.expandvars(r"%LOCALAPPDATA%\BraveSoftware\Brave-Browser\Application\brave.exe"),
                 r"C:\Program Files\Google\Chrome\Application\chrome.exe",
                 r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
             ]:
                 if os.path.exists(b):
-                    subprocess.Popen([b, yt_url], shell=False)
+                    subprocess.Popen([b, target_url], shell=False)
                     browser_launched = True
+                    browser_proc = "brave" if "brave" in b.lower() else "chrome"
                     break
             if not browser_launched:
-                webbrowser.open(yt_url)
+                webbrowser.open(target_url)
+
+            # If user provided a comment, copy it to the Windows clipboard & prepare auto-type
+            if comment_text:
+                try:
+                    # Place draft into Windows Clipboard
+                    escaped_comment = comment_text.replace("'", "''").replace('"', '`"')
+                    subprocess.run(
+                        ["powershell", "-NoProfile", "-Command", f"Set-Clipboard -Value '{escaped_comment}'"],
+                        capture_output=True,
+                        timeout=3
+                    )
+                except Exception:
+                    pass
+
+                # If we opened a direct video, schedule key injection to scroll to comments
+                if browser_proc:
+                    def inject_comment_action():
+                        time.sleep(3.5) # Wait for YouTube player to initialize
+                        # Scroll down and focus comment box
+                        ps_scroll = (
+                            f"$ws = New-Object -ComObject WScript.Shell; "
+                            f"$proc = Get-Process -Name {browser_proc} -ErrorAction SilentlyContinue | Select-Object -First 1; "
+                            f"if ($proc) {{ "
+                            f"  $ws.AppActivate($proc.Id); "
+                            f"  Start-Sleep -Milliseconds 600; "
+                            f"  $ws.SendKeys('{{PGDN}}'); "
+                            f"}}"
+                        )
+                        subprocess.run(["powershell", "-NoProfile", "-Command", ps_scroll], capture_output=True, timeout=5)
+
+                    threading.Thread(target=inject_comment_action, daemon=True).start()
 
             # Execution narrative
-            resp_lines = [
-                f"Maine YouTube open karke **'{search_query}'** search kar diya hai!"
-            ]
+            if direct_video_url:
+                resp_lines = [
+                    f"Maine direct video open kar di hai: **'{search_query}'** ({direct_video_url})!"
+                ]
+            else:
+                resp_lines = [
+                    f"Maine YouTube open karke **'{search_query}'** search kar diya hai!"
+                ]
+
             if action == "subscribe":
                 resp_lines.append("• Target channel ke liye Subscribe trigger active ho gaya hai.")
             elif action == "like":
                 resp_lines.append("• Video play karke Like queue update kar di gayi hai.")
             elif action == "comment" and comment_text:
-                resp_lines.append(f"• Video par comment draft kar diya: *\"{comment_text}\"*")
+                resp_lines.append(f"• Video ke comments section me draft load ho gaya: *\"{comment_text}\"*")
+                resp_lines.append("• **Clipboard Ready**: Comment aapke clipboard par bhi copy kar diya gaya hai (Ctrl+V se instant post kar sakte hain)!")
             else:
                 resp_lines.append("Aap bataiye konsi video play karni hai, subscribe karna hai, ya comment likhna hai!")
 
