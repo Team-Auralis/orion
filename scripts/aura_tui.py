@@ -177,6 +177,10 @@ class AuraTUI(App):
         super().__init__(*args, **kwargs)
         self.nlp = AuraNLP()
         self.agent = LocalCodebaseAgent(os.getcwd())
+        # 3-Part Token Accounting
+        self.input_tokens_total = 0
+        self.cached_tokens_total = 0
+        self.output_tokens_total = 0
         self.total_tokens_used = 0
         self.max_token_budget = 1_000_000
         self.pytorch_model = None
@@ -187,12 +191,12 @@ class AuraTUI(App):
     def compose(self) -> ComposeResult:
         yield Header()
         yield Static(
-            "⚡ ORION NEURAL TELEMETRY  |  Used: 0 tok  |  Budget: 1,000,000 tok (0.0% used, 100.0% free)  |  Throughput: Idle",
+            "⚡ ORION NEURAL TELEMETRY  |  In: 0 tok  |  Cached: 0 tok  |  Out: 0 tok  |  Total: 0 / 1,000,000 tok (0.00%)  |  Throughput: Idle",
             id="token-telemetry-bar"
         )
         with VerticalScroll(id="chat-container"):
             yield ChatMessage("AURA", "✨ ORION Multilingual Neural Subsystem Online.\n[b]Hindi-English • Telugu-English • English (Wikitext)[/b] active.")
-        yield Input(placeholder="Ask anything in English, Hinglish, or Telugu... (! shell, @ file, ? api)", id="input-box")
+        yield Input(placeholder="Ask anything in English, Hinglish, or Telugu... (! shell, @ file, ? api, ! brain)", id="input-box")
         yield Footer()
 
     def on_mount(self):
@@ -201,6 +205,9 @@ class AuraTUI(App):
         self.nlp = AuraNLP()
         self.agent = LocalCodebaseAgent(os.getcwd())
         
+        self.input_tokens_total = 0
+        self.cached_tokens_total = 0
+        self.output_tokens_total = 0
         self.total_tokens_used = 0
         self.max_token_budget = 1_000_000
         self.telemetry_bar = self.query_one("#token-telemetry-bar")
@@ -735,6 +742,16 @@ class AuraTUI(App):
             prompt = self.pytorch_tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
             inputs = self.pytorch_tokenizer(prompt, return_tensors="pt").to("cpu")
             
+            # 3-Part Token Accounting: Input (fresh), Cached (system prefix/KV), Output
+            prompt_token_ids = inputs.input_ids[0].tolist()
+            total_prompt_tokens = len(prompt_token_ids)
+            sys_tokens = len(self.pytorch_tokenizer.encode(sys_prompt))
+            cached_turn_tokens = min(sys_tokens, total_prompt_tokens)
+            fresh_input_tokens = max(0, total_prompt_tokens - cached_turn_tokens)
+            
+            self.input_tokens_total += fresh_input_tokens
+            self.cached_tokens_total += cached_turn_tokens
+
             msg = ChatMessage("AURA", "")
             await self.chat_container.mount(msg)
             self.chat_container.scroll_end(animate=False)
@@ -764,25 +781,28 @@ class AuraTUI(App):
                 new_tokens_count += 1
                 msg.update_text(generated_text)
                 
-                # Live token telemetry animation
-                cur_total = self.total_tokens_used + new_tokens_count
+                # Live 3-Part token telemetry animation
+                cur_output_total = self.output_tokens_total + new_tokens_count
+                cur_total = self.input_tokens_total + self.cached_tokens_total + cur_output_total
                 pct = min(100.0, (cur_total / self.max_token_budget) * 100.0)
-                pct_left = max(0.0, 100.0 - pct)
                 dt = max(0.01, time.time() - t_start)
                 tps = new_tokens_count / dt
                 bar_fill = int(pct / 5)
                 meter = "█" * bar_fill + "░" * (20 - bar_fill)
                 self.telemetry_bar.update(
                     f"⚡ ORION TELEMETRY [{meter}] {pct:.2f}%  |  "
-                    f"Used: {cur_total:,} tok  |  "
-                    f"Remaining: {pct_left:.2f}% ({max(0, self.max_token_budget - cur_total):,} tok)  |  "
+                    f"In: {self.input_tokens_total:,}  |  "
+                    f"Cached: {self.cached_tokens_total:,}  |  "
+                    f"Out: {cur_output_total:,}  |  "
+                    f"Total: {cur_total:,} / {self.max_token_budget:,}  |  "
                     f"⚡ {tps:.1f} tok/s"
                 )
                 await asyncio.sleep(0.005)
                 
-            self.total_tokens_used += new_tokens_count
+            self.output_tokens_total += new_tokens_count
+            self.total_tokens_used = self.input_tokens_total + self.cached_tokens_total + self.output_tokens_total
             dt_total = time.time() - t_start
-            await self.append_message("Tool", f"> Generation completed: {new_tokens_count} tokens in {dt_total:.1f}s ({new_tokens_count/max(0.1, dt_total):.1f} tok/s)")
+            await self.append_message("Tool", f"> Generation completed: {new_tokens_count} tokens in {dt_total:.1f}s ({new_tokens_count/max(0.1, dt_total):.1f} tok/s) [Input: {fresh_input_tokens} | Cached: {cached_turn_tokens} | Output: {new_tokens_count}]")
         except Exception as e:
             await self.append_message("Error", f"PyTorch Inference Failed: {str(e)}")
         self.sub_title = "AURA-PyTorch - Modern Instruct AI Active"

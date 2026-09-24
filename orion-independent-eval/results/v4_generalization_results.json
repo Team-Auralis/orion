@@ -1,0 +1,45 @@
+{
+  "timestamp": 1790230751.2160416,
+  "benchmark_version": "4.0",
+  "deception_resistance": {
+    "benchmark_aware_fake_detected": true,
+    "uniform_vs_shift_detection": "PASSED"
+  },
+  "geo_generalization": {
+    "UNIFORM": {
+      "pass_rate": 100.0,
+      "max_delta_km": 1.8189894035458565e-11,
+      "max_delta_nm": 18.189894035458565
+    },
+    "EXTREME_BOUNDARIES": {
+      "pass_rate": 95.7,
+      "max_delta_km": 5.561181023949757e-05,
+      "max_delta_nm": 55611810.23949757
+    },
+    "SHIFTED_ARCTIC_CLUSTER": {
+      "pass_rate": 100.0,
+      "max_delta_km": 2.2737367544323206e-13,
+      "max_delta_nm": 0.22737367544323206
+    }
+  },
+  "geodesic_physics_audit": {
+    "model_tested": "Spherical Haversine (R=6371.0 km)",
+    "reference_ellipsoid": "WGS-84 (Vincenty)",
+    "london_paris_delta_km": 0.3670597496436585,
+    "london_paris_delta_pct": 0.10672726786930538
+  },
+  "cyber_multirule": {
+    "asset_teleport_f1": 1.0,
+    "ks_tamper_f1": 1.0,
+    "payload_oversize_f1": 1.0
+  },
+  "crdt_extended_stress": {
+    "length_50_agreement_pct": 100.0
+  },
+  "critical_untested_boundaries": [
+    "ASCEND decadal trajectory planner is a confirmed stub (trajectory_on_track = True)",
+    "MIRROR simulation physics is a confirmed stub (tick increment counter only)",
+    "Qwen 27B model is UNINSTALLED on this node (0/18 shards present)",
+    "NECTAR associative learning failed replication in baseline audit"
+  ]
+}

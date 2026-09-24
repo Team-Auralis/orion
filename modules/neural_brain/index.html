@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ORION Neural Brain &amp; Synaptic Links Graph</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body {
+      background-color: #030712;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, monospace;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+    #canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    /* Top Header Bar */
+    .header-bar {
+      position: absolute;
+      top: 16px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .header-title {
+      pointer-events: auto;
+      background: rgba(10, 16, 30, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      border-radius: 10px;
+      padding: 10px 18px;
+      box-shadow: 0 0 25px rgba(0, 229, 255, 0.15);
+    }
+    .header-title h1 {
+      font-size: 1.15rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #00f0ff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+    }
+    .status-pulse {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #00ff9d;
+      box-shadow: 0 0 10px #00ff9d;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.6; }
+    }
+    .header-title p {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-top: 3px;
+      letter-spacing: 0.5px;
+    }
+
+    /* 3-Part Token Telemetry HUD */
+    .telemetry-hud {
+      pointer-events: auto;
+      background: rgba(10, 16, 30, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(138, 43, 226, 0.4);
+      border-radius: 10px;
+      padding: 10px 16px;
+      display: flex;
+      gap: 18px;
+      box-shadow: 0 0 25px rgba(138, 43, 226, 0.2);
+    }
+    .stat-pill {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .stat-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+    }
+    .stat-val {
+      font-size: 0.95rem;
+      font-weight: 700;
+      font-family: monospace;
+    }
+    .val-input { color: #38bdf8; }
+    .val-cached { color: #a78bfa; }
+    .val-output { color: #4ade80; }
+    .val-total { color: #facc15; }
+
+    /* Controls Bar */
+    .controls-bar {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      z-index: 10;
+      display: flex;
+      gap: 8px;
+      background: rgba(10, 16, 30, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 8px 12px;
+      border-radius: 10px;
+    }
+    .btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #cbd5e1;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: 0.5px;
+    }
+    .btn:hover {
+      background: rgba(0, 229, 255, 0.2);
+      border-color: #00f0ff;
+      color: #00f0ff;
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+    }
+    .btn.active {
+      background: #00e5ff;
+      color: #030712;
+      border-color: #00e5ff;
+      box-shadow: 0 0 16px rgba(0, 229, 255, 0.6);
+    }
+    .btn-surge {
+      background: linear-gradient(135deg, #7928ca, #ff0080);
+      border: none;
+      color: #ffffff;
+      font-weight: 700;
+    }
+    .btn-surge:hover {
+      box-shadow: 0 0 20px rgba(255, 0, 128, 0.7);
+      transform: scale(1.03);
+    }
+
+    /* Node Inspector Panel */
+    .inspector-panel {
+      position: absolute;
+      top: 80px;
+      right: 20px;
+      width: 320px;
+      background: rgba(10, 16, 30, 0.92);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(0, 229, 255, 0.35);
+      border-radius: 12px;
+      padding: 16px;
+      z-index: 10;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 229, 255, 0.15);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+    }
+    .inspector-panel.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(360px);
+    }
+    .inspector-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+    }
+    .inspector-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #00f0ff;
+      letter-spacing: 1px;
+    }
+    .inspector-badge {
+      font-size: 0.65rem;
+      padding: 3px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .badge-cognitive { background: rgba(0, 229, 255, 0.15); color: #00f0ff; border: 1px solid #00f0ff; }
+    .badge-infra { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid #c084fc; }
+    .badge-data { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid #4ade80; }
+    .badge-actuator { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid #fbbf24; }
+
+    .inspector-desc {
+      font-size: 0.8rem;
+      line-height: 1.45;
+      color: #cbd5e1;
+      margin-bottom: 14px;
+    }
+    .inspector-section {
+      margin-top: 10px;
+    }
+    .inspector-section-title {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: #94a3b8;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .inspector-path {
+      font-family: monospace;
+      font-size: 0.72rem;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 6px 8px;
+      border-radius: 6px;
+      color: #38bdf8;
+      word-break: break-all;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+    .inspector-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .link-tag {
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      color: #94a3b8;
+    }
+    .close-inspector {
+      background: transparent;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+    .close-inspector:hover { color: #f43f5e; }
+
+    /* Legend Overlay */
+    .legend-panel {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(10, 16, 30, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 10;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #94a3b8;
+    }
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <canvas id="neuralCanvas"></canvas>
+  </div>
+
+  <!-- Header -->
+  <div class="header-bar">
+    <div class="header-title">
+      <h1><span class="status-pulse"></span> ORION NEURAL BRAIN ARCHITECTURE</h1>
+      <p>Interactive Neural Synapse Visualizer • Multi-Pillar Cognitive Network</p>
+    </div>
+
+    <!-- 3-Part Token Telemetry HUD -->
+    <div class="telemetry-hud">
+      <div class="stat-pill">
+        <span class="stat-label">Input (Prompt)</span>
+        <span class="stat-val val-input" id="statInput">2,410</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-label">Cached (KV / Context)</span>
+        <span class="stat-val val-cached" id="statCached">18,340</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-label">Output (Generated)</span>
+        <span class="stat-val val-output" id="statOutput">6,120</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-label">Total / Budget</span>
+        <span class="stat-val val-total" id="statTotal">26,870 / 1M</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Controls -->
+  <div class="controls-bar">
+    <button class="btn active" onclick="setFilter('all', this)">All Synapses</button>
+    <button class="btn" onclick="setFilter('cognitive', this)">Cognitive Core</button>
+    <button class="btn" onclick="setFilter('infra', this)">Infra &amp; Mesh</button>
+    <button class="btn" onclick="setFilter('data', this)">Data &amp; Zero-Trust</button>
+    <button class="btn" onclick="setFilter('actuator', this)">Actuators</button>
+    <button class="btn btn-surge" onclick="triggerSurge()">⚡ Neural Surge</button>
+    <button class="btn" onclick="resetGraph()">Reset View</button>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend-panel">
+    <div class="legend-item"><span class="legend-dot" style="background:#00f0ff; box-shadow:0 0 8px #00f0ff"></span> Cognitive Intelligence (AURA, OMNIS, NEXUS, FORGE)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#c084fc; box-shadow:0 0 8px #c084fc"></span> Infrastructure &amp; Edge (API, Worker, Sentinel, Aegis)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#4ade80; box-shadow:0 0 8px #4ade80"></span> Data Fabric &amp; Policy (NATS, Postgres, Redis, OPA)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#fbbf24; box-shadow:0 0 8px #fbbf24"></span> Real-World Actuators (Brave/YouTube, Notepad, Calc, VS Code)</div>
+  </div>
+
+  <!-- Inspector Panel -->
+  <div class="inspector-panel hidden" id="inspector">
+    <div class="inspector-header">
+      <div>
+        <div class="inspector-title" id="nodeName">AURA</div>
+        <span class="inspector-badge badge-cognitive" id="nodeCategory">Cognitive Core</span>
+      </div>
+      <button class="close-inspector" onclick="closeInspector()">✕</button>
+    </div>
+    <div class="inspector-desc" id="nodeDesc">Multimodal intelligence &amp; reasoning core for ORION.</div>
+    <div class="inspector-section">
+      <div class="inspector-section-title">Repository Path</div>
+      <div class="inspector-path" id="nodePath">scripts/aura_tui.py</div>
+    </div>
+    <div class="inspector-section">
+      <div class="inspector-section-title">Connected Neural Pathways</div>
+      <div class="inspector-links" id="nodeLinks">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── DATA DEFINITION: ORION BRAIN NODES & SYNAPTIC PATHWAYS ─────────────
+    const NODES = [
+      // Core Cognitive
+      { id: 'aura', name: 'AURA Core', category: 'cognitive', role: 'Multimodal intelligence, local LLM, fast intent triage & autonomous desktop orchestration.', path: 'scripts/aura_tui.py', x: 0, y: 0, r: 24, color: '#00f0ff' },
+      { id: 'omnis', name: 'OMNIS', category: 'cognitive', role: 'Civilization world model: continuous causality trees, dynamic entities & TransferGuard.', path: 'services/omnis/', x: -140, y: -90, r: 18, color: '#00e5ff' },
+      { id: 'nexus', name: 'NEXUS', category: 'cognitive', role: 'Multi-agent intelligence fabric, swarm dispute resolution, cross-model consensus.', path: 'services/nexus/', x: 140, y: -90, r: 18, color: '#38bdf8' },
+      { id: 'forge', name: 'FORGE', category: 'cognitive', role: 'Scientific discovery & hypothesis generation; formal code verification & safety gates.', path: 'services/forge/', x: 0, y: -160, r: 19, color: '#06b6d4' },
+      { id: 'ascend', name: 'ASCEND', category: 'cognitive', role: 'Long-horizon strategic planner with uncertainty mitigation and decadal replanning.', path: 'services/ascend/', x: -180, y: -190, r: 16, color: '#0ea5e9' },
+      { id: 'nectar', name: 'NECTAR', category: 'cognitive', role: 'Fruit-fly mushroom-body connectome simulation (KC→MBON plasticity & associative recall).', path: 'services/nectar/', x: 180, y: -190, r: 16, color: '#22d3ee' },
+      { id: 'mathsage', name: 'Mathsage', category: 'cognitive', role: 'Symbolic & formal mathematical coprocessor (Mathstral verification engine).', path: 'services/mathsage/', x: 60, y: -240, r: 14, color: '#67e8f9' },
+
+      // Infrastructure & Edge
+      { id: 'api', name: 'orion-api', category: 'infra', role: 'FastAPI TLS frontier gateway, incidents, telemetry compression, HITL approvals.', path: 'apps/api/main.py', x: -120, y: 90, r: 18, color: '#c084fc' },
+      { id: 'worker', name: 'orion-worker', category: 'infra', role: 'NATS JetStream consumer (incident.*), geospatial dispatch, outbox publisher.', path: 'services/worker/main.py', x: 120, y: 90, r: 18, color: '#a855f7' },
+      { id: 'sentinel', name: 'orion-sentinel', category: 'infra', role: 'Real-time AI triage on JetStream with deterministic fallbacks & watchdog monitoring.', path: 'services/ai_sentinel/main.py', x: 0, y: 140, r: 17, color: '#d8b4fe' },
+      { id: 'aegis', name: 'orion-aegis', category: 'infra', role: 'Edge/communications gateway: validated SOS ingestion, resilient channel management.', path: 'services/aegis/main.py', x: -220, y: 150, r: 15, color: '#9333ea' },
+      { id: 'orbital', name: 'Orbital Mesh', category: 'infra', role: 'Satellite constellation mesh communication layer, space-to-ground telemetry.', path: 'modules/orbital-view/', x: 220, y: 150, r: 15, color: '#7e22ce' },
+
+      // Data Fabric & Zero-Trust
+      { id: 'nats', name: 'NATS JetStream', category: 'data', role: 'Zero-loss authenticated distributed event bus & streaming queue backbone.', path: 'services/nats/', x: 0, y: 220, r: 17, color: '#4ade80' },
+      { id: 'postgres', name: 'PostgreSQL DB', category: 'data', role: 'Relational storage for incidents, telemetry archives, audit logs & dispatch states.', path: 'db/', x: -100, y: 250, r: 15, color: '#22c55e' },
+      { id: 'redis', name: 'Redis Cache', category: 'data', role: 'Sub-millisecond session state, token rate-limiting, and distributed lock coordinator.', path: 'services/redis/', x: 100, y: 250, r: 15, color: '#16a34a' },
+      { id: 'veil', name: 'VEIL / OPA', category: 'data', role: 'Open Policy Agent zero-trust governance gating any real-world physical action.', path: 'services/governance/', x: -220, y: 20, r: 16, color: '#10b981' },
+
+      // Actuators & Integrations
+      { id: 'act_browser', name: 'Brave/YouTube', category: 'actuator', role: 'Automated video search, channel subscription, dynamic comment injection & web scraping.', path: 'scripts/aura_tui.py (Browser)', x: -280, y: -70, r: 14, color: '#fbbf24' },
+      { id: 'act_notepad', name: 'Notepad Automator', category: 'actuator', role: 'Autonomous text editor drafting, clipboard keystroke injection & document note-taking.', path: 'scripts/aura_tui.py (Notepad)', x: -260, y: 20, r: 14, color: '#f59e0b' },
+      { id: 'act_calc', name: 'Calculator Engine', category: 'actuator', role: 'Windows Calculator automation with equation evaluation and verified results.', path: 'scripts/aura_tui.py (Calc)', x: 280, y: -70, r: 14, color: '#f59e0b' },
+      { id: 'act_code', name: 'Code & Terminal', category: 'actuator', role: 'Multi-language code writing, shell command execution, and codebase AST indexing.', path: 'scripts/aura_tui.py (Shell/Agent)', x: 260, y: 20, r: 14, color: '#fbbf24' }
+    ];
+
+    const LINKS = [
+      // Cognitive Core Synapses
+      { source: 'aura', target: 'omnis', weight: 3 },
+      { source: 'aura', target: 'nexus', weight: 3 },
+      { source: 'aura', target: 'forge', weight: 3 },
+      { source: 'aura', target: 'sentinel', weight: 3 },
+      { source: 'omnis', target: 'forge', weight: 2 },
+      { source: 'forge', target: 'mathsage', weight: 2 },
+      { source: 'nexus', target: 'ascend', weight: 2 },
+      { source: 'aura', target: 'nectar', weight: 2 },
+      { source: 'omnis', target: 'ascend', weight: 2 },
+      { source: 'omnis', target: 'veil', weight: 3 },
+
+      // Infrastructure Synapses
+      { source: 'api', target: 'aura', weight: 3 },
+      { source: 'api', target: 'worker', weight: 3 },
+      { source: 'worker', target: 'nats', weight: 3 },
+      { source: 'sentinel', target: 'nats', weight: 3 },
+      { source: 'api', target: 'postgres', weight: 2 },
+      { source: 'api', target: 'redis', weight: 2 },
+      { source: 'api', target: 'veil', weight: 3 },
+      { source: 'aegis', target: 'api', weight: 2 },
+      { source: 'aegis', target: 'worker', weight: 2 },
+      { source: 'orbital', target: 'worker', weight: 2 },
+      { source: 'orbital', target: 'aegis', weight: 1 },
+
+      // Actuator Synapses
+      { source: 'aura', target: 'act_browser', weight: 2 },
+      { source: 'aura', target: 'act_notepad', weight: 2 },
+      { source: 'aura', target: 'act_calc', weight: 2 },
+      { source: 'aura', target: 'act_code', weight: 2 },
+      { source: 'act_code', target: 'forge', weight: 2 },
+      { source: 'act_calc', target: 'mathsage', weight: 1 }
+    ];
+
+    // ── CANVAS & RENDER ENGINE ─────────────────────────────────────────────
+    const canvas = document.getElementById('neuralCanvas');
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    let currentFilter = 'all';
+    let zoom = 1.25;
+    let panX = width / 2;
+    let panY = height / 2 + 20;
+    let draggingNode = null;
+    let isPanning = false;
+    let panStartX = 0;
+    let panStartY = 0;
+    let selectedNode = null;
+
+    // Synaptic Signal Pulses traveling on edges
+    const pulses = [];
+    function spawnPulse(link, speed = 0.012) {
+      pulses.push({
+        source: link.source,
+        target: link.target,
+        progress: 0,
+        speed: speed + Math.random() * 0.008,
+        color: link.source.color || '#00f0ff',
+        size: 2.5 + Math.random() * 2
+      });
+    }
+
+    // Initialize node map
+    const nodeMap = {};
+    NODES.forEach(n => {
+      n.vx = 0;
+      n.vy = 0;
+      nodeMap[n.id] = n;
+    });
+
+    const activeLinks = LINKS.map(l => ({
+      source: nodeMap[l.source],
+      target: nodeMap[l.target],
+      weight: l.weight
+    }));
+
+    // Periodically spawn natural synaptic pulses
+    setInterval(() => {
+      if (activeLinks.length > 0) {
+        const link = activeLinks[Math.floor(Math.random() * activeLinks.length)];
+        spawnPulse(link);
+      }
+    }, 120);
+
+    // Live Telemetry Ticker simulation
+    let curIn = 3120, curCached = 24150, curOut = 8420;
+    setInterval(() => {
+      curIn += Math.floor(Math.random() * 8);
+      curCached += Math.floor(Math.random() * 15);
+      curOut += Math.floor(Math.random() * 12);
+      const total = curIn + curCached + curOut;
+      document.getElementById('statInput').innerText = curIn.toLocaleString();
+      document.getElementById('statCached').innerText = curCached.toLocaleString();
+      document.getElementById('statOutput').innerText = curOut.toLocaleString();
+      document.getElementById('statTotal').innerText = `${total.toLocaleString()} / 1M (${((total/1000000)*100).toFixed(2)}%)`;
+    }, 2000);
+
+    // ── SIMULATION & RENDER LOOP ───────────────────────────────────────────
+    let animationTime = 0;
+
+    function render() {
+      animationTime += 0.02;
+      ctx.clearRect(0, 0, width, height);
+
+      // Save context for pan/zoom
+      ctx.save();
+      ctx.translate(panX, panY);
+      ctx.scale(zoom, zoom);
+
+      // 1. Draw Background Grid
+      drawGrid();
+
+      // 2. Physics Relaxation (Spring Repulsion)
+      applyPhysics();
+
+      // 3. Draw Synaptic Links
+      activeLinks.forEach(link => {
+        const s = link.source;
+        const t = link.target;
+        const visible = isVisible(s) && isVisible(t);
+        const alpha = visible ? (selectedNode === s || selectedNode === t ? 0.9 : 0.25) : 0.04;
+        
+        ctx.beginPath();
+        ctx.moveTo(s.x, s.y);
+        ctx.lineTo(t.x, t.y);
+        ctx.strokeStyle = visible ? s.color : '#334155';
+        ctx.globalAlpha = alpha;
+        ctx.lineWidth = visible ? link.weight * 1.2 : 0.8;
+        ctx.stroke();
+        ctx.globalAlpha = 1.0;
+      });
+
+      // 4. Update & Draw Synaptic Pulses
+      for (let i = pulses.length - 1; i >= 0; i--) {
+        const p = pulses[i];
+        p.progress += p.speed;
+        if (p.progress >= 1) {
+          pulses.splice(i, 1);
+          continue;
+        }
+
+        const sx = p.source.x, sy = p.source.y;
+        const tx = p.target.x, ty = p.target.y;
+        const cx = sx + (tx - sx) * p.progress;
+        const cy = sy + (ty - sy) * p.progress;
+
+        if (isVisible(p.source) && isVisible(p.target)) {
+          ctx.beginPath();
+          ctx.arc(cx, cy, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.shadowColor = p.color;
+          ctx.shadowBlur = 10;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
+
+      // 5. Draw Neural Nodes
+      NODES.forEach(n => {
+        const visible = isVisible(n);
+        const isHovered = (selectedNode === n);
+        const radius = isHovered ? n.r * 1.2 : n.r;
+        const baseColor = n.color;
+
+        ctx.save();
+        ctx.globalAlpha = visible ? 1.0 : 0.15;
+
+        // Outer Glowing Halo (Breathing)
+        const breathe = Math.sin(animationTime * 2 + n.x) * 3;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, radius + 6 + breathe, 0, Math.PI * 2);
+        ctx.fillStyle = baseColor;
+        ctx.globalAlpha = visible ? 0.15 : 0.02;
+        ctx.fill();
+
+        // Node Circle Body
+        ctx.globalAlpha = visible ? 1.0 : 0.2;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#0a101d';
+        ctx.fill();
+        ctx.lineWidth = isHovered ? 3 : 2;
+        ctx.strokeStyle = baseColor;
+        ctx.shadowColor = baseColor;
+        ctx.shadowBlur = isHovered ? 20 : 10;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Inner Core Dot
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, radius * 0.4, 0, Math.PI * 2);
+        ctx.fillStyle = baseColor;
+        ctx.fill();
+
+        // Node Label
+        ctx.font = `600 ${isHovered ? 12 : 10.5}px -apple-system, monospace`;
+        ctx.fillStyle = isHovered ? '#ffffff' : '#cbd5e1';
+        ctx.textAlign = 'center';
+        ctx.fillText(n.name, n.x, n.y + radius + 15);
+
+        ctx.restore();
+      });
+
+      ctx.restore();
+      requestAnimationFrame(render);
+    }
+
+    // Grid rendering
+    function drawGrid() {
+      const gridSize = 60;
+      const extent = 1200;
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.025)';
+      ctx.lineWidth = 1;
+      for (let x = -extent; x <= extent; x += gridSize) {
+        ctx.moveTo(x, -extent);
+        ctx.lineTo(x, extent);
+      }
+      for (let y = -extent; y <= extent; y += gridSize) {
+        ctx.moveTo(-extent, y);
+        ctx.lineTo(extent, y);
+      }
+      ctx.stroke();
+    }
+
+    // Spring physics for organic floating
+    function applyPhysics() {
+      // Repulsion between nodes
+      for (let i = 0; i < NODES.length; i++) {
+        for (let j = i + 1; j < NODES.length; j++) {
+          const a = NODES[i], b = NODES[j];
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          if (dist < 180) {
+            const force = (180 - dist) / 180 * 0.4;
+            const fx = (dx / dist) * force;
+            const fy = (dy / dist) * force;
+            if (a !== draggingNode) { a.x -= fx; a.y -= fy; }
+            if (b !== draggingNode) { b.x += fx; b.y += fy; }
+          }
+        }
+      }
+
+      // Link attraction
+      activeLinks.forEach(link => {
+        const a = link.source, b = link.target;
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const targetDist = 140;
+        const force = (dist - targetDist) * 0.003;
+        const fx = (dx / dist) * force;
+        const fy = (dy / dist) * force;
+        if (a !== draggingNode && a.id !== 'aura') { a.x += fx; a.y += fy; }
+        if (b !== draggingNode && b.id !== 'aura') { b.x -= fx; b.y -= fy; }
+      });
+    }
+
+    function isVisible(node) {
+      if (currentFilter === 'all') return true;
+      if (currentFilter === 'cognitive') return node.category === 'cognitive';
+      if (currentFilter === 'infra') return node.category === 'infra';
+      if (currentFilter === 'data') return node.category === 'data';
+      if (currentFilter === 'actuator') return node.category === 'actuator';
+      return true;
+    }
+
+    // ── INTERACTIVITY & CONTROLS ───────────────────────────────────────────
+    function setFilter(category, el) {
+      currentFilter = category;
+      document.querySelectorAll('.controls-bar .btn').forEach(b => b.classList.remove('active'));
+      if (el) el.classList.add('active');
+    }
+
+    function triggerSurge() {
+      for (let i = 0; i < 60; i++) {
+        setTimeout(() => {
+          const link = activeLinks[Math.floor(Math.random() * activeLinks.length)];
+          spawnPulse(link, 0.025);
+        }, i * 15);
+      }
+    }
+
+    function resetGraph() {
+      zoom = 1.25;
+      panX = width / 2;
+      panY = height / 2 + 20;
+      selectedNode = null;
+      closeInspector();
+    }
+
+    function openInspector(node) {
+      selectedNode = node;
+      const p = document.getElementById('inspector');
+      p.classList.remove('hidden');
+      document.getElementById('nodeName').innerText = node.name;
+      document.getElementById('nodeDesc').innerText = node.role;
+      document.getElementById('nodePath').innerText = node.path;
+      
+      const badge = document.getElementById('nodeCategory');
+      badge.innerText = node.category.toUpperCase();
+      badge.className = 'inspector-badge badge-' + node.category;
+
+      const linksEl = document.getElementById('nodeLinks');
+      linksEl.innerHTML = '';
+      activeLinks.forEach(l => {
+        if (l.source.id === node.id) {
+          const tag = document.createElement('span');
+          tag.className = 'link-tag';
+          tag.innerText = '→ ' + l.target.name;
+          linksEl.appendChild(tag);
+        } else if (l.target.id === node.id) {
+          const tag = document.createElement('span');
+          tag.className = 'link-tag';
+          tag.innerText = '← ' + l.source.name;
+          linksEl.appendChild(tag);
+        }
+      });
+    }
+
+    function closeInspector() {
+      document.getElementById('inspector').classList.add('hidden');
+      selectedNode = null;
+    }
+
+    // Mouse & Touch events
+    function getCanvasCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+      const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+      return {
+        x: (clientX - rect.left - panX) / zoom,
+        y: (clientY - rect.top - panY) / zoom
+      };
+    }
+
+    canvas.addEventListener('mousedown', e => {
+      const coords = getCanvasCoords(e);
+      let hit = null;
+      for (let n of NODES) {
+        const dx = coords.x - n.x;
+        const dy = coords.y - n.y;
+        if (dx * dx + dy * dy <= n.r * n.r * 1.5) {
+          hit = n;
+          break;
+        }
+      }
+
+      if (hit) {
+        draggingNode = hit;
+        openInspector(hit);
+      } else {
+        isPanning = true;
+        panStartX = e.clientX - panX;
+        panStartY = e.clientY - panY;
+      }
+    });
+
+    window.addEventListener('mousemove', e => {
+      if (draggingNode) {
+        const coords = getCanvasCoords(e);
+        draggingNode.x = coords.x;
+        draggingNode.y = coords.y;
+      } else if (isPanning) {
+        panX = e.clientX - panStartX;
+        panY = e.clientY - panStartY;
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      draggingNode = null;
+      isPanning = false;
+    });
+
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+      zoom = Math.min(Math.max(0.5, zoom * zoomFactor), 3.0);
+    }, { passive: false });
+
+    // Start Animation Loop
+    render();
+    // Default inspection on AURA Core
+    openInspector(nodeMap['aura']);
+  </script>
+</body>
+</html>

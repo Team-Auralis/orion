@@ -1,0 +1,21 @@
+{
+  "timestamp": 1790181437.5713801,
+  "git_tag": "benchmark-v1",
+  "evaluator_self_test": "PASSED",
+  "metrics": {
+    "geo_metamorphic_pass_rate": 100.0,
+    "geo_oracle_max_error_km": 1.0913936421275139e-11,
+    "crdt_metamorphic_pass_rate": 100.0,
+    "crdt_oracle_agreement_pct": 100.0,
+    "cyber_f1": 1.0,
+    "cyber_precision": 1.0,
+    "cyber_recall": 1.0,
+    "mutation_kill_rate_pct": 100.0
+  },
+  "unverified_stubs_identified": [
+    "services/ascend/planner.py:68 (trajectory_on_track = True)",
+    "services/mirror/engine.py:67 (tick counter increment only)",
+    "Qwen3.8-27B (0/18 shards present, NOT_RUN)",
+    "NECTAR KC->MBON Plasticity (learning factor failed to replicate)"
+  ]
+}

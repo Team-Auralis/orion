@@ -1,0 +1,80 @@
+{
+  "ORION_Regex_Fallback": {
+    "cases_evaluated": 50,
+    "correct": 17,
+    "accuracy_pct": 34.0,
+    "catastrophic_misses": 11,
+    "idiom_false_alarms": 3,
+    "avg_latency_ms": 0.08,
+    "p95_latency_ms": 0.01,
+    "confusion_matrix": {
+      "CRITICAL": {
+        "CRITICAL": 1,
+        "HIGH": 0,
+        "MODERATE": 0,
+        "LOW": 11,
+        "UNKNOWN": 0
+      },
+      "HIGH": {
+        "CRITICAL": 0,
+        "HIGH": 3,
+        "MODERATE": 1,
+        "LOW": 6,
+        "UNKNOWN": 0
+      },
+      "MODERATE": {
+        "CRITICAL": 1,
+        "HIGH": 1,
+        "MODERATE": 1,
+        "LOW": 7,
+        "UNKNOWN": 0
+      },
+      "LOW": {
+        "CRITICAL": 1,
+        "HIGH": 4,
+        "MODERATE": 1,
+        "LOW": 12,
+        "UNKNOWN": 0
+      }
+    }
+  },
+  "ORION_Laya_System1": {
+    "cases_evaluated": 50,
+    "correct": 18,
+    "accuracy_pct": 36.0,
+    "catastrophic_misses": 0,
+    "idiom_false_alarms": 1,
+    "avg_latency_ms": 455.69,
+    "p95_latency_ms": 409.29,
+    "confusion_matrix": {
+      "CRITICAL": {
+        "CRITICAL": 0,
+        "HIGH": 12,
+        "MODERATE": 0,
+        "LOW": 0,
+        "UNKNOWN": 0
+      },
+      "HIGH": {
+        "CRITICAL": 0,
+        "HIGH": 10,
+        "MODERATE": 0,
+        "LOW": 0,
+        "UNKNOWN": 0
+      },
+      "MODERATE": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MODERATE": 7,
+        "LOW": 2,
+        "UNKNOWN": 0
+      },
+      "LOW": {
+        "CRITICAL": 0,
+        "HIGH": 2,
+        "MODERATE": 15,
+        "LOW": 1,
+        "UNKNOWN": 0
+      }
+    }
+  }
+}
