@@ -500,9 +500,11 @@ class AuraTUI(App):
             except Exception:
                 pass
 
-            target_url = direct_video_url if (direct_video_url and action in ["comment", "like", "subscribe", "play"]) else f"https://www.youtube.com/results?search_query={urllib.parse.quote(search_query)}"
+            # Only use direct video URL if the user specifically asked to play, watch, or comment
+            use_direct = (direct_video_url is not None) and (action in ["comment", "play", "watch"])
+            target_url = direct_video_url if use_direct else f"https://www.youtube.com/results?search_query={urllib.parse.quote(search_query)}"
 
-            if direct_video_url and action == "comment":
+            if use_direct and action == "comment":
                 await self.append_message("Tool", f"> Direct Video Resolved: {direct_video_url}\n> Target Query: '{search_query}'")
             else:
                 await self.append_message("Tool", f"> Opening YouTube in browser: Searching for '{search_query}'...")
@@ -538,7 +540,7 @@ class AuraTUI(App):
 
                 # Automated comment injection
                 def inject_comment_action():
-                    time.sleep(3.5) # Wait for YouTube player to finish loading
+                    time.sleep(4.0) # Wait for YouTube player to finish loading
                     # Locate browser process dynamically (brave, chrome, msedge, or firefox)
                     ps_comment_auto = (
                         f"$ws = New-Object -ComObject WScript.Shell; "
@@ -546,13 +548,11 @@ class AuraTUI(App):
                         f"if ($proc) {{ "
                         f"  $ws.AppActivate($proc.Id); "
                         f"  Start-Sleep -Milliseconds 600; "
-                        f"  $ws.SendKeys('k'); "  # Pause video so it doesn't play over comments
+                        f"  $ws.SendKeys('k'); "  # Pause video
                         f"  Start-Sleep -Milliseconds 300; "
                         f"  $ws.SendKeys('{{PGDN}}'); " # Scroll down to comments
-                        f"  Start-Sleep -Milliseconds 600; "
-                        f"  $ws.SendKeys('{{TAB}}'); "  # Focus comment box
-                        f"  Start-Sleep -Milliseconds 300; "
-                        f"  $ws.SendKeys('^v'); "  # Paste clipboard comment
+                        f"  Start-Sleep -Milliseconds 500; "
+                        f"  $ws.SendKeys('{{PGDN}}'); "
                         f"}}"
                     )
                     subprocess.run(["powershell", "-NoProfile", "-Command", ps_comment_auto], capture_output=True, timeout=8)
@@ -560,7 +560,7 @@ class AuraTUI(App):
                 threading.Thread(target=inject_comment_action, daemon=True).start()
 
             # Execution narrative
-            if direct_video_url:
+            if use_direct:
                 resp_lines = [
                     f"Maine direct video open kar di hai: **'{search_query}'** ({direct_video_url})!"
                 ]
@@ -574,8 +574,9 @@ class AuraTUI(App):
             elif action == "like":
                 resp_lines.append("• Video play karke Like queue update kar di gayi hai.")
             elif action == "comment" and comment_text:
-                resp_lines.append(f"• Video load karke comments section focus kiya gaya aur comment draft inject kiya: *\"{comment_text}\"*")
-                resp_lines.append("• **One-Click/Enter Submit**: Agar comment box select ho chuka hai, to turant submit ho jayega (ya aap simply **Ctrl+V** / **Enter** press karke comment post kar sakte hain)!")
+                resp_lines.append(f"• **Comment Ready**: Aapka comment clipboard par load ho chuka hai: *\"{comment_text}\"*")
+                resp_lines.append("• Page scroll down karke video pause kar di gayi hai.")
+                resp_lines.append("• **Instant Post**: Bas browser me comment box pe click karke **Ctrl+V** aur **Enter / Comment** press karein — comment turant live ho jayega!")
             else:
                 resp_lines.append("Aap bataiye konsi video play karni hai, subscribe karna hai, ya comment likhna hai!")
 
