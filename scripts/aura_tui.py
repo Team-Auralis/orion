@@ -63,6 +63,9 @@ class AuraNLP:
         # Capabilities & System Controls
         if re.search(r'\b(can\s+you\s+open\s+apps?|apps?\s+open\s+kar\s+sa[kt]|apps?\s+khol\s+sa[kt]|applications?\s+open|apps\s+open\s+cheyagalaru|tum\s+apps\s+open)\b', text_lower):
             return "Haan bilkul! Main applications open karke unke andar automated tasks bhi perform kar sakta hoon:\n• **Brave / Chrome**: Direct URLs, YouTube search/channels/videos, likes, subscribes, comments (Laya fast-path accelerated)\n• **Notepad**: Notepad kholna aur specific text/notes automatically type karna\n• **Calculator**: Calculator launch karke mathematical equations solve karna\n• **VS Code / Terminal / Explorer**: System tools launch aur navigate karna"
+        # Code Capability Inquiries (pure capability questions; specific generation prompts pass to LLM)
+        if re.search(r'^(?:can\s+(?:u|you)\s+write\s+codes?|can\s+(?:u|you)\s+code|do\s+you\s+write\s+code|do\s+you\s+know\s+coding|kya\s+tum\s+code\s+likh\s+sak[teia]*\s+ho|code\s+likh\s+sak[teia]*\s+ho|programming\s+kar\s+sak[teia]*\s+ho)\??$', text_lower.strip()):
+            return "Yes, absolutely! I am an expert AI programmer and software engineer. I can write, review, debug, and explain code in Python, JavaScript/TypeScript, C/C++, Rust, HTML/CSS, SQL, Bash, PowerShell, and more. What code or program would you like to build?"
         if text_lower in ["meow", "woof", "moo"]:
             return f"I'm an advanced AI, not an animal... but {text_lower} to you too!"
         return None
@@ -351,11 +354,16 @@ class AuraTUI(App):
 
         return False, f"Could not find or launch application '{target}'"
 
-    def send_keys_to_process(self, process_or_title: str, keys: str):
+    def send_keys_to_process(self, process_or_title: str, text_to_paste: str, press_enter: bool = False, press_equals: bool = False):
         """Sends keystrokes or pastes into an active Windows process/window using PowerShell. ponytail: native zero-dep."""
         try:
             # Escape quotes in keys
-            sanitized = keys.replace("'", "''")
+            sanitized = text_to_paste.replace("'", "''")
+            extra_keys = ""
+            if press_equals:
+                extra_keys += "$ws.SendKeys('='); "
+            if press_enter:
+                extra_keys += "$ws.SendKeys('{ENTER}'); "
             ps_code = (
                 f"$ws = New-Object -ComObject WScript.Shell; "
                 f"$activated = $ws.AppActivate('{process_or_title}'); "
@@ -368,7 +376,7 @@ class AuraTUI(App):
                 f"  Set-Clipboard -Value '{sanitized}'; "
                 f"  $ws.SendKeys('^v'); "
                 f"  Start-Sleep -Milliseconds 150; "
-                f"  $ws.SendKeys('='); "
+                f"  {extra_keys}"
                 f"}}"
             )
             subprocess.run(["powershell", "-NoProfile", "-Command", ps_code], capture_output=True, timeout=5)
@@ -604,7 +612,7 @@ class AuraTUI(App):
             # Send keystrokes via background thread
             def inject_notepad():
                 time.sleep(1.0) # Wait for window to settle
-                self.send_keys_to_process("notepad", content_to_write + "{ENTER}")
+                self.send_keys_to_process("notepad", content_to_write, press_enter=True)
 
             threading.Thread(target=inject_notepad, daemon=True).start()
             await self.append_message("AURA", f"Notepad open kar diya hai aur aapka text type kar diya gaya hai:\n\n> *\"{content_to_write}\"*")
@@ -629,8 +637,8 @@ class AuraTUI(App):
                 def inject_calc():
                     time.sleep(1.2) # Allow UWP window to render
                     keys = expr.replace(' ', '')
-                    self.send_keys_to_process("Calculator", keys)
-                    self.send_keys_to_process("CalculatorApp", keys)
+                    self.send_keys_to_process("Calculator", keys, press_equals=True)
+                    self.send_keys_to_process("CalculatorApp", keys, press_equals=True)
                 threading.Thread(target=inject_calc, daemon=True).start()
 
             await self.append_message("AURA", f"Maine Calculator open kar diya hai!\n• **Equation**: `{expr}`\n• **Result**: **`{res}`**")
@@ -704,8 +712,17 @@ class AuraTUI(App):
             from transformers import TextIteratorStreamer
             from threading import Thread
             
+            is_code_request = bool(re.search(
+                r'\b(code|script|function|program|class\b|def\b|python|javascript|typescript|html|css|cpp|c\+\+|rust|sql|bash|powershell|algorithm|implement|write|create|solve|debug)\b',
+                text.lower()
+            ))
+            max_tokens = 384 if is_code_request else 120
+
             sys_prompt = (
-                "You are AURA, an advanced offline AI assistant for ORION. "
+                "You are AURA, an advanced offline AI assistant, software engineer, and programming expert for ORION. "
+                "You excel at writing, debugging, explaining, and refactoring clean, working code in Python, JavaScript/TypeScript, HTML/CSS, C/C++, Rust, SQL, Bash, and PowerShell. "
+                "When asked to write code or solve technical problems, always provide clear, functional, and complete code solutions with concise explanations. "
+                "You never refuse coding or programming assistance. "
                 "You fluently understand English, Hindi, and Hinglish (Hindi words written using the English alphabet). "
                 "For example: 'kaise ho' means 'how are you', 'tum kaun ho' means 'who are you', and 'mera naam' means 'my name is'. "
                 "Never misinterpret Hinglish words as English medical terms. "
@@ -726,7 +743,7 @@ class AuraTUI(App):
             generation_kwargs = dict(
                 inputs,
                 streamer=streamer,
-                max_new_tokens=90,
+                max_new_tokens=max_tokens,
                 do_sample=True,
                 temperature=0.6,
                 top_p=0.85
