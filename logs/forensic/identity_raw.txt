@@ -1,0 +1,279 @@
+# model_identity.py - zero-trust per-tensor forensic listing
+# generated: 2026-09-24T07:58:09+00:00
+# scheme: sha256 prefix = first 16 hex chars of per-tensor sha256 (key|dtype|shape|raw_bytes); raw prefix = sha256(raw_bytes only)
+#
+# CKPT tensors (checkpoint state dict, hashed from loaded bytes)
+TYPE	KEY	SHAPE	NUMEL	DTYPE	SHA256_16	RAW_SHA256_16
+CKPT	lm_head.weight	[10240,768]	7864320	torch.float32	23d49d39729b615e	2ca0453dd594b2d1
+CKPT	model.embed_tokens.weight	[10240,768]	7864320	torch.float32	d728eeb669eba025	180a3839cae13ffe
+CKPT	model.layers.0.input_layernorm.weight	[768]	768	torch.float32	c93ee92217833a4f	2ac8370381f19610
+CKPT	model.layers.0.mlp.down_proj.weight	[768,3072]	2359296	torch.float32	433a66bc63dcbf51	971991d1434ba705
+CKPT	model.layers.0.mlp.gate_proj.weight	[3072,768]	2359296	torch.float32	c68e1cbdc82c9d2d	eafa88c6c8986ef7
+CKPT	model.layers.0.mlp.up_proj.weight	[3072,768]	2359296	torch.float32	8004ed8916c08910	cdbc385b212c1a79
+CKPT	model.layers.0.post_attention_layernorm.weight	[768]	768	torch.float32	7a1e54a0d37f625a	caf791b6bb116fb2
+CKPT	model.layers.0.self_attn.k_proj.bias	[256]	256	torch.float32	bfc7b8087036cc80	9524182702894477
+CKPT	model.layers.0.self_attn.k_proj.weight	[256,768]	196608	torch.float32	7c64d96f7c3f8742	c2832cd474bc74f2
+CKPT	model.layers.0.self_attn.o_proj.weight	[768,768]	589824	torch.float32	4289b6f0faafd92b	fa93369659090816
+CKPT	model.layers.0.self_attn.q_proj.bias	[768]	768	torch.float32	e8fe76973adf40a1	d84762079e0e7549
+CKPT	model.layers.0.self_attn.q_proj.weight	[768,768]	589824	torch.float32	bb0b02c2d608021b	a0c364fa043ce1ed
+CKPT	model.layers.0.self_attn.v_proj.bias	[256]	256	torch.float32	e64c90e0a4a09f16	af9769ea2a0e5e2a
+CKPT	model.layers.0.self_attn.v_proj.weight	[256,768]	196608	torch.float32	8aa0c1481c6342b7	9d5d4b26c0337500
+CKPT	model.layers.1.input_layernorm.weight	[768]	768	torch.float32	9550c7b95af9e800	796b9f3898f8b921
+CKPT	model.layers.1.mlp.down_proj.weight	[768,3072]	2359296	torch.float32	21bb929d38fb60a7	e8d7a8c3f8798dd8
+CKPT	model.layers.1.mlp.gate_proj.weight	[3072,768]	2359296	torch.float32	dbc2547ebe3ef683	7243c961b4a90a97
+CKPT	model.layers.1.mlp.up_proj.weight	[3072,768]	2359296	torch.float32	bc02ccb53d255e50	d4a64cb5955cd453
+CKPT	model.layers.1.post_attention_layernorm.weight	[768]	768	torch.float32	5121af0b4f38a2e9	bb7009c5ee5a986a
+CKPT	model.layers.1.self_attn.k_proj.bias	[256]	256	torch.float32	73697d512c0d17f8	39f5a1e29a1b7ba3
+CKPT	model.layers.1.self_attn.k_proj.weight	[256,768]	196608	torch.float32	c19c82ab61ebcd85	4ff7c3ad619ee55e
+CKPT	model.layers.1.self_attn.o_proj.weight	[768,768]	589824	torch.float32	560405921ecbcc57	a570611bdd8b9e06
+CKPT	model.layers.1.self_attn.q_proj.bias	[768]	768	torch.float32	8e124611f5fc6e0c	3f67614642f4a807
+CKPT	model.layers.1.self_attn.q_proj.weight	[768,768]	589824	torch.float32	8e26fff289486137	37e702234d931927
+CKPT	model.layers.1.self_attn.v_proj.bias	[256]	256	torch.float32	31186863bf5b99b2	2e5a81b503482ce8
+CKPT	model.layers.1.self_attn.v_proj.weight	[256,768]	196608	torch.float32	4498caadedc55fa7	81ca51e2c3e854e0
+CKPT	model.layers.10.input_layernorm.weight	[768]	768	torch.float32	0c14f1d3d91f1e67	9426593270733df0
+CKPT	model.layers.10.mlp.down_proj.weight	[768,3072]	2359296	torch.float32	8f443b8f0064df93	9cf7d30e062c562d
+CKPT	model.layers.10.mlp.gate_proj.weight	[3072,768]	2359296	torch.float32	06896058fe07c71d	1719948048f75352
+CKPT	model.layers.10.mlp.up_proj.weight	[3072,768]	2359296	torch.float32	b4f17a6d2406722b	97b15a9b1a99624f
+CKPT	model.layers.10.post_attention_layernorm.weight	[768]	768	torch.float32	574c0ac978b10af8	d8fd83cb0e93d1d6
+CKPT	model.layers.10.self_attn.k_proj.bias	[256]	256	torch.float32	1b9543934ad34cca	4778bd40fe088aa6
+CKPT	model.layers.10.self_attn.k_proj.weight	[256,768]	196608	torch.float32	9ac7e637fbf55630	99d9bfa989213997
+CKPT	model.layers.10.self_attn.o_proj.weight	[768,768]	589824	torch.float32	732d49f43975c877	0850a0b73019410d
+CKPT	model.layers.10.self_attn.q_proj.bias	[768]	768	torch.float32	17afc2a31c849e7b	f7bac45667cf2d41
+CKPT	model.layers.10.self_attn.q_proj.weight	[768,768]	589824	torch.float32	a425be3fce024edc	d83b4023ad94adb3
+CKPT	model.layers.10.self_attn.v_proj.bias	[256]	256	torch.float32	bcfb2f8eee614258	449c3597bd2618a5
+CKPT	model.layers.10.self_attn.v_proj.weight	[256,768]	196608	torch.float32	903e41dcbdba83ea	f7a46e4d53c69b03
+CKPT	model.layers.2.input_layernorm.weight	[768]	768	torch.float32	aa11cfda526fd7a5	9e6b293370ce0428
+CKPT	model.layers.2.mlp.down_proj.weight	[768,3072]	2359296	torch.float32	843480df81a1585a	cc058bc58286f0e8
+CKPT	model.layers.2.mlp.gate_proj.weight	[3072,768]	2359296	torch.float32	3f69dab9fe60ced8	4b26d6607318a242
+CKPT	model.layers.2.mlp.up_proj.weight	[3072,768]	2359296	torch.float32	49e838aeb0a23029	6050fb00fd474118
+CKPT	model.layers.2.post_attention_layernorm.weight	[768]	768	torch.float32	f249d4ddaacc9e0d	074555806402c90d
+CKPT	model.layers.2.self_attn.k_proj.bias	[256]	256	torch.float32	ae8d7b0e2ebf6e19	9af8cc4938f35bb8
+CKPT	model.layers.2.self_attn.k_proj.weight	[256,768]	196608	torch.float32	7c2d819197a06354	0b375a01d7e187d9
+CKPT	model.layers.2.self_attn.o_proj.weight	[768,768]	589824	torch.float32	8ce5a991a1afdcdf	96285203f49fa306
+CKPT	model.layers.2.self_attn.q_proj.bias	[768]	768	torch.float32	b02828bb374f125a	1820728721e94e70
+CKPT	model.layers.2.self_attn.q_proj.weight	[768,768]	589824	torch.float32	f57c4db86164b268	1b8988cef322a024
+CKPT	model.layers.2.self_attn.v_proj.bias	[256]	256	torch.float32	8853237d6dd48ec7	81b663d171d61bb5
+CKPT	model.layers.2.self_attn.v_proj.weight	[256,768]	196608	torch.float32	d5122dbf027c6d32	71c1ef5deb3adc2c
+CKPT	model.layers.3.input_layernorm.weight	[768]	768	torch.float32	426d75b2338749d5	35451f37eef39be1
+CKPT	model.layers.3.mlp.down_proj.weight	[768,3072]	2359296	torch.float32	3000780074726903	957cdbfdd158b10f
+CKPT	model.layers.3.mlp.gate_proj.weight	[3072,768]	2359296	torch.float32	84507cddbdeb903c	c1c9963a3188ef8d
+CKPT	model.layers.3.mlp.up_proj.weight	[3072,768]	2359296	torch.float32	bdb4cd5deb987aaf	8b232d778dec3640
+CKPT	model.layers.3.post_attention_layernorm.weight	[768]	768	torch.float32	ac7f72fac0749138	cf2485e50a1816d5
+CKPT	model.layers.3.self_attn.k_proj.bias	[256]	256	torch.float32	a261c7f3914ad82c	1f11d37d8fcf4d1d
+CKPT	model.layers.3.self_attn.k_proj.weight	[256,768]	196608	torch.float32	2aad396f839d4897	a679ec26fc356f4a
+CKPT	model.layers.3.self_attn.o_proj.weight	[768,768]	589824	torch.float32	02eed53a9d5f2524	6bcc4eb1c65ad282
+CKPT	model.layers.3.self_attn.q_proj.bias	[768]	768	torch.float32	999ca2f0374dede8	4377f05c5b3127e3
+CKPT	model.layers.3.self_attn.q_proj.weight	[768,768]	589824	torch.float32	c13fc064f472b8a1	c219b95bf6af104d
+CKPT	model.layers.3.self_attn.v_proj.bias	[256]	256	torch.float32	7973720bec4f29c3	b834a4efdbcef97b
+CKPT	model.layers.3.self_attn.v_proj.weight	[256,768]	196608	torch.float32	cb64f8cde0e32b31	e71b139554d63742
+CKPT	model.layers.4.input_layernorm.weight	[768]	768	torch.float32	346e619e15efcb70	dc391208ba02eef4
+CKPT	model.layers.4.mlp.down_proj.weight	[768,3072]	2359296	torch.float32	5d39f42a75b46921	2306fe9e6ec1798d
+CKPT	model.layers.4.mlp.gate_proj.weight	[3072,768]	2359296	torch.float32	f0e6e9f4489351b0	6be0fa31a50ce3df
+CKPT	model.layers.4.mlp.up_proj.weight	[3072,768]	2359296	torch.float32	cc8c47a50e1456c0	91c749b97cb063bf
+CKPT	model.layers.4.post_attention_layernorm.weight	[768]	768	torch.float32	feebacc6a9e3c9cd	e70586870e5409a4
+CKPT	model.layers.4.self_attn.k_proj.bias	[256]	256	torch.float32	3934d8c2e920fcb1	5f8eab6213f2a1fd
+CKPT	model.layers.4.self_attn.k_proj.weight	[256,768]	196608	torch.float32	9e64209b7966a303	3125c5e10ad048a9
+CKPT	model.layers.4.self_attn.o_proj.weight	[768,768]	589824	torch.float32	96452f16785ca9e4	3fc90f5ece21a00f
+CKPT	model.layers.4.self_attn.q_proj.bias	[768]	768	torch.float32	c7d1c125423a1d04	d51d800e4e7e7a64
+CKPT	model.layers.4.self_attn.q_proj.weight	[768,768]	589824	torch.float32	fb28d53b2d2b48f2	7586379ce56b8dec
+CKPT	model.layers.4.self_attn.v_proj.bias	[256]	256	torch.float32	0aae0be2a004de4b	6708ff0811b7afee
+CKPT	model.layers.4.self_attn.v_proj.weight	[256,768]	196608	torch.float32	77940dc796c133e6	6df53e9284c1dcbb
+CKPT	model.layers.5.input_layernorm.weight	[768]	768	torch.float32	16585a716d86969a	03f31c4b2041b8f7
+CKPT	model.layers.5.mlp.down_proj.weight	[768,3072]	2359296	torch.float32	b8d8e851c8f2e4ce	63cee6e5171567c2
+CKPT	model.layers.5.mlp.gate_proj.weight	[3072,768]	2359296	torch.float32	1cce4f12efbaf418	f3c30c7ae9626cff
+CKPT	model.layers.5.mlp.up_proj.weight	[3072,768]	2359296	torch.float32	04056f9adb9b0824	249f9f9257adcc73
+CKPT	model.layers.5.post_attention_layernorm.weight	[768]	768	torch.float32	45787bc6a987a32e	9162ff42501fce52
+CKPT	model.layers.5.self_attn.k_proj.bias	[256]	256	torch.float32	8765f3b799915c74	df4a2c57f483df4f
+CKPT	model.layers.5.self_attn.k_proj.weight	[256,768]	196608	torch.float32	68d9598ab0ba8616	2f85aee72ce170cc
+CKPT	model.layers.5.self_attn.o_proj.weight	[768,768]	589824	torch.float32	8c42bd54c6204f99	f555de963bf467ca
+CKPT	model.layers.5.self_attn.q_proj.bias	[768]	768	torch.float32	762787ac65007575	55215eb12ce72a98
+CKPT	model.layers.5.self_attn.q_proj.weight	[768,768]	589824	torch.float32	56d58b1aa098a00b	60d38da3b2a4e367
+CKPT	model.layers.5.self_attn.v_proj.bias	[256]	256	torch.float32	cf60bb18a4029954	4f8bddbff21df31d
+CKPT	model.layers.5.self_attn.v_proj.weight	[256,768]	196608	torch.float32	360635fca035d652	11e763ed7af2aadf
+CKPT	model.layers.6.input_layernorm.weight	[768]	768	torch.float32	5992884108ca1fae	7a7dbc8c37e2b56f
+CKPT	model.layers.6.mlp.down_proj.weight	[768,3072]	2359296	torch.float32	d11c13ca1b4404f0	66e279481eadb8db
+CKPT	model.layers.6.mlp.gate_proj.weight	[3072,768]	2359296	torch.float32	971da89d2fce51f3	5dd7df3042f5b63e
+CKPT	model.layers.6.mlp.up_proj.weight	[3072,768]	2359296	torch.float32	c9cd9cf3801822e4	1a796a04c5f3c0ef
+CKPT	model.layers.6.post_attention_layernorm.weight	[768]	768	torch.float32	ece3373a69450fe0	f8e4f678219a08b5
+CKPT	model.layers.6.self_attn.k_proj.bias	[256]	256	torch.float32	3eae8fe0ff28b4a6	5a551a6ca4e3271d
+CKPT	model.layers.6.self_attn.k_proj.weight	[256,768]	196608	torch.float32	5fff4da901168454	625a41ad41160838
+CKPT	model.layers.6.self_attn.o_proj.weight	[768,768]	589824	torch.float32	b73c2af7c459e884	e73d163de9c0d2ac
+CKPT	model.layers.6.self_attn.q_proj.bias	[768]	768	torch.float32	ea133aec76dbe698	9473c75e5bac00d6
+CKPT	model.layers.6.self_attn.q_proj.weight	[768,768]	589824	torch.float32	84f611000daed5f8	00c83a29a7a702f6
+CKPT	model.layers.6.self_attn.v_proj.bias	[256]	256	torch.float32	aba7976a36f7d554	5eeb1fde7e138acd
+CKPT	model.layers.6.self_attn.v_proj.weight	[256,768]	196608	torch.float32	5cb282589629bac5	7d5fec9d7cd2d6c4
+CKPT	model.layers.7.input_layernorm.weight	[768]	768	torch.float32	47fe05c7bc809571	eef728394283989a
+CKPT	model.layers.7.mlp.down_proj.weight	[768,3072]	2359296	torch.float32	092fafc39c3fafc3	f387b8d14e76b876
+CKPT	model.layers.7.mlp.gate_proj.weight	[3072,768]	2359296	torch.float32	56c632d2b1fc8ea1	f04902703fafefe0
+CKPT	model.layers.7.mlp.up_proj.weight	[3072,768]	2359296	torch.float32	b5afeff59ebd6c0d	16a71382a14f5f8b
+CKPT	model.layers.7.post_attention_layernorm.weight	[768]	768	torch.float32	d6e9e63b9ef965f0	31574a7454d78f16
+CKPT	model.layers.7.self_attn.k_proj.bias	[256]	256	torch.float32	1149e90ecedacd2d	ca8fd254e506cbc5
+CKPT	model.layers.7.self_attn.k_proj.weight	[256,768]	196608	torch.float32	e1885ad60e11823d	86b5e5abc2210257
+CKPT	model.layers.7.self_attn.o_proj.weight	[768,768]	589824	torch.float32	bdbd7e8c3fe2dfda	82e61eb96140b063
+CKPT	model.layers.7.self_attn.q_proj.bias	[768]	768	torch.float32	7c310a1f785645e5	7cd6dcdc54e02291
+CKPT	model.layers.7.self_attn.q_proj.weight	[768,768]	589824	torch.float32	7287ee00b7757224	80b0aa6f096117f8
+CKPT	model.layers.7.self_attn.v_proj.bias	[256]	256	torch.float32	9871191ade0c0fe3	d558fd2ba81850e5
+CKPT	model.layers.7.self_attn.v_proj.weight	[256,768]	196608	torch.float32	1fdcf89511e188a9	f360d89244c822f2
+CKPT	model.layers.8.input_layernorm.weight	[768]	768	torch.float32	66c6d66257659221	2a9d46f0cbbd7f8a
+CKPT	model.layers.8.mlp.down_proj.weight	[768,3072]	2359296	torch.float32	758aae536daa6d8e	3afebdcc1a9d2ccc
+CKPT	model.layers.8.mlp.gate_proj.weight	[3072,768]	2359296	torch.float32	980befa748356311	51c7c93d7f799a0d
+CKPT	model.layers.8.mlp.up_proj.weight	[3072,768]	2359296	torch.float32	17e83abf5f3dd5bb	4f32e7920723b100
+CKPT	model.layers.8.post_attention_layernorm.weight	[768]	768	torch.float32	8a92910379416e93	2b2c30324cacc497
+CKPT	model.layers.8.self_attn.k_proj.bias	[256]	256	torch.float32	0756ce360b2da0fa	5de2b3c084ab8232
+CKPT	model.layers.8.self_attn.k_proj.weight	[256,768]	196608	torch.float32	fc52c975f6a531ee	9321950505b53d8b
+CKPT	model.layers.8.self_attn.o_proj.weight	[768,768]	589824	torch.float32	c0c27f35db7f8356	80d24c6bdd10ff73
+CKPT	model.layers.8.self_attn.q_proj.bias	[768]	768	torch.float32	c82ed96aa84e2b5c	2ab11da5a644fbb5
+CKPT	model.layers.8.self_attn.q_proj.weight	[768,768]	589824	torch.float32	d32e5794df0d2b97	699afcc387c35316
+CKPT	model.layers.8.self_attn.v_proj.bias	[256]	256	torch.float32	f9a93d39889d64d6	26991cf4fa17b5f9
+CKPT	model.layers.8.self_attn.v_proj.weight	[256,768]	196608	torch.float32	5195d3655b47e4d5	d6b3b5a517224dac
+CKPT	model.layers.9.input_layernorm.weight	[768]	768	torch.float32	b45748d80b911d03	773790352c619a26
+CKPT	model.layers.9.mlp.down_proj.weight	[768,3072]	2359296	torch.float32	1449dff5afde7ad2	fa5cc5ea096998ca
+CKPT	model.layers.9.mlp.gate_proj.weight	[3072,768]	2359296	torch.float32	b326a20cf5475b83	215f6a799ad78fa5
+CKPT	model.layers.9.mlp.up_proj.weight	[3072,768]	2359296	torch.float32	75c3fa85ce94f539	7e51a82e583d606e
+CKPT	model.layers.9.post_attention_layernorm.weight	[768]	768	torch.float32	7d37da2d24562001	17c3f7f1a1d8ef31
+CKPT	model.layers.9.self_attn.k_proj.bias	[256]	256	torch.float32	e3a0019ecc027b30	e5c632098841bd3b
+CKPT	model.layers.9.self_attn.k_proj.weight	[256,768]	196608	torch.float32	34afa5f80bf2f88f	0181b894b14f36a7
+CKPT	model.layers.9.self_attn.o_proj.weight	[768,768]	589824	torch.float32	0adafc9f0376d516	8f9a1d79b18d6c09
+CKPT	model.layers.9.self_attn.q_proj.bias	[768]	768	torch.float32	398bc4b997fc8d55	ab6cea2f3fa8e571
+CKPT	model.layers.9.self_attn.q_proj.weight	[768,768]	589824	torch.float32	830a9721771d6c18	ff2ad0a88ec99eff
+CKPT	model.layers.9.self_attn.v_proj.bias	[256]	256	torch.float32	2deb3ec37bb2be0a	8aa02dc750748e39
+CKPT	model.layers.9.self_attn.v_proj.weight	[256,768]	196608	torch.float32	70cb6e8549229d44	599eeeac62db2570
+CKPT	model.norm.weight	[768]	768	torch.float32	7a00e2430d25c496	c99d1a3d833212c5
+
+# EXPORT tensors (safetensors header only; data not loaded except spot checks)
+TYPE	KEY	SHAPE	NUMEL	DTYPE	OFFSETS	META_SHA256_16
+EXPORT	lm_head.weight	[10240,768]	7864320	F32	[0, 31457280]	d989e9fea99063ca
+EXPORT	model.embed_tokens.weight	[10240,768]	7864320	F32	[31457280, 62914560]	0845885504eff8b2
+EXPORT	model.layers.0.input_layernorm.weight	[768]	768	F32	[62914560, 62917632]	52f7512ead4ac5c6
+EXPORT	model.layers.0.mlp.down_proj.weight	[768,3072]	2359296	F32	[62917632, 72354816]	2115b955819ea07b
+EXPORT	model.layers.0.mlp.gate_proj.weight	[3072,768]	2359296	F32	[72354816, 81792000]	7878004765876561
+EXPORT	model.layers.0.mlp.up_proj.weight	[3072,768]	2359296	F32	[81792000, 91229184]	9b7493be83447b56
+EXPORT	model.layers.0.post_attention_layernorm.weight	[768]	768	F32	[91229184, 91232256]	a331945b22419759
+EXPORT	model.layers.0.self_attn.k_proj.bias	[256]	256	F32	[91232256, 91233280]	4efd38bd1cf0c019
+EXPORT	model.layers.0.self_attn.k_proj.weight	[256,768]	196608	F32	[91233280, 92019712]	8cb051daf9e56475
+EXPORT	model.layers.0.self_attn.o_proj.weight	[768,768]	589824	F32	[92019712, 94379008]	b831da2dfbf3013a
+EXPORT	model.layers.0.self_attn.q_proj.bias	[768]	768	F32	[94379008, 94382080]	f8c120646adb12ec
+EXPORT	model.layers.0.self_attn.q_proj.weight	[768,768]	589824	F32	[94382080, 96741376]	ed77a0fa4f2afdb6
+EXPORT	model.layers.0.self_attn.v_proj.bias	[256]	256	F32	[96741376, 96742400]	385d23ad5a0cc15f
+EXPORT	model.layers.0.self_attn.v_proj.weight	[256,768]	196608	F32	[96742400, 97528832]	78358d4d347edfcb
+EXPORT	model.layers.1.input_layernorm.weight	[768]	768	F32	[97528832, 97531904]	9e86f29087fe00fe
+EXPORT	model.layers.1.mlp.down_proj.weight	[768,3072]	2359296	F32	[97531904, 106969088]	481c8b981cb140c4
+EXPORT	model.layers.1.mlp.gate_proj.weight	[3072,768]	2359296	F32	[106969088, 116406272]	cfcc7da63b931772
+EXPORT	model.layers.1.mlp.up_proj.weight	[3072,768]	2359296	F32	[116406272, 125843456]	6f14230876f6d765
+EXPORT	model.layers.1.post_attention_layernorm.weight	[768]	768	F32	[125843456, 125846528]	e47d829989785627
+EXPORT	model.layers.1.self_attn.k_proj.bias	[256]	256	F32	[125846528, 125847552]	20c57eb1b137ce00
+EXPORT	model.layers.1.self_attn.k_proj.weight	[256,768]	196608	F32	[125847552, 126633984]	266e8e4f04cad09c
+EXPORT	model.layers.1.self_attn.o_proj.weight	[768,768]	589824	F32	[126633984, 128993280]	d7dc9777f062f2c7
+EXPORT	model.layers.1.self_attn.q_proj.bias	[768]	768	F32	[128993280, 128996352]	1544213e9160456f
+EXPORT	model.layers.1.self_attn.q_proj.weight	[768,768]	589824	F32	[128996352, 131355648]	3507321d667962fa
+EXPORT	model.layers.1.self_attn.v_proj.bias	[256]	256	F32	[131355648, 131356672]	6ea53f373a02fdbf
+EXPORT	model.layers.1.self_attn.v_proj.weight	[256,768]	196608	F32	[131356672, 132143104]	21f79fd1c35744e7
+EXPORT	model.layers.10.input_layernorm.weight	[768]	768	F32	[132143104, 132146176]	ecc6405faa6fec3f
+EXPORT	model.layers.10.mlp.down_proj.weight	[768,3072]	2359296	F32	[132146176, 141583360]	cffe6e5c01af3d79
+EXPORT	model.layers.10.mlp.gate_proj.weight	[3072,768]	2359296	F32	[141583360, 151020544]	899213b824fa08d4
+EXPORT	model.layers.10.mlp.up_proj.weight	[3072,768]	2359296	F32	[151020544, 160457728]	a3ec0f0849e82ec4
+EXPORT	model.layers.10.post_attention_layernorm.weight	[768]	768	F32	[160457728, 160460800]	f28bd21cd42e2e2c
+EXPORT	model.layers.10.self_attn.k_proj.bias	[256]	256	F32	[160460800, 160461824]	560bd9fcb2acf078
+EXPORT	model.layers.10.self_attn.k_proj.weight	[256,768]	196608	F32	[160461824, 161248256]	ada109478f826a37
+EXPORT	model.layers.10.self_attn.o_proj.weight	[768,768]	589824	F32	[161248256, 163607552]	4fbd669338ea49e6
+EXPORT	model.layers.10.self_attn.q_proj.bias	[768]	768	F32	[163607552, 163610624]	3f0db7033ebd2414
+EXPORT	model.layers.10.self_attn.q_proj.weight	[768,768]	589824	F32	[163610624, 165969920]	cd4cac43f78baf65
+EXPORT	model.layers.10.self_attn.v_proj.bias	[256]	256	F32	[165969920, 165970944]	25814bde99b8ab3d
+EXPORT	model.layers.10.self_attn.v_proj.weight	[256,768]	196608	F32	[165970944, 166757376]	8867acdeef11b62e
+EXPORT	model.layers.2.input_layernorm.weight	[768]	768	F32	[166757376, 166760448]	c67edd16e201c899
+EXPORT	model.layers.2.mlp.down_proj.weight	[768,3072]	2359296	F32	[166760448, 176197632]	be406ca771fffced
+EXPORT	model.layers.2.mlp.gate_proj.weight	[3072,768]	2359296	F32	[176197632, 185634816]	7e4fb47be257c003
+EXPORT	model.layers.2.mlp.up_proj.weight	[3072,768]	2359296	F32	[185634816, 195072000]	745bbbccfb2f22f1
+EXPORT	model.layers.2.post_attention_layernorm.weight	[768]	768	F32	[195072000, 195075072]	960068a161ce6d4a
+EXPORT	model.layers.2.self_attn.k_proj.bias	[256]	256	F32	[195075072, 195076096]	01aab404e919d853
+EXPORT	model.layers.2.self_attn.k_proj.weight	[256,768]	196608	F32	[195076096, 195862528]	edfe3f3808c66568
+EXPORT	model.layers.2.self_attn.o_proj.weight	[768,768]	589824	F32	[195862528, 198221824]	5dd8cd03f4d44ef1
+EXPORT	model.layers.2.self_attn.q_proj.bias	[768]	768	F32	[198221824, 198224896]	8906708003d0d7aa
+EXPORT	model.layers.2.self_attn.q_proj.weight	[768,768]	589824	F32	[198224896, 200584192]	9c87b9a1313fd2cb
+EXPORT	model.layers.2.self_attn.v_proj.bias	[256]	256	F32	[200584192, 200585216]	c2505f757b530663
+EXPORT	model.layers.2.self_attn.v_proj.weight	[256,768]	196608	F32	[200585216, 201371648]	902638805ca1a90f
+EXPORT	model.layers.3.input_layernorm.weight	[768]	768	F32	[201371648, 201374720]	bd06a7c41b1b8537
+EXPORT	model.layers.3.mlp.down_proj.weight	[768,3072]	2359296	F32	[201374720, 210811904]	709be5771be50ea9
+EXPORT	model.layers.3.mlp.gate_proj.weight	[3072,768]	2359296	F32	[210811904, 220249088]	d083f74f12ea20f3
+EXPORT	model.layers.3.mlp.up_proj.weight	[3072,768]	2359296	F32	[220249088, 229686272]	05ca0ab9f337e777
+EXPORT	model.layers.3.post_attention_layernorm.weight	[768]	768	F32	[229686272, 229689344]	a5b784991c3da20d
+EXPORT	model.layers.3.self_attn.k_proj.bias	[256]	256	F32	[229689344, 229690368]	bc82d6506b904697
+EXPORT	model.layers.3.self_attn.k_proj.weight	[256,768]	196608	F32	[229690368, 230476800]	524b94b5caa472e7
+EXPORT	model.layers.3.self_attn.o_proj.weight	[768,768]	589824	F32	[230476800, 232836096]	a11f08cdcee35dd8
+EXPORT	model.layers.3.self_attn.q_proj.bias	[768]	768	F32	[232836096, 232839168]	fe59c54e9d9ff341
+EXPORT	model.layers.3.self_attn.q_proj.weight	[768,768]	589824	F32	[232839168, 235198464]	bad8498ba480d0bb
+EXPORT	model.layers.3.self_attn.v_proj.bias	[256]	256	F32	[235198464, 235199488]	d1166823bd39a7ce
+EXPORT	model.layers.3.self_attn.v_proj.weight	[256,768]	196608	F32	[235199488, 235985920]	b3ded890312e14bf
+EXPORT	model.layers.4.input_layernorm.weight	[768]	768	F32	[235985920, 235988992]	8565e576d68421cf
+EXPORT	model.layers.4.mlp.down_proj.weight	[768,3072]	2359296	F32	[235988992, 245426176]	c0f8ee73af3f55fa
+EXPORT	model.layers.4.mlp.gate_proj.weight	[3072,768]	2359296	F32	[245426176, 254863360]	c32a32a94c06093b
+EXPORT	model.layers.4.mlp.up_proj.weight	[3072,768]	2359296	F32	[254863360, 264300544]	9d2aeab8ab97d76e
+EXPORT	model.layers.4.post_attention_layernorm.weight	[768]	768	F32	[264300544, 264303616]	acdb5adbfef209b1
+EXPORT	model.layers.4.self_attn.k_proj.bias	[256]	256	F32	[264303616, 264304640]	f20c37b04771f3ed
+EXPORT	model.layers.4.self_attn.k_proj.weight	[256,768]	196608	F32	[264304640, 265091072]	8c52925aba102d88
+EXPORT	model.layers.4.self_attn.o_proj.weight	[768,768]	589824	F32	[265091072, 267450368]	a67c62eed0188b66
+EXPORT	model.layers.4.self_attn.q_proj.bias	[768]	768	F32	[267450368, 267453440]	3808fceb5a6c4c7f
+EXPORT	model.layers.4.self_attn.q_proj.weight	[768,768]	589824	F32	[267453440, 269812736]	aab1fc51fe20b11c
+EXPORT	model.layers.4.self_attn.v_proj.bias	[256]	256	F32	[269812736, 269813760]	fefb75718133f6d0
+EXPORT	model.layers.4.self_attn.v_proj.weight	[256,768]	196608	F32	[269813760, 270600192]	110334ed2feba000
+EXPORT	model.layers.5.input_layernorm.weight	[768]	768	F32	[270600192, 270603264]	ec707ae738d420bc
+EXPORT	model.layers.5.mlp.down_proj.weight	[768,3072]	2359296	F32	[270603264, 280040448]	00f3e5a123c3be22
+EXPORT	model.layers.5.mlp.gate_proj.weight	[3072,768]	2359296	F32	[280040448, 289477632]	0c57d1e0b426925f
+EXPORT	model.layers.5.mlp.up_proj.weight	[3072,768]	2359296	F32	[289477632, 298914816]	aac1c26dde5bb338
+EXPORT	model.layers.5.post_attention_layernorm.weight	[768]	768	F32	[298914816, 298917888]	269d52472721359e
+EXPORT	model.layers.5.self_attn.k_proj.bias	[256]	256	F32	[298917888, 298918912]	b9951ddacf98ec8d
+EXPORT	model.layers.5.self_attn.k_proj.weight	[256,768]	196608	F32	[298918912, 299705344]	2dd91364002480d6
+EXPORT	model.layers.5.self_attn.o_proj.weight	[768,768]	589824	F32	[299705344, 302064640]	c63d2ebd1ec98e73
+EXPORT	model.layers.5.self_attn.q_proj.bias	[768]	768	F32	[302064640, 302067712]	d5008c87b743304d
+EXPORT	model.layers.5.self_attn.q_proj.weight	[768,768]	589824	F32	[302067712, 304427008]	f61f226fe4eded76
+EXPORT	model.layers.5.self_attn.v_proj.bias	[256]	256	F32	[304427008, 304428032]	0c7371ba54d48d2f
+EXPORT	model.layers.5.self_attn.v_proj.weight	[256,768]	196608	F32	[304428032, 305214464]	68345a2d43bc2834
+EXPORT	model.layers.6.input_layernorm.weight	[768]	768	F32	[305214464, 305217536]	318140149ed5be8c
+EXPORT	model.layers.6.mlp.down_proj.weight	[768,3072]	2359296	F32	[305217536, 314654720]	23184cb7a3c98899
+EXPORT	model.layers.6.mlp.gate_proj.weight	[3072,768]	2359296	F32	[314654720, 324091904]	6001a8f86ef89978
+EXPORT	model.layers.6.mlp.up_proj.weight	[3072,768]	2359296	F32	[324091904, 333529088]	020a3c99f4e1b5f8
+EXPORT	model.layers.6.post_attention_layernorm.weight	[768]	768	F32	[333529088, 333532160]	cfa5127f6e475e2b
+EXPORT	model.layers.6.self_attn.k_proj.bias	[256]	256	F32	[333532160, 333533184]	2766610e29af2ade
+EXPORT	model.layers.6.self_attn.k_proj.weight	[256,768]	196608	F32	[333533184, 334319616]	6f360e281d74f693
+EXPORT	model.layers.6.self_attn.o_proj.weight	[768,768]	589824	F32	[334319616, 336678912]	89e6e8887283a362
+EXPORT	model.layers.6.self_attn.q_proj.bias	[768]	768	F32	[336678912, 336681984]	4c8748e5daef0d6a
+EXPORT	model.layers.6.self_attn.q_proj.weight	[768,768]	589824	F32	[336681984, 339041280]	23bc4b19b425d59e
+EXPORT	model.layers.6.self_attn.v_proj.bias	[256]	256	F32	[339041280, 339042304]	7513747749303d65
+EXPORT	model.layers.6.self_attn.v_proj.weight	[256,768]	196608	F32	[339042304, 339828736]	10aeb8a5397fc628
+EXPORT	model.layers.7.input_layernorm.weight	[768]	768	F32	[339828736, 339831808]	515fdffe928f5c45
+EXPORT	model.layers.7.mlp.down_proj.weight	[768,3072]	2359296	F32	[339831808, 349268992]	103db3d68176f7d8
+EXPORT	model.layers.7.mlp.gate_proj.weight	[3072,768]	2359296	F32	[349268992, 358706176]	2a902454b26af719
+EXPORT	model.layers.7.mlp.up_proj.weight	[3072,768]	2359296	F32	[358706176, 368143360]	ddef5bc8ea76d2b7
+EXPORT	model.layers.7.post_attention_layernorm.weight	[768]	768	F32	[368143360, 368146432]	2c18558a9e64a796
+EXPORT	model.layers.7.self_attn.k_proj.bias	[256]	256	F32	[368146432, 368147456]	0a584e4a30967cc3
+EXPORT	model.layers.7.self_attn.k_proj.weight	[256,768]	196608	F32	[368147456, 368933888]	bc38158199580122
+EXPORT	model.layers.7.self_attn.o_proj.weight	[768,768]	589824	F32	[368933888, 371293184]	0ba9a2608be296dc
+EXPORT	model.layers.7.self_attn.q_proj.bias	[768]	768	F32	[371293184, 371296256]	869fce2de27777c6
+EXPORT	model.layers.7.self_attn.q_proj.weight	[768,768]	589824	F32	[371296256, 373655552]	74b5fa7b9c9d4b12
+EXPORT	model.layers.7.self_attn.v_proj.bias	[256]	256	F32	[373655552, 373656576]	577df5f3e4cd3016
+EXPORT	model.layers.7.self_attn.v_proj.weight	[256,768]	196608	F32	[373656576, 374443008]	35854d8c5f4a93ff
+EXPORT	model.layers.8.input_layernorm.weight	[768]	768	F32	[374443008, 374446080]	9ea73083cb981d6d
+EXPORT	model.layers.8.mlp.down_proj.weight	[768,3072]	2359296	F32	[374446080, 383883264]	739de2a426dfd574
+EXPORT	model.layers.8.mlp.gate_proj.weight	[3072,768]	2359296	F32	[383883264, 393320448]	d4f45ce4c5f15669
+EXPORT	model.layers.8.mlp.up_proj.weight	[3072,768]	2359296	F32	[393320448, 402757632]	448234685008328d
+EXPORT	model.layers.8.post_attention_layernorm.weight	[768]	768	F32	[402757632, 402760704]	1b36992cd41978f3
+EXPORT	model.layers.8.self_attn.k_proj.bias	[256]	256	F32	[402760704, 402761728]	1b768852e1198e27
+EXPORT	model.layers.8.self_attn.k_proj.weight	[256,768]	196608	F32	[402761728, 403548160]	60cba548acffd6ea
+EXPORT	model.layers.8.self_attn.o_proj.weight	[768,768]	589824	F32	[403548160, 405907456]	f84bccd3e0875290
+EXPORT	model.layers.8.self_attn.q_proj.bias	[768]	768	F32	[405907456, 405910528]	d4f7b1a249ff3e86
+EXPORT	model.layers.8.self_attn.q_proj.weight	[768,768]	589824	F32	[405910528, 408269824]	a3baa8e9cbb7e36d
+EXPORT	model.layers.8.self_attn.v_proj.bias	[256]	256	F32	[408269824, 408270848]	b53c29193e15d7d9
+EXPORT	model.layers.8.self_attn.v_proj.weight	[256,768]	196608	F32	[408270848, 409057280]	c170ad397410e70e
+EXPORT	model.layers.9.input_layernorm.weight	[768]	768	F32	[409057280, 409060352]	5d6185f2b8037147
+EXPORT	model.layers.9.mlp.down_proj.weight	[768,3072]	2359296	F32	[409060352, 418497536]	560f07a5745f3c47
+EXPORT	model.layers.9.mlp.gate_proj.weight	[3072,768]	2359296	F32	[418497536, 427934720]	7f755828095cf7fb
+EXPORT	model.layers.9.mlp.up_proj.weight	[3072,768]	2359296	F32	[427934720, 437371904]	c58314f252ba42bf
+EXPORT	model.layers.9.post_attention_layernorm.weight	[768]	768	F32	[437371904, 437374976]	59a64056c5be07bd
+EXPORT	model.layers.9.self_attn.k_proj.bias	[256]	256	F32	[437374976, 437376000]	cca4ee6e74d37d4e
+EXPORT	model.layers.9.self_attn.k_proj.weight	[256,768]	196608	F32	[437376000, 438162432]	4d3d23563f457441
+EXPORT	model.layers.9.self_attn.o_proj.weight	[768,768]	589824	F32	[438162432, 440521728]	21884c72fdda25d7
+EXPORT	model.layers.9.self_attn.q_proj.bias	[768]	768	F32	[440521728, 440524800]	61963334f511efeb
+EXPORT	model.layers.9.self_attn.q_proj.weight	[768,768]	589824	F32	[440524800, 442884096]	05b1e9180e5035a8
+EXPORT	model.layers.9.self_attn.v_proj.bias	[256]	256	F32	[442884096, 442885120]	d4c9182b7fee251a
+EXPORT	model.layers.9.self_attn.v_proj.weight	[256,768]	196608	F32	[442885120, 443671552]	75dff73ae13f9d9c
+EXPORT	model.norm.weight	[768]	768	F32	[443671552, 443674624]	1464e1566ac4ff7a
