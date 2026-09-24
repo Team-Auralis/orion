@@ -19,6 +19,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
+from orion import prompts
 from orion.config import get_config
 from orion.db import get_session
 from orion.log import get_logger
@@ -206,24 +207,19 @@ def quality_gate(product_dir: Path, kind: str) -> tuple[bool, list[str]]:
 
 def _build_generation_prompt(spec: ProductSpec) -> tuple[str, str]:
     """Build system and user prompts for product generation."""
-    system = (
-        "You are an expert digital product creator. Generate complete, original, "
-        "production-ready digital products. No placeholders, no TODO comments, "
-        "no lorem ipsum. Output must be a single file or zip-ready directory "
-        "structure that a customer could purchase and use immediately."
-    )
-
     features_text = ", ".join(spec.features) if spec.features else "none specified"
-    user = (
+    task_instructions = (
         f"Create a complete, original {spec.kind} for {spec.target_audience} "
         f"about: {spec.description}. Features: {features_text}. "
         f"Difficulty: {spec.difficulty}. Estimated creation time: "
         f"{spec.estimated_hours_to_create} hours. License: {spec.license}. "
         f"Tags: {', '.join(spec.tags) if spec.tags else 'none'}. "
-        f"Output must be production-ready quality — a real product someone would pay for."
+        f"Output must be production-ready quality — a real product someone would pay for. "
+        "No placeholders, TODO comments, or lorem ipsum. Output must be a single file "
+        "or zip-ready directory structure that a customer could purchase and use immediately."
     )
-
-    return system, user
+    role = "coding" if spec.kind in ("tool", "asset_pack") else "analyst"
+    return prompts.build_prompt(role, task_instructions)
 
 
 def _write_product_files(product_dir: Path, content: str, kind: str) -> list[Path]:

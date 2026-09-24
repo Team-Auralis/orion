@@ -5,6 +5,8 @@
 # later tasks; model calls fail gracefully to a "no LLM" stub when absent.
 #
 # Defaults target a local Ollama server on 127.0.0.1:11434 with qwen2.5:7b.
+# system_prompt_source: orion.prompts
+# All roles share ORION's own central prompt; no third-party prompt is vendored.
 
 roles:
   orchestrator:

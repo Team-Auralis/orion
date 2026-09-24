@@ -22,6 +22,7 @@ from __future__ import annotations
 import json
 from typing import Any, Optional
 
+from orion import prompts
 from orion.db import get_session
 from orion.log import get_logger
 from orion.models import (
@@ -51,13 +52,6 @@ _EVALUATION_SCHEMA = {
     },
     "required": ["verdict", "score_0_100", "lesson"],
 }
-
-_EVALUATION_SYSTEM = (
-    "You are ORION's experiment analyst. Judge only the RECORDED "
-    "observation against the hypothesis and its expected result. "
-    "Be terse and factual. A tuning suggestion may be given but it must "
-    "never be treated as an automatic weight/policy change."
-)
 
 
 def _payload(row: Experiment) -> dict[str, Any]:
@@ -204,7 +198,7 @@ class ExperimentService:
         payload = _payload(experiment)
         results = self.results_for_experiment(id, session=session)
 
-        user_prompt = (
+        recorded_results = (
             f"hypothesis: {payload.get('hypothesis', '')}\n"
             f"expected_result: {payload.get('expected_result', '')}\n"
             f"strategy_id: {payload.get('strategy_id')}\n"
@@ -217,10 +211,18 @@ class ExperimentService:
                 for r in results
             )
         )
+        task_instructions = (
+            "Judge only the RECORDED observation against the hypothesis and its "
+            "expected result. Be terse and factual. A tuning suggestion may be given, "
+            "but it must never be treated as an automatic weight or policy change. "
+            "Return exactly one valid JSON object matching the provided schema.\n\n"
+            f"{recorded_results}"
+        )
+        system_prompt, user_prompt = prompts.build_prompt("analyst", task_instructions)
 
         router = ModelRouter()
         out = router.structured_output(
-            "analyst", _EVALUATION_SYSTEM, user_prompt, _EVALUATION_SCHEMA
+            "analyst", system_prompt, user_prompt, _EVALUATION_SCHEMA
         )
 
         if out.get("status") == "degraded":
