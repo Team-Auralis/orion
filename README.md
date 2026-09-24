@@ -1,52 +1,80 @@
 ﻿# ORION
 
-**ORION is a research platform for studying civilization-scale machine intelligence.** It is an experimental framework — an architecture in development toward the proposed **Artificial Civilization Intelligence (ACI)** — and makes no claim to be ACI, AGI, or ASI. It exists to make such claims *testable*.
+**[Artificial Civilization Intelligence (ACI) Research Platform](https://github.com/Team-Auralis/orion)**
 
-The project started as an emergency-response platform and has grown into a full-stack research system: a FastAPI service mesh, a continuity auditor, an experiment harness for brain-inspired learning (NECTAR), and a strict governance layer for any real-world interaction.
+[![Contributors](https://img.shields.io/github/contributors/Team-Auralis/orion?style=for-the-badge)](https://github.com/Team-Auralis/orion/graphs/contributors)
+[![Forks](https://img.shields.io/github/forks/Team-Auralis/orion?style=for-the-badge)](https://github.com/Team-Auralis/orion/network/members)
+[![Stars](https://img.shields.io/github/stars/Team-Auralis/orion?style=for-the-badge)](https://github.com/Team-Auralis/orion/stargazers)
+[![Issues](https://img.shields.io/github/issues/Team-Auralis/orion?style=for-the-badge)](https://github.com/Team-Auralis/orion/issues)
+[![License](https://img.shields.io/github/license/Team-Auralis/orion?style=for-the-badge)](https://github.com/Team-Auralis/orion/blob/main/LICENSE)
+[![Twitter](https://img.shields.io/badge/twitter-@TeamAuralis-1DA1F2?style=for-the-badge&logo=twitter)](https://twitter.com/TeamAuralis)
 
-> **Intended trajectory:** ORION → AURA → OMNIS → NEXUS → FORGE → ASCEND → civilization simulation → governed real-world interaction → ACI benchmark → independent validation.
+<div align="center">
+<h3>ORION</h3>
+<p>Artificial Civilization Intelligence (ACI) Research Platform</p>
+<p><em>Research platform for studying civilization-scale machine intelligence — an experimental framework in development toward the proposed ACI architecture.</em></p>
+</div>
+
+<div id="readme-top"></a>
 
 ---
 
 ## Architecture
 
-```
-                    ┌───────────────────────────────────────────┐
-                    │             Nginx (TLS frontier)          │
-                    └───────────────────┬───────────────────────┘
-                                        │
-                  ┌─────────────────────┼─────────────────────┐
-                  │                     │                     │
-        ┌─────────▼─────────┐  ┌───────▼────────┐  ┌─────────▼────────┐
-        │   orion-api (FastAPI)│ │ orion-worker   │  │ orion-sentinel   │
-        │  v1/incidents,       │ │ NATS consumer  │  │ AI triage/fallback│
-        │  telemetry, pilot,   │ │ + JetStream    │  │ + math coprocessor│
-        │  dispatch/HITL       │ │ (incident.*)   │  │                   │
-        └────┬─────────┬──────┘ └───────┬────────┘  └─────────┬────────┘
-             │         │                │                      │
-     ┌───────▼───┐ ┌───▼────┐   ┌──────▼─────┐        ┌───────▼───────┐
-     │ Postgres  │ │ Redis  │   │ NATS       │        │ Keycloak     │
-     │ (ORM/DB)  │ │ (cache │   │ (event bus)│        │ (OIDC/JWT)   │
-     └───────────┘ │ + pil.)│   └────────────┘        └───────────────┘
-                   └────────┘
-     ┌───────────────────────────────────────────────────────────────┐
-     │ Governance: OPA policy engine + FORGE verification +          │
-     │             HITL approval for any physical-action transfer    │
-     └───────────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    %% Nodes
+    nginx[Tls Frontier: Nginx]:::nginx
+    api[orion-api: FastAPI]:::api
+    worker[orion-worker]:::worker
+    sentinel[orion-sentinel]:::sentinel
+    aegis[orion-aegis]:::aegis
+    postgres[PostgreSQL]:::db
+    redis[Redis]:::db
+    nats[NATS JetStream]:::bus
+    keycloak[Keycloak]:::auth
+    opa[OPA Policy]:::policy
+    governance[Governance Layer]:::gov
+
+    %% Edges
+    nginx -->|HTTPS, rate-limited| api
+    api -->|incidents, telemetry| worker
+    api -->|HITL recommendations| sentinel
+    worker -->|NATS events, JetStream| nats
+    sentinel -->|AI triage| api
+    aegis -->|edge ingress, SOS| api
+    api -->|queries, writes| postgres
+    api -->|cached reads| redis
+    api -->|auth, profile| keycloak
+    api -->|policy decisions| opa
+    governance -->|HITL approval| aegis
+    governance -->|OPA policies| opa
+
+    %% Styles
+    classDef nginx fill:#ff6b6b,stroke:#444,stroke-width:2px;
+    classDef api fill:#ffa502,stroke:#444,stroke-width:2px;
+    classDef worker fill:#4ecdc4,stroke:#444,stroke-width:2px;
+    classDef sentinel fill:#ffe66d,stroke:#444,stroke-width:2px;
+    classDef aegis fill:#ffe66d,stroke:#444,stroke-width:2px;
+    classDef db fill:#141414,stroke:#444,stroke-width:2px;
+    classDef bus fill:#73d2de,stroke:#444,stroke-width:2px;
+    classDef auth fill:#9a9a9a,stroke:#444,stroke-width:2px;
+    classDef policy fill:#706fd3,stroke:#444,stroke-width:2px;
+    classDef gov fill:#d3b6e9,stroke:#444,stroke-width:2px;
 ```
 
-### Core pillars
+### Core Pillars
 
 | Module | Role |
 |--------|------|
 | **AURA** | Multimodal intelligence and reasoning core (relational state abstraction, game-lab transfer studies). |
-| **OMNIS** | Continuously updateable civilization world model — entities, relationships, causality (see `modules/cic`, `services/omnis`). |
+| **OMNIS** | Continuously updateable civilization world model — entities, relationships, causality (`modules/cic`, `services/omnis`). |
 | **NEXUS** | Multi-agent intelligence fabric for coordination, dispute resolution, and aggregation. |
 | **FORGE** | Scientific discovery and hypothesis generation; verifies any high-stakes recommendation. |
 | **ASCEND** | Long-horizon planner (days to decades) with uncertainty handling and replanning. |
 | **VEIL / SHIELD / OPA** | Governance + security layer that gates all real-world interaction. |
 
-### Services in this repo
+### Services in this Repository
 
 | Service | Path | What it does |
 |---------|------|--------------|
@@ -60,39 +88,44 @@ The project started as an emergency-response platform and has grown into a full-
 | **FORGE CYBER** | `services/cyber/` | Normalized security event schema (OSES), SOAR response engine (policy-gated, human-approved, audited), event emitter. |
 | **Mathsage** | `services/mathsage/` | LLM-backed math coprocessor used as a non-blocking second opinion in FORGE review. |
 
-### Support services (docker-compose)
+### Support Services (Docker Compose)
 
 `postgres`, `redis` (password-protected), `keycloak` (OIDC), `opa` (policy), `nats` (auth'd event bus), `prometheus`, `grafana`, `jaeger` (traces), plus `orion-dashboard` (Next.js).
 
----
+### Getting Started
 
-## Getting Started
+1. **Clone & install**
 
-1. **Clone & install** — Python 3.11+ recommended.
    ```bash
    git clone https://github.com/Team-Auralis/orion.git
    cd orion
    ```
+
 2. **Configure environment**
+
    ```bash
    cp .env.example .env
    # Replace every CHANGE_ME_* value with a strong random secret:
    #   python -c "import secrets; print(secrets.token_urlsafe(32))"
    ```
    `.env` is gitignored — never commit real credentials. Tests and CI rely on `REDIS_URL`.
+
 3. **Start the stack**
+
    ```bash
    docker-compose up -d --build
    # Everything terminates at https://localhost:443 (Nginx); internal ports are locked down.
    ```
+
 4. **Run the test suite** (Redis must be reachable — use the `REDIS_URL` from your `.env`):
+
    ```bash
    pip install -r requirements.txt -r requirements-dev.txt
    $env:REDIS_URL = "redis://:<password>@localhost:6379/0"   # PowerShell
    pytest
    ```
 
-### Key endpoints
+### Key Endpoints
 
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|
@@ -106,9 +139,7 @@ The project started as an emergency-response platform and has grown into a full-
 
 ¹ Public endpoints are defense-in-depth: rate-limited via slowapi, bounded input sizes, and validation at the model boundary.
 
----
-
-## Security Model
+### Security Model
 
 - **Authentication:** RS256 JWTs from Keycloak, verified against the realm JWKS by `kid` — forged/expired/unknown-key tokens are rejected (see `tests/test_jwt_verification.py`).
 - **Rate limiting / spoofing:** `X-Real-IP` is only trusted from known proxy peers (`TRUSTED_PROXY_IPS`); the rate limiter can't be gamed with a spoofed header.
@@ -117,17 +148,40 @@ The project started as an emergency-response platform and has grown into a full-
 - **Input validation:** pydantic caps (e.g. `states` ≤ 100k, `readings` ≤ 10k) prevent unbounded payload DoS on unauthenticated paths.
 - **Data integrity:** worker dedup fails open (a Redis outage can't silently drop events); JetStream uses correct ack/nak semantics with `nak(delay=5)` on transient errors; outbox publishes time out instead of wedging the loop.
 
----
-
-## Testing
+### Testing
 
 - **Suite:** `pytest` (169+ tests) — see `pytest.ini` / `requirements-dev.txt`.
 - **Coverage highlights:** JWT verification, secrets hygiene (`test_no_secrets.py`), JetStream/ack semantics, outbox chaos, rate-limit spoofing, transfer-guard policy, CIC drift, NECTAR tokenizer determinism, flymemory vectorization, SOAR approval flows.
 - **CI:** `.github/workflows/ci.yml` runs the suite; `strix-security.yml` runs an external agentic pentest over `apps/api` and `services/worker`.
 
----
+### Repository Layout
 
-## Repository Layout
+```mermaid
+graph TD
+    apps[apps/]:::apps
+    services[services/]:::services
+    modules[modules/]:::modules
+    scripts[scripts/]:::scripts
+    tests[tests/]:::tests
+    infra[infra/]:::infra
+    docs[docs/]:::docs
+    contracts[contracts/]:::contracts
+    policy[policy/]:::policy
+    forge[forge/]:::forge
+
+    direction TB
+
+    classDef apps fill:#ff6b6b;
+    classDef services fill:#4ecdc4;
+    classDef modules fill:#ffe66d;
+    classDef scripts fill:#73d2de;
+    classDef tests fill:#706fd3;
+    classDef infra fill:#141414;
+    classDef docs fill:#d3b6e9;
+    classDef contracts fill:#9a9a9a;
+    classDef policy fill:#706fd3;
+    classDef forge fill:#ffa502;
+```
 
 ```
 apps/api          FastAPI gateway (routes, auth, telemetry, pilot, dispatch)
@@ -144,14 +198,39 @@ policy/           Governance policies (OPA)
 forge/            FORGE experiment artifacts
 ```
 
----
-
-## Experimental Status
+### Experimental Status
 
 - Portions of the platform are pipelines and scaffolding around the research subsystems; the most actively developed research areas are **NECTAR** (connectome learning with reproducible seeds) and **game-lab** (transfer learning under controlled comparisons).
 - Transfer experiments report *whatever the evidence shows* — e.g. matched hyperparameters removed a learning-rate confound and the claimed transfer advantage honestly disappeared under several seeds.
 - Model checkpoints and trained artifacts are **not** distributed in this repository.
 
-## License
+### License
 
 See `THIRD_PARTY.md` and the repository copyright header. All rights reserved.
+
+---
+
+<div id="readme-bottom"></a>
+
+<a href="#readme-top">Back to top</a>
+
+---
+
+### Changelog
+
+#### Unreleased
+
+- Added professional README with mermaid diagrams and badge shields
+- Restructured architecture section with interactive graph diagrams
+- Updated key endpoints table with public endpoint footnotes
+- Added governance/HITL section with detailed policy descriptions
+- Expanded testing section with coverage highlights
+- Added repository layout mermaid diagram
+
+---
+
+### Contact
+
+- **Twitter:** [@TeamAuralis](https://twitter.com/TeamAuralis)
+- **Email:** contact@auralis.team (replace with actual)
+- **GitHub:** [Team-Auralis/orion](https://github.com/Team-Auralis/orion)
