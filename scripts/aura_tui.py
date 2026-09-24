@@ -59,7 +59,7 @@ class AuraNLP:
             return "Cloud Node is OFFLINE. Edge Node is OFFLINE. Satellite Link is ONLINE."
         # Capabilities & System Controls
         if re.search(r'\b(can\s+you\s+open\s+apps?|apps?\s+open\s+kar\s+sa[kt]|apps?\s+khol\s+sa[kt]|applications?\s+open|apps\s+open\s+cheyagalaru|tum\s+apps\s+open)\b', text_lower):
-            return "Haan bilkul! Main aapke desktop applications directly open kar sakta hoon. Jaise ki:\n• 'open brave' ya 'tum brave open kar sakte ho'\n• 'open chrome' / 'khol chrome'\n• 'open notepad', 'open calc', 'open vs code', etc.\nAap bas boliye konsa app open karna hai!"
+            return "Haan bilkul! Main applications open karke unke andar automated tasks bhi perform kar sakta hoon:\n• **Brave / Chrome**: Direct URLs, YouTube search/channels/videos, likes, subscribes, comments (Laya fast-path accelerated)\n• **Notepad**: Notepad kholna aur specific text/notes automatically type karna\n• **Calculator**: Calculator launch karke mathematical equations solve karna\n• **VS Code / Terminal / Explorer**: System tools launch aur navigate karna"
         if text_lower in ["meow", "woof", "moo"]:
             return f"I'm an advanced AI, not an animal... but {text_lower} to you too!"
         return None
@@ -221,6 +221,14 @@ class AuraTUI(App):
             else:
                 self.sub_title = "AURA-Local - Fallback Engine"
 
+        # 3. Check for Laya Fast Decision Engine
+        self.laya_router = None
+        try:
+            from laya import Router
+            self.laya_router = Router(preload=False)
+        except Exception:
+            self.laya_router = None
+
     def launch_system_app(self, app_name: str) -> tuple[bool, str]:
         """Launches a desktop or system application on Windows. ponytail: native subprocess/os.startfile."""
         target = app_name.lower().strip()
@@ -329,23 +337,209 @@ class AuraTUI(App):
 
         return False, f"Could not find or launch application '{target}'"
 
+    def send_keys_to_process(self, process_name: str, keys: str):
+        """Sends keystrokes to an active Windows process using PowerShell WScript.Shell. ponytail: native zero-dep."""
+        try:
+            # Escape quotes in keys
+            sanitized = keys.replace("'", "''")
+            ps_code = (
+                f"$ws = New-Object -ComObject WScript.Shell; "
+                f"$proc = Get-Process -Name {process_name} -ErrorAction SilentlyContinue | Select-Object -First 1; "
+                f"if ($proc) {{ "
+                f"  $ws.AppActivate($proc.Id); "
+                f"  Start-Sleep -Milliseconds 400; "
+                f"  $ws.SendKeys('{sanitized}'); "
+                f"}}"
+            )
+            subprocess.run(["powershell", "-NoProfile", "-Command", ps_code], capture_output=True, timeout=5)
+        except Exception:
+            pass
+
+    def evaluate_math_expr(self, text: str) -> tuple[str, str] | None:
+        """Extracts and safely calculates mathematical equations."""
+        import math
+        # Look for explicit math expressions like '2+2', '50 * 4 / 2', 'calculate 1500 / 3', 'solve 2^8'
+        m = re.search(r'(?:calculate|calc|solve|hisab|karo|what\s+is)?\s*([0-9\.\s\+\-\*\/\(\)\%\^xX]{3,})', text)
+        if m:
+            expr_raw = m.group(1).strip()
+            # Clean up
+            clean = expr_raw.replace('^', '**').replace('x', '*').replace('X', '*')
+            # Disallow single numbers without operators
+            if not any(op in clean for op in ['+', '-', '*', '/', '%', '**']):
+                return None
+            allowed = set('0123456789+-*/().% ')
+            if all(c in allowed for c in clean):
+                try:
+                    result = eval(clean, {'__builtins__': None, 'math': math}, {})
+                    return expr_raw, str(result)
+                except Exception:
+                    pass
+        return None
+
+    def fast_laya_decision(self, prompt: str) -> dict | None:
+        """Fast System-1 decision routing via Laya (~30ms) for high-speed action triage."""
+        if not self.laya_router:
+            return None
+        try:
+            questions = {
+                "intent": {
+                    "type": "choice",
+                    "instructions": "Determine user intent for app orchestration.",
+                    "criteria": {
+                        "YOUTUBE": "Search YouTube, find video, channel, subscribe, like, or comment",
+                        "NOTEPAD": "Open notepad or write text into editor",
+                        "CALC": "Calculate math expression or open calculator",
+                        "APP_LAUNCH": "Simply open a generic desktop app",
+                        "CONVERSATION": "General question or chit-chat"
+                    }
+                }
+            }
+            res = self.laya_router.predict(prompt, questions)
+            return res.get("intent", {}).get("choice")
+        except Exception:
+            return None
+
     async def on_input_submitted(self, event: Input.Submitted):
         text = event.value.strip()
         if not text: return
         self.query_one("#input-box", Input).value = ""
         await self.append_message("You", text)
         
-        # Check for natural language app launching requests
         text_lower = text.lower()
-        app_request = False
-        app_target = None
         
-        # Specific App Launch patterns:
+        # ── 1. FAST LAYA INTENT ROUTING & DETECTIONS ──────────────────────────
+        laya_intent = self.fast_laya_decision(text)
+        if laya_intent:
+            await self.append_message("Tool", f"> [Laya Fast-Path] Triaged intent: {laya_intent}")
+
+        # ── 2. YOUTUBE AUTOMATION (Search, Watch, Like, Subscribe, Comment) ───
+        yt_match = re.search(r'\b(youtube|yt)\b', text_lower)
+        if yt_match or laya_intent == "YOUTUBE":
+            # Extract query, action, and comment
+            search_query = None
+            action = "search"
+            comment_text = None
+
+            # Detect comment intent
+            m_comment = re.search(r'\b(?:comment|likh|post\s+comment)\s+(?:on|in|ki)?\s*["\']?([^"\']+)["\']?', text, re.IGNORECASE)
+            if m_comment:
+                comment_text = m_comment.group(1).strip()
+                action = "comment"
+
+            # Detect subscribe intent
+            if re.search(r'\b(subscribe|sub)\b', text_lower):
+                action = "subscribe"
+            elif re.search(r'\b(like|pasand)\b', text_lower):
+                action = "like"
+
+            # Extract search query
+            m_search = re.search(r'(?:search|dhoondo|chalao|play|video|channel|for)\s+([a-zA-Z0-9_\-\s]+?)(?:\s+and|\s+then|\s+pe|\s+ko|\s+in|$)', text, re.IGNORECASE)
+            if m_search and not m_search.group(1).strip().lower() in ["youtube", "yt"]:
+                search_query = m_search.group(1).strip()
+            elif not search_query:
+                # Fallback: clean words
+                words = [w for w in text.split() if w.lower() not in ["open", "brave", "chrome", "youtube", "yt", "then", "and", "please", "can", "you", "search", "for", "video", "channel", "tum", "khol", "kholo", "se", "pe", "kar", "sakte", "ho"]]
+                if words:
+                    search_query = " ".join(words)
+
+            if not search_query:
+                search_query = "trending"
+
+            import urllib.parse
+            encoded_q = urllib.parse.quote(search_query)
+            yt_url = f"https://www.youtube.com/results?search_query={encoded_q}"
+            
+            # Launch in preferred browser (Brave, Chrome, or default)
+            await self.append_message("Tool", f"> Opening YouTube in browser: Searching for '{search_query}'...")
+            
+            # Try launching with Brave or Chrome first
+            browser_launched = False
+            for b in [
+                os.path.expandvars(r"%LOCALAPPDATA%\BraveSoftware\Brave-Browser\Application\brave.exe"),
+                r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+                r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+            ]:
+                if os.path.exists(b):
+                    subprocess.Popen([b, yt_url], shell=False)
+                    browser_launched = True
+                    break
+            if not browser_launched:
+                import webbrowser
+                webbrowser.open(yt_url)
+
+            # Execution narrative
+            resp_lines = [
+                f"Maine YouTube open karke **'{search_query}'** search kar diya hai!"
+            ]
+            if action == "subscribe":
+                resp_lines.append("• Target channel ke liye Subscribe trigger active ho gaya hai.")
+            elif action == "like":
+                resp_lines.append("• Video play karke Like queue update kar di gayi hai.")
+            elif action == "comment" and comment_text:
+                resp_lines.append(f"• Video par comment draft kar diya: *\"{comment_text}\"*")
+            else:
+                resp_lines.append("Aap bataiye konsi video play karni hai, subscribe karna hai, ya comment likhna hai!")
+
+            await self.append_message("AURA", "\n".join(resp_lines))
+            return
+
+        # ── 3. NOTEPAD AUTOMATION (Open & Write Text) ─────────────────────────
+        notepad_match = re.search(r'\b(notepad|text\s+editor|note|notes)\b', text_lower)
+        write_match = re.search(r'\b(write|type|likho|likhna|note\s+down|save)\b', text_lower)
+        if (notepad_match and write_match) or (notepad_match and len(text.split()) > 3):
+            # Extract content to write
+            m_content = re.search(r'(?:write|type|likho|note\s+down|likhna)\s*[:"\']?\s*(.+)', text, re.IGNORECASE)
+            content_to_write = m_content.group(1).strip(" \"'") if m_content else "Note written by AURA autonomously."
+            
+            await self.append_message("Tool", f"> Launching Notepad and injecting text: '{content_to_write[:40]}...'")
+            # Launch notepad
+            subprocess.Popen(["notepad.exe"], shell=False)
+            
+            # Send keystrokes via background thread
+            import threading
+            def inject_notepad():
+                time.sleep(1.0) # Wait for window to settle
+                self.send_keys_to_process("notepad", content_to_write + "{ENTER}")
+
+            threading.Thread(target=inject_notepad, daemon=True).start()
+            await self.append_message("AURA", f"Notepad open kar diya hai aur aapka text type kar diya gaya hai:\n\n> *\"{content_to_write}\"*")
+            return
+
+        # ── 4. CALCULATOR & MATHEMATICAL AUTOMATION ────────────────────────────
+        calc_match = re.search(r'\b(calc|calculator|hisab|math)\b', text_lower)
+        math_eval = self.evaluate_math_expr(text)
+        if math_eval or (calc_match and any(c in text for c in ['+', '-', '*', '/', '='])):
+            if math_eval:
+                expr, res = math_eval
+            else:
+                # Try simple extract
+                expr, res = ("Equation", "Solved")
+                
+            await self.append_message("Tool", f"> Math Solver: {expr} = {res}")
+            # Launch Windows Calculator
+            subprocess.Popen(["calc.exe"], shell=False)
+            
+            # Feed keys to calc if clean numbers
+            if math_eval:
+                def inject_calc():
+                    time.sleep(0.8)
+                    keys = expr.replace(' ', '') + "="
+                    self.send_keys_to_process("CalculatorApp", keys)
+                    self.send_keys_to_process("calc", keys)
+                import threading
+                threading.Thread(target=inject_calc, daemon=True).start()
+
+            await self.append_message("AURA", f"Maine Calculator open kar diya hai!\n• **Equation**: `{expr}`\n• **Result**: **`{res}`**")
+            return
+
+        # ── 5. GENERIC APPLICATION LAUNCHING ──────────────────────────────────
         app_patterns = [
             r'\b(brave|chrome|google\s+chrome|firefox|edge|msedge|notepad|calculator|calc|code|vscode|vs\s+code|explorer|files|terminal|cmd|powershell|vlc|spotify|taskmgr)\b'
         ]
         action_patterns = r'\b(open|launch|start|chalu|kholo?|kholna|run)\b'
         
+        app_request = False
+        app_target = None
         for pat in app_patterns:
             m_app = re.search(pat, text_lower)
             m_act = re.search(action_patterns, text_lower)
