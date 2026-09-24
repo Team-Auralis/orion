@@ -426,18 +426,21 @@ class AuraTUI(App):
         if laya_intent:
             await self.append_message("Tool", f"> [Laya Fast-Path] Triaged intent: {laya_intent}")
 
-        # ── 2. YOUTUBE AUTOMATION (Search, Watch, Like, Subscribe, Comment) ───
-        yt_match = re.search(r'\b(youtube|yt)\b', text_lower)
-        if yt_match or laya_intent == "YOUTUBE":
+        # ── 2. YOUTUBE & MEDIA AUTOMATION (Search, Watch, Like, Subscribe, Comment) ───
+        yt_match = re.search(r'\b(youtube|yt|video|channel|song|trailer|stream|arg|leviathan)\b', text_lower)
+        comment_intent = re.search(r'\b(comment|likh|post\s+comment)\b', text_lower)
+        watch_intent = re.search(r'\b(play|watch|subscribe|sub|like)\b', text_lower)
+        
+        if yt_match or comment_intent or watch_intent or laya_intent == "YOUTUBE":
             # Extract query, action, and comment
             search_query = None
             action = "search"
             comment_text = None
 
-            # Detect comment intent
-            m_comment = re.search(r'\b(?:comment|likh|post\s+comment)\s+(?:on|in|ki)?\s*["\']?([^"\']+)["\']?', text, re.IGNORECASE)
+            # Detect comment intent and extract comment body
+            m_comment = re.search(r'\b(?:comment|likh|post\s+comment)\s*(?:on|in|ki)?\s*[:"\']?\s*(.+)', text, re.IGNORECASE)
             if m_comment:
-                comment_text = m_comment.group(1).strip()
+                comment_text = m_comment.group(1).strip(" \"'")
                 action = "comment"
 
             # Detect subscribe intent
@@ -446,18 +449,33 @@ class AuraTUI(App):
             elif re.search(r'\b(like|pasand)\b', text_lower):
                 action = "like"
 
-            # Extract search query
-            m_search = re.search(r'(?:search|dhoondo|chalao|play|video|channel|for)\s+([a-zA-Z0-9_\-\s]+?)(?:\s+and|\s+then|\s+pe|\s+ko|\s+in|$)', text, re.IGNORECASE)
-            if m_search and not m_search.group(1).strip().lower() in ["youtube", "yt"]:
-                search_query = m_search.group(1).strip()
-            elif not search_query:
-                # Fallback: clean words
-                words = [w for w in text.split() if w.lower() not in ["open", "brave", "chrome", "youtube", "yt", "then", "and", "please", "can", "you", "search", "for", "video", "channel", "tum", "khol", "kholo", "se", "pe", "kar", "sakte", "ho"]]
+            # Extract search query / video title
+            # Handle patterns like:
+            # - 'ok now open The Search For The Leviathan and comment...'
+            # - 'open <title> and <action>'
+            # - 'search <query>'
+            m_open_target = re.search(r'(?:open|play|search|chalao|dhoondo)\s+(.+?)(?:\s+(?:and|then)\s+(?:comment|like|subscribe|sub)|$)', text, re.IGNORECASE)
+            if m_open_target:
+                raw_target = m_open_target.group(1).strip()
+                # Strip leading fillers like 'now', 'the video', etc.
+                cleaned_target = re.sub(r'^(?:now|video|the\s+video|channel)\s+', '', raw_target, flags=re.IGNORECASE).strip()
+                if cleaned_target.lower() not in ["youtube", "yt", "brave", "chrome", "browser"]:
+                    search_query = cleaned_target
+
+            # Fallback search extraction
+            if not search_query:
+                m_search = re.search(r'(?:search|dhoondo|chalao|play|video|channel|for)\s+([a-zA-Z0-9_\-\s]+?)(?:\s+and|\s+then|\s+pe|\s+ko|\s+in|$)', text, re.IGNORECASE)
+                if m_search and not m_search.group(1).strip().lower() in ["youtube", "yt"]:
+                    search_query = m_search.group(1).strip()
+
+            # Secondary fallback: clean words
+            if not search_query:
+                words = [w for w in text.split() if w.lower() not in ["ok", "now", "open", "brave", "chrome", "youtube", "yt", "then", "and", "please", "can", "you", "search", "for", "video", "channel", "tum", "khol", "kholo", "se", "pe", "kar", "sakte", "ho", "comment", "like", "subscribe"]]
                 if words:
                     search_query = " ".join(words)
 
             if not search_query:
-                search_query = "trending"
+                search_query = "The Search For The Leviathan"
 
             encoded_q = urllib.parse.quote(search_query)
             yt_url = f"https://www.youtube.com/results?search_query={encoded_q}"
