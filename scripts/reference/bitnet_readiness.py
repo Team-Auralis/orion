@@ -84,11 +84,18 @@ def detect_runtime() -> tuple:
         if located:
             found.append(f"{name} -> {located}")
     # Local source clone without a build also counts as "not ready".
-    local_clone = REPO_ROOT / "third_party" / "bitnet.cpp"
-    if local_clone.exists():
-        checked.append("third_party/bitnet.cpp (source only)")
-        if (local_clone / "build" / "bin").exists():
-            found.append("third_party/bitnet.cpp/build/bin")
+    for local_name in ("bitnet.cpp", "BitNet"):
+        local_clone = REPO_ROOT / "third_party" / local_name
+        if local_clone.exists():
+            checked.append(f"third_party/{local_name} (source only)")
+            for bdir in ("build", "build/bin"):
+                b = local_clone / bdir
+                if b.exists():
+                    found.append(f"third_party/{local_name}/{bdir}")
+            # T7 artifact: the bitnet.cpp fork's official inference binary.
+            cli = local_clone / "build" / "bin" / "llama-cli.exe"
+            if cli.exists():
+                found.append(str(cli))
     return bool(found), found, checked
 
 

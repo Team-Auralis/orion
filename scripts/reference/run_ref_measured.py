@@ -1,134 +1,271 @@
 #!/usr/bin/env python3
-"""Measure the official BitNet b1.58-2B-4T reference (bitnet.cpp llama-cli) on this box.
+"""Run the BitNet b1.58-2B-4T reference (bitnet.cpp / llama-cli fork) under
+measurement: peak RSS (psutil sampling), eval tok/s + latency (parsed from the
+binary's llama_print_timings output), generation snippet, model file size.
 
-Spawns the built llama-cli binary (the bitnet.cpp reference path), samples its
-resident set with psutil, and parses the generation stats llama-cli prints
-(`[ Prompt: X t/s | Generation: Y t/s ]`). One process per run, peak RSS,
-wall time, tokens/s. Non-interactive via `-no-cnv`.
+Task 7 reference arm. The binary is the OFFICIAL bitnet.cpp inference binary
+(`llama-cli.exe` in build/bin), the model is the EXTERNAL pretrained reference
+`microsoft/BitNet-b1.58-2B-4T-gguf/ggml-model-i2_s.gguf` (2.4B params, ternary
+1.58-bit). All numbers are reported honestly as the external reference, not
+ORION's own checkpoint.
 
-Usage:
-    python scripts/reference/run_ref_measured.py              # defaults, prints JSON
-    python scripts/reference/run_ref_measured.py --repeat 2   # more runs -> median tok/s
+CLI:
+    python scripts/reference/run_ref_measured.py                  # defaults below
+    python scripts/reference/run_ref_measured.py -p "Daniel is a" -n 16 -t 6
+    python scripts/reference/run_ref_measured.py --no-record      # no ledger row
+    python scripts/reference/run_ref_measured.py --self-test      # parser check only
 
-Ledger row is recorded separately (scripts/repro.record_experiment) by the caller.
+Ledger row: experiment `bitnet-2b4t-reference`
+    params      {"params_b": 2.4, "external_reference": true, ...}
+    status      VERIFIED (ran+parsed) / FAILED (binary error) / BLOCKED (missing pieces)
 """
 
 import argparse
-import json
 import re
 import subprocess
 import sys
-import threading
 import time
+import uuid
 from pathlib import Path
 
 import psutil
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+
+from scripts.repro import record_experiment  # noqa: E402
+
 DEFAULT_BIN = REPO_ROOT / "third_party" / "BitNet" / "build" / "bin" / "llama-cli.exe"
-DEFAULT_MODEL = REPO_ROOT / "models" / "BitNet-b1.58-2B-4T" / "ggml-model-i2_s.gguf"
-PROMPT = "Daniel is a"
-N_PREDICT = 16
-THREADS = 6
+DEFAULT_MODEL = REPO_ROOT / "models" / "bitnet-b1.58-2B-4T" / "ggml-model-i2_s.gguf"
+DEFAULT_PROMPT = "Daniel is a"
+DEFAULT_N = 16
+DEFAULT_T = 6
+
+MB = 1024 * 1024
+
+# llama_print_timings lines, e.g.
+#   llama_print_timings: eval time =  1234.56 ms /    16 tokens (   77.16 ms per token,   12.96 tokens per second)
+#   llama_print_timings: total time =  2345.67 ms
+# This bitnet.cpp fork (b1-390c307) prints a compact banner in non-timings
+# paths, e.g.:
+#   [ Prompt: 85.2 t/s | Generation: 12.0 t/s ]
+TIMINGS_RE = {
+    # anchored on the literal prefix so "prompt eval time" is NOT matched
+    "eval_ms": re.compile(
+        r"llama_print_timings: eval time\s*=\s*([\d.]+) ms / +(\d+) tokens"
+    ),
+}
+TOK_PER_S_RE = re.compile(r"([\d.]+) tokens per second")
+BANNER_RE = re.compile(r"\[ Prompt:\s*([\d.]+) t/s \| Generation:\s*([\d.]+) t/s \]")
 
 
-def measure(
-    bin_path: Path, model_path: Path, prompt: str, n: int, threads: int
-) -> dict:
-    cmd = [
-        str(bin_path),
-        "-m",
-        str(model_path),
-        "-p",
-        prompt,
-        "-n",
-        str(n),
-        "-t",
-        str(threads),
-        "-no-cnv",
-    ]
-    proc = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=False
+def parse_timings(text: str, n_predict: int | None = None) -> dict:
+    """Pull eval ms, eval token count, tok/s and total ms from llama-cli output.
+
+    Accepts the classic llama_print_timings block AND the bitnet.cpp fork's
+    `[ Prompt: X t/s | Generation: Y t/s ]` banner (preferred when present).
+    `n_predict` supplies the generated-token count when only the banner exists.
+    """
+    out = {}
+    m = TIMINGS_RE["eval_ms"].search(text)
+    if m:
+        out["eval_ms"] = float(m.group(1))
+        out["eval_tokens"] = int(m.group(2))
+    m = TOK_PER_S_RE.search(text)
+    if m:
+        out["tok_per_s"] = float(m.group(1))
+    m = re.search(r"total time\s*=\s*([\d.]+) ms", text)
+    if m:
+        out["total_ms"] = float(m.group(1))
+    m = BANNER_RE.search(text)
+    if m:
+        out["prompt_tok_per_s"] = float(m.group(1))
+        out["tok_per_s"] = float(m.group(2))
+    # Latency from the fork banner: eval tokens / generation speed.
+    if out.get("tok_per_s") and "eval_ms" not in out:
+        n_tok = out.get("eval_tokens", 0) or (n_predict if n_predict else 0)
+        out["eval_tokens"] = n_tok
+        out["eval_ms"] = round(n_tok / out["tok_per_s"] * 1000, 1)
+    return out
+
+
+def _self_test() -> None:
+    txt = (
+        "llama_print_timings: prompt eval time =    42.00 ms /     3 tokens\n"
+        "llama_print_timings: eval time =  1234.56 ms /    16 tokens (   77.16 ms per token,   12.96 tokens per second)\n"
+        "llama_print_timings: total time =  2345.67 ms\n"
     )
-    started = time.perf_counter()
-    peak_rss = 0.0
-    try:
-        p = psutil.Process(proc.pid)
-    except psutil.Error:
-        p = None
-
-    out_chunks = []
-
-    def _drain():
-        while True:
-            chunk = proc.stdout.read(65536)
-            if not chunk:
-                break
-            out_chunks.append(chunk)
-
-    reader = threading.Thread(target=_drain, daemon=True)
-    reader.start()
-    while proc.poll() is None:
-        if p is not None:
-            try:
-                peak_rss = max(peak_rss, p.memory_info().rss / (1024**2))
-            except (psutil.Error, ProcessLookupError):
-                pass
-        time.sleep(0.02)
-    reader.join(timeout=30)
-    wall = time.perf_counter() - started
-    out = b"".join(out_chunks).decode("utf-8", "replace")
-
-    gen_tps = prompt_tps = None
-    m = re.search(r"Generation:\s*([\d.]+)\s*t/s", out)
-    if m:
-        gen_tps = float(m.group(1))
-    m = re.search(r"Prompt:\s*([\d.]+)\s*t/s", out)
-    if m:
-        prompt_tps = float(m.group(1))
-    # Non-interactive output: text after the prompt echo/blank lines; keep first ~80 chars.
-    generation = ""
-    lines = [ln for ln in out.splitlines() if ln.strip()]
-    for i, ln in enumerate(lines):
-        if ln.strip() == prompt:
-            generation = " ".join(lines[i + 1 :]).strip()
-            break
-    return {
-        "binary": str(bin_path),
-        "model": str(model_path),
-        "prompt": prompt,
-        "n_predict": n,
-        "threads": threads,
-        "exit_code": proc.returncode,
-        "wall_s": round(wall, 3),
-        "peak_rss_mb": round(peak_rss, 1),
-        "prompt_tok_per_s": prompt_tps,
-        "generation_tok_per_s": gen_tps,
-        "generation": generation[:120],
-        "raw_tail": out[-500:],
-    }
+    got = parse_timings(txt)
+    assert got["eval_ms"] == 1234.56, got
+    assert got["eval_tokens"] == 16, got
+    assert got["tok_per_s"] == 12.96, got
+    assert got["total_ms"] == 2345.67, got
+    txt2 = "  [ Prompt: 85.2 t/s | Generation: 12.0 t/s ]\n"
+    got2 = parse_timings(txt2, n_predict=16)
+    assert got2["tok_per_s"] == 12.0, got2
+    assert got2["prompt_tok_per_s"] == 85.2, got2
+    assert abs(got2["eval_ms"] - round(16 / 12.0 * 1000, 1)) < 0.01, got2
+    print("[SELF-TEST] timing parser OK (classic + fork banner):", got, got2)
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--bin", type=Path, default=DEFAULT_BIN)
-    ap.add_argument("--model", type=Path, default=DEFAULT_MODEL)
-    ap.add_argument("--repeat", type=int, default=1)
+    ap.add_argument("-m", "--model", default=str(DEFAULT_MODEL))
+    ap.add_argument("-p", "--prompt", default=DEFAULT_PROMPT)
+    ap.add_argument("-n", "--n-predict", type=int, default=DEFAULT_N)
+    ap.add_argument("-t", "--threads", type=int, default=DEFAULT_T)
+    ap.add_argument("--bin", default=str(DEFAULT_BIN))
+    ap.add_argument("--no-record", action="store_true")
+    ap.add_argument("--self-test", action="store_true")
     args = ap.parse_args()
 
-    results = []
-    for i in range(args.repeat):
-        results.append(measure(args.bin, args.model, PROMPT, N_PREDICT, THREADS))
-        time.sleep(1)
-    if args.repeat > 1:
-        tps = sorted(
-            r["generation_tok_per_s"] for r in results if r.get("generation_tok_per_s")
+    if args.self_test:
+        _self_test()
+        return 0
+
+    model = Path(args.model)
+    binary = Path(args.bin)
+
+    # ---- preflight ---------------------------------------------------------
+    missing = []
+    if not binary.exists():
+        missing.append(f"binary {binary}")
+    if not model.exists():
+        missing.append(f"model {model}")
+    if missing:
+        print(f"[BLOCKED] missing: {', '.join(missing)}")
+        if not args.no_record:
+            record_experiment(
+                "bitnet-2b4t-reference",
+                {"params_b": 2.4, "external_reference": True},
+                {
+                    "run_id": f"bitnet-ref-{uuid.uuid4().hex[:8]}",
+                    "status": "BLOCKED",
+                    "base_model_name": "microsoft/BitNet-b1.58-2B-4T-gguf",
+                    "model_type": "bitnet-1.58-bit i2_s (external reference)",
+                    "checkpoint_path": "",
+                    "num_samples": 0,
+                    "error_message": f"missing: {', '.join(missing)}",
+                },
+            )
+        return 2
+
+    file_mb = round(model.stat().st_size / MB, 1)
+
+    # ---- spawn + measure ----------------------------------------------------
+    cmd = [
+        str(binary),
+        "-m",
+        str(model),
+        "-p",
+        args.prompt,
+        "-n",
+        str(args.n_predict),
+        "-t",
+        str(args.threads),
+        "-ngl",
+        "0",
+        "-c",
+        "512",
+        "--temp",
+        "0.8",
+        "--no-display-prompt",
+        "--single-turn",  # one-shot: exit after generation instead of dropping into the REPL
+    ]
+    t0 = time.monotonic()
+    proc = psutil.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        stdin=subprocess.DEVNULL,
+    )
+    peak_rss = 0
+    chunks = []
+    while proc.poll() is None:
+        try:
+            line = proc.stdout.readline()
+        except Exception:
+            line = ""
+        if line:
+            chunks.append(line)
+        try:
+            peak_rss = max(peak_rss, proc.memory_info().rss)
+        except Exception:
+            pass
+        time.sleep(0.1)
+    # drain remaining output
+    for line in proc.stdout:
+        chunks.append(line)
+    wall_s = time.monotonic() - t0
+    out_text = "".join(chunks)
+    peak_rss_mb = round(peak_rss / MB, 1)
+
+    timings = parse_timings(out_text, n_predict=args.n_predict)
+    exit_code = proc.returncode
+
+    # ---- report --------------------------------------------------------------
+    status = (
+        "FAILED"
+        if exit_code != 0
+        else ("VERIFIED" if timings.get("tok_per_s") else "FAILED")
+    )
+    print("=" * 72)
+    print("BitNet b1.58-2B-4T reference run (bitnet.cpp llama-cli fork)")
+    print("=" * 72)
+    print(f"binary          : {binary}")
+    print(f"model           : {model}  ({file_mb} MB)")
+    print(f"cmd             : {' '.join(cmd)}")
+    print(f"exit code       : {exit_code}")
+    print(f"wall time       : {wall_s:.1f} s")
+    print(f"peak RSS        : {peak_rss_mb} MB")
+    print(f"timings         : {timings}")
+    print(f"STATUS          : {status}")
+    tail = [l for l in chunks if l.strip()][-8:]
+    print("-- last output lines --")
+    for l in tail:
+        print("  " + l.rstrip())
+    if not timings:
+        print("[!] no llama_print_timings parsed from output; full output above")
+
+    # ---- ledger ---------------------------------------------------------------
+    if not args.no_record:
+        record = {
+            "run_id": f"bitnet-ref-{uuid.uuid4().hex[:8]}",
+            "status": status,
+            "base_model_name": "microsoft/BitNet-b1.58-2B-4T-gguf",
+            "model_type": "bitnet-1.58-bit i2_s (external reference)",
+            "checkpoint_path": str(model),
+            "num_samples": args.n_predict,
+            "error_message": "" if status == "VERIFIED" else out_text[-500:],
+            "file_mb": file_mb,
+            "peak_rss_mb": peak_rss_mb,
+            "tok_per_s": timings.get("tok_per_s"),
+            "eval_ms": timings.get("eval_ms"),
+            "eval_tokens": timings.get("eval_tokens"),
+            "total_ms": timings.get("total_ms"),
+            "wall_s": round(wall_s, 2),
+            "threads": args.threads,
+            "prompt": args.prompt,
+        }
+        record_experiment(
+            "bitnet-2b4t-reference",
+            {
+                "params_b": 2.4,
+                "external_reference": True,
+                "quantization": "i2_s",
+                "runtime": "bitnet.cpp llama-cli (official)",
+                "threads": args.threads,
+            },
+            record,
         )
-        med = tps[len(tps) // 2] if tps else None
-        print(json.dumps({"runs": results, "median_tok_per_s": med}, indent=2))
-    else:
-        print(json.dumps(results[0], indent=2))
-    return 0
+        print(
+            f"\n[LEDGER] appended bitnet-2b4t-reference row: status={status} "
+            f"tok_per_s={timings.get('tok_per_s')} peak_rss_mb={peak_rss_mb} file_mb={file_mb}"
+        )
+
+    return 0 if status == "VERIFIED" else 1
 
 
 if __name__ == "__main__":
