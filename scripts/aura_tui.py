@@ -1,5 +1,6 @@
 import os
 import re
+import time
 import random
 import asyncio
 import subprocess
@@ -139,16 +140,23 @@ class ChatMessage(Static):
 class AuraTUI(App):
     CSS = """
     Screen { background: #000000; color: #dddddd; }
-    Header { background: #111111; color: #888888; height: 1; border-bottom: solid #222222; }
+    Header { background: #111111; color: #00e5ff; height: 1; border-bottom: solid #005577; }
     Footer { background: #111111; color: #888888; }
+    #token-telemetry-bar {
+        background: #090e15;
+        border-bottom: solid #005577;
+        height: 3;
+        padding: 0 2;
+        color: #00e5ff;
+    }
     #chat-container { padding: 1 2; }
     .chat-label-you { color: #ffffff; margin-top: 1; }
-    .chat-label-aura { color: #00ffff; margin-top: 1; }
+    .chat-label-aura { color: #00ffff; margin-top: 1; text-style: bold; }
     .chat-content { margin-bottom: 1; }
-    .chat-content-aura { color: #cccccc; margin-bottom: 1; }
-    .chat-tool { color: #666666; margin-left: 2; border-left: solid #333333; padding-left: 1; }
-    .chat-error { color: #ff5555; margin-left: 2; border-left: solid #ff0000; padding-left: 1; }
-    #input-box { border: round #333333; background: #000000; height: 3; margin: 1; }
+    .chat-content-aura { color: #e0f7fa; margin-bottom: 1; }
+    .chat-tool { color: #78909c; margin-left: 2; border-left: solid #00838f; padding-left: 1; }
+    .chat-error { color: #ff5252; margin-left: 2; border-left: solid #d50000; padding-left: 1; }
+    #input-box { border: round #00838f; background: #050a10; height: 3; margin: 1; color: #ffffff; }
     """
     
     BINDINGS = [
@@ -158,9 +166,13 @@ class AuraTUI(App):
 
     def compose(self) -> ComposeResult:
         yield Header()
+        yield Static(
+            "⚡ ORION NEURAL TELEMETRY  |  Used: 0 tok  |  Budget: 2,048 tok (0.0% used, 100.0% free)  |  Throughput: Idle",
+            id="token-telemetry-bar"
+        )
         with VerticalScroll(id="chat-container"):
-            yield ChatMessage("AURA", "ORION Agent Initialized.")
-        yield Input(placeholder="Ask anything... (! shell, @ file, ? api)", id="input-box")
+            yield ChatMessage("AURA", "✨ ORION Multilingual Neural Subsystem Online.\n[b]Hindi-English • Telugu-English • English (Wikitext)[/b] active.")
+        yield Input(placeholder="Ask anything in English, Hinglish, or Telugu... (! shell, @ file, ? api)", id="input-box")
         yield Footer()
 
     def on_mount(self):
@@ -169,6 +181,10 @@ class AuraTUI(App):
         self.nlp = AuraNLP()
         self.agent = LocalCodebaseAgent(os.getcwd())
         
+        self.total_tokens_used = 0
+        self.max_token_budget = 4096
+        self.telemetry_bar = self.query_one("#token-telemetry-bar")
+
         # 1. Check for Modern PyTorch Brain (Qwen Instruct)
         self.pytorch_model = None
         self.pytorch_tokenizer = None
@@ -179,6 +195,11 @@ class AuraTUI(App):
                 from transformers import AutoModelForCausalLM, AutoTokenizer
                 self.pytorch_tokenizer = AutoTokenizer.from_pretrained(pytorch_path)
                 self.pytorch_model = AutoModelForCausalLM.from_pretrained(pytorch_path).to("cpu")
+                # Optimize CPU thread count for fast inference
+                try:
+                    torch.set_num_threads(4)
+                except Exception:
+                    pass
                 self.sub_title = "AURA-PyTorch - Modern Instruct AI Active"
             except:
                 pass
@@ -265,13 +286,33 @@ class AuraTUI(App):
             thread = Thread(target=self.pytorch_model.generate, kwargs=generation_kwargs)
             thread.start()
             
+            t_start = time.time()
             generated_text = ""
+            new_tokens_count = 0
             for new_text in streamer:
                 generated_text += new_text
+                new_tokens_count += 1
                 msg.update_text(generated_text)
-                await asyncio.sleep(0.01)
                 
-            await self.append_message("Tool", "> Generation completed via Modern PyTorch Instruct Engine.")
+                # Live token telemetry animation
+                cur_total = self.total_tokens_used + new_tokens_count
+                pct = min(100.0, (cur_total / self.max_token_budget) * 100.0)
+                pct_left = max(0.0, 100.0 - pct)
+                dt = max(0.01, time.time() - t_start)
+                tps = new_tokens_count / dt
+                bar_fill = int(pct / 5)
+                meter = "█" * bar_fill + "░" * (20 - bar_fill)
+                self.telemetry_bar.update(
+                    f"⚡ ORION TELEMETRY [{meter}] {pct:.1f}%  |  "
+                    f"Used: {cur_total:,} tok  |  "
+                    f"Remaining: {pct_left:.1f}% ({max(0, self.max_token_budget - cur_total):,} tok)  |  "
+                    f"⚡ {tps:.1f} tok/s"
+                )
+                await asyncio.sleep(0.005)
+                
+            self.total_tokens_used += new_tokens_count
+            dt_total = time.time() - t_start
+            await self.append_message("Tool", f"> Generation completed: {new_tokens_count} tokens in {dt_total:.1f}s ({new_tokens_count/max(0.1, dt_total):.1f} tok/s)")
         except Exception as e:
             await self.append_message("Error", f"PyTorch Inference Failed: {str(e)}")
         self.sub_title = "AURA-PyTorch - Modern Instruct AI Active"
