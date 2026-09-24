@@ -57,6 +57,9 @@ class AuraNLP:
             return random.choice(self.greetings)
         if any(word in text_lower for word in ["status", "health"]):
             return "Cloud Node is OFFLINE. Edge Node is OFFLINE. Satellite Link is ONLINE."
+        # Capabilities & System Controls
+        if re.search(r'\b(can\s+you\s+open\s+apps?|apps?\s+open\s+kar\s+sa[kt]|apps?\s+khol\s+sa[kt]|applications?\s+open|apps\s+open\s+cheyagalaru|tum\s+apps\s+open)\b', text_lower):
+            return "Haan bilkul! Main aapke desktop applications directly open kar sakta hoon. Jaise ki:\n• 'open brave' ya 'tum brave open kar sakte ho'\n• 'open chrome' / 'khol chrome'\n• 'open notepad', 'open calc', 'open vs code', etc.\nAap bas boliye konsa app open karna hai!"
         if text_lower in ["meow", "woof", "moo"]:
             return f"I'm an advanced AI, not an animal... but {text_lower} to you too!"
         return None
@@ -167,7 +170,7 @@ class AuraTUI(App):
     def compose(self) -> ComposeResult:
         yield Header()
         yield Static(
-            "⚡ ORION NEURAL TELEMETRY  |  Used: 0 tok  |  Budget: 2,048 tok (0.0% used, 100.0% free)  |  Throughput: Idle",
+            "⚡ ORION NEURAL TELEMETRY  |  Used: 0 tok  |  Budget: 1,000,000 tok (0.0% used, 100.0% free)  |  Throughput: Idle",
             id="token-telemetry-bar"
         )
         with VerticalScroll(id="chat-container"):
@@ -182,7 +185,7 @@ class AuraTUI(App):
         self.agent = LocalCodebaseAgent(os.getcwd())
         
         self.total_tokens_used = 0
-        self.max_token_budget = 4096
+        self.max_token_budget = 1_000_000
         self.telemetry_bar = self.query_one("#token-telemetry-bar")
 
         # 1. Check for Modern PyTorch Brain (Qwen Instruct)
@@ -197,7 +200,7 @@ class AuraTUI(App):
                 self.pytorch_model = AutoModelForCausalLM.from_pretrained(pytorch_path).to("cpu")
                 # Optimize CPU thread count for fast inference
                 try:
-                    torch.set_num_threads(4)
+                    torch.set_num_threads(6)
                 except Exception:
                     pass
                 self.sub_title = "AURA-PyTorch - Modern Instruct AI Active"
@@ -218,19 +221,161 @@ class AuraTUI(App):
             else:
                 self.sub_title = "AURA-Local - Fallback Engine"
 
+    def launch_system_app(self, app_name: str) -> tuple[bool, str]:
+        """Launches a desktop or system application on Windows. ponytail: native subprocess/os.startfile."""
+        target = app_name.lower().strip()
+        
+        # 1. Custom and registered Windows apps
+        app_map = {
+            "notepad": ["notepad.exe"],
+            "calculator": ["calc.exe"],
+            "calc": ["calc.exe"],
+            "explorer": ["explorer.exe"],
+            "files": ["explorer.exe"],
+            "file manager": ["explorer.exe"],
+            "terminal": ["wt.exe", "cmd.exe"],
+            "cmd": ["cmd.exe"],
+            "powershell": ["powershell.exe"],
+            "task manager": ["taskmgr.exe"],
+            "taskmgr": ["taskmgr.exe"],
+            "chrome": [
+                r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+                r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+                "chrome.exe"
+            ],
+            "google chrome": [
+                r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+                r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+                "chrome.exe"
+            ],
+            "firefox": [
+                r"C:\Program Files\Mozilla Firefox\firefox.exe",
+                "firefox.exe"
+            ],
+            "edge": [
+                r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+                "msedge.exe"
+            ],
+            "msedge": [
+                r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+                "msedge.exe"
+            ],
+            "vlc": [
+                r"C:\Program Files\VideoLAN\VLC\vlc.exe",
+                "vlc.exe"
+            ],
+            "code": [
+                os.path.expandvars(r"%LOCALAPPDATA%\Programs\Microsoft VS Code\Code.exe"),
+                r"C:\Program Files\Microsoft VS Code\Code.exe",
+                "code"
+            ],
+            "vscode": [
+                os.path.expandvars(r"%LOCALAPPDATA%\Programs\Microsoft VS Code\Code.exe"),
+                r"C:\Program Files\Microsoft VS Code\Code.exe",
+                "code"
+            ],
+            "vs code": [
+                os.path.expandvars(r"%LOCALAPPDATA%\Programs\Microsoft VS Code\Code.exe"),
+                r"C:\Program Files\Microsoft VS Code\Code.exe",
+                "code"
+            ],
+            "brave": [
+                os.path.expandvars(r"%LOCALAPPDATA%\BraveSoftware\Brave-Browser\Application\brave.exe"),
+                r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
+                r"C:\Program Files (x86)\BraveSoftware\Brave-Browser\Application\brave.exe",
+                "brave.exe"
+            ],
+            "brave browser": [
+                os.path.expandvars(r"%LOCALAPPDATA%\BraveSoftware\Brave-Browser\Application\brave.exe"),
+                r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
+                r"C:\Program Files (x86)\BraveSoftware\Brave-Browser\Application\brave.exe",
+                "brave.exe"
+            ]
+        }
+
+        # Check in app_map
+        candidates = app_map.get(target, [target])
+        for c in candidates:
+            try:
+                if os.path.isabs(c):
+                    if os.path.exists(c):
+                        subprocess.Popen([c], shell=False)
+                        return True, f"Launched {os.path.basename(c)}"
+                else:
+                    # Run via shell
+                    subprocess.Popen(f"start {c}", shell=True)
+                    return True, f"Launched command '{c}'"
+            except Exception:
+                continue
+
+        # Fallback to Windows Registry App Paths
+        try:
+            import winreg
+            for root in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
+                try:
+                    key = winreg.OpenKey(root, r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths")
+                    for i in range(winreg.QueryInfoKey(key)[0]):
+                        sub = winreg.EnumKey(key, i)
+                        if target in sub.lower():
+                            sk = winreg.OpenKey(key, sub)
+                            path = winreg.QueryValue(sk, None)
+                            if path and os.path.exists(path):
+                                subprocess.Popen([path], shell=False)
+                                return True, f"Launched {os.path.basename(path)}"
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+        return False, f"Could not find or launch application '{target}'"
+
     async def on_input_submitted(self, event: Input.Submitted):
         text = event.value.strip()
         if not text: return
         self.query_one("#input-box", Input).value = ""
         await self.append_message("You", text)
         
+        # Check for natural language app launching requests
+        text_lower = text.lower()
+        app_request = False
+        app_target = None
+        
+        # Specific App Launch patterns:
+        app_patterns = [
+            r'\b(brave|chrome|google\s+chrome|firefox|edge|msedge|notepad|calculator|calc|code|vscode|vs\s+code|explorer|files|terminal|cmd|powershell|vlc|spotify|taskmgr)\b'
+        ]
+        action_patterns = r'\b(open|launch|start|chalu|kholo?|kholna|run)\b'
+        
+        for pat in app_patterns:
+            m_app = re.search(pat, text_lower)
+            m_act = re.search(action_patterns, text_lower)
+            if m_app and m_act:
+                app_request = True
+                app_target = m_app.group(1).strip()
+                break
+                
+        # Direct command format: 'open <app>'
+        if not app_request:
+            m_direct = re.match(r'^(?:open|launch|start|kholo?)\s+([a-zA-Z0-9_\-\.\s]+)$', text_lower)
+            if m_direct and not text_lower.startswith("! "):
+                app_request = True
+                app_target = m_direct.group(1).strip()
+                
+        if app_request and app_target:
+            await self.append_message("Tool", f"> System App Trigger detected: '{app_target}'")
+            success, msg = self.launch_system_app(app_target)
+            if success:
+                display_name = app_target.capitalize()
+                await self.append_message("AURA", f"Opening {display_name} for you right away!")
+            else:
+                await self.append_message("AURA", f"Maine '{app_target}' launch karne ki koshish ki, lekin system par executable nahi mila. Aap 'open chrome', 'open notepad', ya 'open calc' try kar sakte hain.")
+            return
+
         if text.startswith("!"):
             cmd = text[1:].strip()
             if cmd == "orbital":
                 await self.append_message("Tool", "> Initializing ORION Orbital View subsystem...")
                 import subprocess
-                # Ponytail: Launching in a new visible CMD window so the user can see when npm install finishes
-                # and when Vite is actually ready, instead of silently failing in the background.
                 subprocess.Popen('start cmd /k "npm install && npm run dev -- --host localhost --port 4173"', shell=True, cwd=os.path.join(os.getcwd(), "modules", "orbital-view"))
                 await self.append_message("AURA", "ORION Orbital View initialized!\nA new terminal window has opened to run the server.\nOnce it says 'ready', open http://localhost:4173 in your browser.")
             else:
@@ -267,7 +412,7 @@ class AuraTUI(App):
                 "You fluently understand English, Hindi, and Hinglish (Hindi words written using the English alphabet). "
                 "For example: 'kaise ho' means 'how are you', 'tum kaun ho' means 'who are you', and 'mera naam' means 'my name is'. "
                 "Never misinterpret Hinglish words as English medical terms. "
-                "Reply naturally and helpfully in the same language or tone as the user."
+                "Reply naturally, concisely, and helpfully in the same language or tone as the user."
             )
             messages = [
                 {"role": "system", "content": sys_prompt},
@@ -281,9 +426,20 @@ class AuraTUI(App):
             self.chat_container.scroll_end(animate=False)
             
             streamer = TextIteratorStreamer(self.pytorch_tokenizer, skip_prompt=True, skip_special_tokens=True)
-            generation_kwargs = dict(inputs, streamer=streamer, max_new_tokens=150, temperature=0.7, top_p=0.9)
+            generation_kwargs = dict(
+                inputs,
+                streamer=streamer,
+                max_new_tokens=90,
+                do_sample=True,
+                temperature=0.6,
+                top_p=0.85
+            )
             
-            thread = Thread(target=self.pytorch_model.generate, kwargs=generation_kwargs)
+            def run_gen():
+                with torch.inference_mode():
+                    self.pytorch_model.generate(**generation_kwargs)
+
+            thread = Thread(target=run_gen)
             thread.start()
             
             t_start = time.time()
@@ -303,9 +459,9 @@ class AuraTUI(App):
                 bar_fill = int(pct / 5)
                 meter = "█" * bar_fill + "░" * (20 - bar_fill)
                 self.telemetry_bar.update(
-                    f"⚡ ORION TELEMETRY [{meter}] {pct:.1f}%  |  "
+                    f"⚡ ORION TELEMETRY [{meter}] {pct:.2f}%  |  "
                     f"Used: {cur_total:,} tok  |  "
-                    f"Remaining: {pct_left:.1f}% ({max(0, self.max_token_budget - cur_total):,} tok)  |  "
+                    f"Remaining: {pct_left:.2f}% ({max(0, self.max_token_budget - cur_total):,} tok)  |  "
                     f"⚡ {tps:.1f} tok/s"
                 )
                 await asyncio.sleep(0.005)
