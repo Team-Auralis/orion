@@ -1,0 +1,258 @@
+{
+  "meta": {
+    "task": "F7 training-harness resource stress + crash-recovery",
+    "harness": "scripts/training/train_comp001.py (10m config, real BPE vocab 10240, CPU)",
+    "seed": 42,
+    "lr": 0.001,
+    "threads": 6,
+    "ckpt_every": 2,
+    "scratch_dir": "D:\\orion\\models\\scratch-for-stress",
+    "canonical_policy": "stress runs write ONLY models/scratch-for-stress/ + logs/forensic/; NEVER canonical checkpoints or logs/training_runs.jsonl",
+    "free_ram_start_mb": 2732.1,
+    "min_free_ram_mb": 1923.0,
+    "ram_floor_mb": 250.0,
+    "wall_s": 41.0
+  },
+  "scratch_run": {
+    "run_dir": "D:\\orion\\models\\scratch-for-stress\\runA-bootstrap",
+    "rc": 0,
+    "steps": 6,
+    "start_loss": 9.260666,
+    "end_loss": 9.114306,
+    "train_s": 0.37,
+    "mean_step_s": 0.062,
+    "peak_rss_mb": 672.6,
+    "ckpts_written": [
+      "D:\\orion\\models\\scratch-for-stress\\runA-bootstrap\\checkpoint-2",
+      "D:\\orion\\models\\scratch-for-stress\\runA-bootstrap\\checkpoint-4",
+      "D:\\orion\\models\\scratch-for-stress\\runA-bootstrap\\checkpoint-6"
+    ]
+  },
+  "crash_recovery": {
+    "kill_rc": 1,
+    "killed_after_s": 8.7,
+    "ckpts_at_kill": [
+      2,
+      4,
+      6,
+      8
+    ],
+    "last_ckpt_step": 8,
+    "last_logged_step": 9,
+    "pre_kill_losses": {
+      "1": 9.238544,
+      "2": 9.251266,
+      "3": 9.231266,
+      "4": 9.220968,
+      "5": 9.170778,
+      "6": 9.115236,
+      "7": 9.067359,
+      "8": 9.071245,
+      "9": 9.000678
+    },
+    "pre_kill_rss_mb": {
+      "1": 638.4,
+      "2": 681.1,
+      "3": 608.2,
+      "4": 670.6,
+      "5": 668.3,
+      "6": 672.2,
+      "7": 669.7,
+      "8": 670.0,
+      "9": 669.6
+    }
+  },
+  "resume": {
+    "resumed_from": "D:\\orion\\models\\scratch-for-stress\\runB-crashresume\\checkpoint-8",
+    "resume_attempts": [
+      {
+        "ckpt_step": 8,
+        "rc": 0,
+        "stdout_tail": "ion\\models\\scratch-for-stress\\runB-crashresume\\checkpoint-10/ (step 10)\n  step  11/14 loss 8.9212 rss 669 MB\n  step  12/14 loss 8.8834 rss 672 MB\n[CKPT] saved D:\\orion\\models\\scratch-for-stress\\runB-crashresume\\checkpoint-12/ (step 12)\n  step  13/14 loss 8.8072 rss 673 MB\n  step  14/14 loss 8.8233 rss 677 MB\n[CKPT] saved D:\\orion\\models\\scratch-for-stress\\runB-crashresume\\checkpoint-14/ (step 14)\n"
+      }
+    ],
+    "interrupted_save_artifacts": [],
+    "rc": 0,
+    "ckpt_loss_before_resume": 9.071245193481445,
+    "first_post_resume_loss": 9.000678,
+    "last_pre_kill_loss": 9.000678,
+    "last_pre_kill_step": 9,
+    "overlap_steps": [
+      9
+    ],
+    "same_step_max_delta": 0.0,
+    "same_step_deltas": {
+      "9": 0.0
+    },
+    "pre_kill_losses": {
+      "1": 9.238544,
+      "2": 9.251266,
+      "3": 9.231266,
+      "4": 9.220968,
+      "5": 9.170778,
+      "6": 9.115236,
+      "7": 9.067359,
+      "8": 9.071245,
+      "9": 9.000678
+    },
+    "pre_kill_rss_mb": {
+      "1": 638.4,
+      "2": 681.1,
+      "3": 608.2,
+      "4": 670.6,
+      "5": 668.3,
+      "6": 672.2,
+      "7": 669.7,
+      "8": 670.0,
+      "9": 669.6
+    },
+    "post_resume_losses": {
+      "9": 9.000678,
+      "10": 8.986612,
+      "11": 8.921224,
+      "12": 8.883446,
+      "13": 8.80718,
+      "14": 8.823266
+    },
+    "harness_warm_resume_check": true,
+    "ckpt_duplicates": {},
+    "ckpt_integrity": [
+      {
+        "step": 2,
+        "json_step": 2,
+        "dir_ok": true,
+        "pt_bytes": 17343229
+      },
+      {
+        "step": 4,
+        "json_step": 4,
+        "dir_ok": true,
+        "pt_bytes": 17343229
+      },
+      {
+        "step": 6,
+        "json_step": 6,
+        "dir_ok": true,
+        "pt_bytes": 17343293
+      },
+      {
+        "step": 8,
+        "json_step": 8,
+        "dir_ok": true,
+        "pt_bytes": 17343293
+      },
+      {
+        "step": 10,
+        "json_step": 10,
+        "dir_ok": true,
+        "pt_bytes": 17343293
+      },
+      {
+        "step": 12,
+        "json_step": 12,
+        "dir_ok": true,
+        "pt_bytes": 17343357
+      },
+      {
+        "step": 14,
+        "json_step": 14,
+        "dir_ok": true,
+        "pt_bytes": 17343357
+      }
+    ]
+  },
+  "leak": {
+    "steps": 30,
+    "rss_samples_mb": [
+      629.50390625,
+      672.20703125,
+      673.14453125,
+      673.7890625,
+      673.79296875,
+      673.85546875,
+      673.17578125,
+      673.42578125,
+      673.67578125,
+      673.86328125,
+      673.9296875,
+      653.8984375,
+      673.93359375,
+      601.70703125,
+      664.30078125,
+      664.3046875,
+      664.3046875,
+      664.3046875,
+      664.3671875,
+      664.3671875,
+      664.3671875,
+      664.4296875,
+      664.4296875,
+      664.9921875,
+      665.05859375,
+      662.125,
+      664.875,
+      664.875,
+      664.875,
+      664.875
+    ],
+    "rss_start_mb": 629.50390625,
+    "rss_end_mb": 664.875,
+    "rss_delta_mb": 35.37,
+    "steady_state_slope_mb_per_step": -0.1919,
+    "slope_pass": true
+  },
+  "sustained": {
+    "wall_s": 41.0,
+    "min_free_ram_mb": 1923.0,
+    "no_crash_or_oom": true,
+    "aborted": false
+  },
+  "isolation": {
+    "canonical_ledger_path": "D:\\orion\\logs\\training_runs.jsonl",
+    "ledger_sha256_before": "c8324a990c697931c8392c7b69cd7880a60591e6ed3320f8783fd3c248c03e51",
+    "ledger_sha256_after": "c8324a990c697931c8392c7b69cd7880a60591e6ed3320f8783fd3c248c03e51",
+    "ledger_rows_before": 128,
+    "ledger_rows_after": 128,
+    "ledger_unchanged": true,
+    "stress_ids_in_canonical_ledger": 0,
+    "git_status_before_start": "M (pre-existing working-tree modification; confirmed present before any stress run)",
+    "canonical_100m_real_ckpts_before": [
+      "checkpoint-1200",
+      "checkpoint-1500",
+      "checkpoint-1800",
+      "checkpoint-1869",
+      "checkpoint-1900",
+      "checkpoint-1919",
+      "checkpoint-200",
+      "checkpoint-400",
+      "checkpoint-600",
+      "checkpoint-623",
+      "checkpoint-900"
+    ],
+    "canonical_100m_real_ckpts_after": [
+      "checkpoint-1200",
+      "checkpoint-1500",
+      "checkpoint-1800",
+      "checkpoint-1869",
+      "checkpoint-1900",
+      "checkpoint-1919",
+      "checkpoint-200",
+      "checkpoint-400",
+      "checkpoint-600",
+      "checkpoint-623",
+      "checkpoint-900"
+    ],
+    "canonical_10m_ckpts_unchanged": true,
+    "canonical_unchanged": true
+  },
+  "scratch_cleanup": {
+    "deleted": true,
+    "max_scratch_size_mb": 165.4
+  },
+  "summary_flags": {
+    "crash_resume_continuous": true,
+    "leak_slope_pass": true,
+    "sustained_pass": true,
+    "isolation_pass": true
+  }
+}

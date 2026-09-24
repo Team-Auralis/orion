@@ -1,0 +1,58 @@
+{"kind": "marker", "note": "FORENSIC STRESS RUN - not a canonical training ledger row"}
+{"kind": "data", "phase": "scratch_child", "budget": 10000, "slice_tokens": 10167, "train_rows": 8, "blocks": 8, "vocab": 10240, "data_load_s": 0.44}
+{"kind": "step", "phase": "scratch_child", "step": 1, "loss": 9.260666, "rss_mb": 629.9}
+{"kind": "step", "phase": "scratch_child", "step": 2, "loss": 9.245667, "rss_mb": 672.6}
+{"kind": "step", "phase": "scratch_child", "step": 3, "loss": 9.221022, "rss_mb": 659.8}
+{"kind": "step", "phase": "scratch_child", "step": 4, "loss": 9.219785, "rss_mb": 662.1}
+{"kind": "step", "phase": "scratch_child", "step": 5, "loss": 9.165699, "rss_mb": 659.8}
+{"kind": "step", "phase": "scratch_child", "step": 6, "loss": 9.114306, "rss_mb": 663.8}
+{"kind": "run_summary", "phase": "scratch_child", "steps": 6, "start_loss": 9.260666, "end_loss": 9.114306, "train_s": 0.37, "peak_rss_mb": 672.6, "ckpt_last_loss": null, "resumed_from": null, "params": 1442496, "seed": 42, "threads": 6}
+{"kind": "data", "phase": "crash_child", "budget": 40000, "slice_tokens": 40643, "train_rows": 41, "blocks": 39, "vocab": 10240, "data_load_s": 0.36}
+{"kind": "step", "phase": "crash_child", "step": 1, "loss": 9.238544, "rss_mb": 638.4}
+{"kind": "step", "phase": "crash_child", "step": 2, "loss": 9.251266, "rss_mb": 681.1}
+{"kind": "step", "phase": "crash_child", "step": 3, "loss": 9.231266, "rss_mb": 608.2}
+{"kind": "step", "phase": "crash_child", "step": 4, "loss": 9.220968, "rss_mb": 670.6}
+{"kind": "step", "phase": "crash_child", "step": 5, "loss": 9.170778, "rss_mb": 668.3}
+{"kind": "step", "phase": "crash_child", "step": 6, "loss": 9.115236, "rss_mb": 672.2}
+{"kind": "step", "phase": "crash_child", "step": 7, "loss": 9.067359, "rss_mb": 669.7}
+{"kind": "step", "phase": "crash_child", "step": 8, "loss": 9.071245, "rss_mb": 670.0}
+{"kind": "step", "phase": "crash_child", "step": 9, "loss": 9.000678, "rss_mb": 669.6}
+{"kind": "data", "phase": "resume_child", "budget": 40000, "slice_tokens": 40643, "train_rows": 41, "blocks": 39, "vocab": 10240, "data_load_s": 0.37}
+{"kind": "step", "phase": "resume_child", "step": 9, "loss": 9.000678, "rss_mb": 648.7}
+{"kind": "step", "phase": "resume_child", "step": 10, "loss": 8.986612, "rss_mb": 672.0}
+{"kind": "step", "phase": "resume_child", "step": 11, "loss": 8.921224, "rss_mb": 669.3}
+{"kind": "step", "phase": "resume_child", "step": 12, "loss": 8.883446, "rss_mb": 671.9}
+{"kind": "step", "phase": "resume_child", "step": 13, "loss": 8.80718, "rss_mb": 672.7}
+{"kind": "step", "phase": "resume_child", "step": 14, "loss": 8.823266, "rss_mb": 677.2}
+{"kind": "run_summary", "phase": "resume_child", "steps": 14, "start_loss": 9.238544, "end_loss": 8.823266, "train_s": 0.33, "peak_rss_mb": 677.2, "ckpt_last_loss": 9.071245193481445, "resumed_from": "D:\\orion\\models\\scratch-for-stress\\runB-crashresume\\checkpoint-8", "params": 1442496, "seed": 42, "threads": 6}
+{"kind": "leak_sample", "step": 1, "rss_mb": 629.50390625}
+{"kind": "leak_sample", "step": 2, "rss_mb": 672.20703125}
+{"kind": "leak_sample", "step": 3, "rss_mb": 673.14453125}
+{"kind": "leak_sample", "step": 4, "rss_mb": 673.7890625}
+{"kind": "leak_sample", "step": 5, "rss_mb": 673.79296875}
+{"kind": "leak_sample", "step": 6, "rss_mb": 673.85546875}
+{"kind": "leak_sample", "step": 7, "rss_mb": 673.17578125}
+{"kind": "leak_sample", "step": 8, "rss_mb": 673.42578125}
+{"kind": "leak_sample", "step": 9, "rss_mb": 673.67578125}
+{"kind": "leak_sample", "step": 10, "rss_mb": 673.86328125}
+{"kind": "leak_sample", "step": 11, "rss_mb": 673.9296875}
+{"kind": "leak_sample", "step": 12, "rss_mb": 653.8984375}
+{"kind": "leak_sample", "step": 13, "rss_mb": 673.93359375}
+{"kind": "leak_sample", "step": 14, "rss_mb": 601.70703125}
+{"kind": "leak_sample", "step": 15, "rss_mb": 664.30078125}
+{"kind": "leak_sample", "step": 16, "rss_mb": 664.3046875}
+{"kind": "leak_sample", "step": 17, "rss_mb": 664.3046875}
+{"kind": "leak_sample", "step": 18, "rss_mb": 664.3046875}
+{"kind": "leak_sample", "step": 19, "rss_mb": 664.3671875}
+{"kind": "leak_sample", "step": 20, "rss_mb": 664.3671875}
+{"kind": "leak_sample", "step": 21, "rss_mb": 664.3671875}
+{"kind": "leak_sample", "step": 22, "rss_mb": 664.4296875}
+{"kind": "leak_sample", "step": 23, "rss_mb": 664.4296875}
+{"kind": "leak_sample", "step": 24, "rss_mb": 664.9921875}
+{"kind": "leak_sample", "step": 25, "rss_mb": 665.05859375}
+{"kind": "leak_sample", "step": 26, "rss_mb": 662.125}
+{"kind": "leak_sample", "step": 27, "rss_mb": 664.875}
+{"kind": "leak_sample", "step": 28, "rss_mb": 664.875}
+{"kind": "leak_sample", "step": 29, "rss_mb": 664.875}
+{"kind": "leak_sample", "step": 30, "rss_mb": 664.875}
+{"kind": "suite_summary", "wall_s": 41.0, "min_free_ram_mb": 1923.0, "flags": {"crash_resume_continuous": true, "leak_slope_pass": true, "sustained_pass": true, "isolation_pass": true}, "note": "suite-level summary row (forensic, not canonical)"}
