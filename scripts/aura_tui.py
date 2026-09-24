@@ -536,23 +536,28 @@ class AuraTUI(App):
                 except Exception:
                     pass
 
-                # If we opened a direct video, schedule key injection to scroll to comments
-                if browser_proc:
-                    def inject_comment_action():
-                        time.sleep(3.5) # Wait for YouTube player to initialize
-                        # Scroll down and focus comment box
-                        ps_scroll = (
-                            f"$ws = New-Object -ComObject WScript.Shell; "
-                            f"$proc = Get-Process -Name {browser_proc} -ErrorAction SilentlyContinue | Select-Object -First 1; "
-                            f"if ($proc) {{ "
-                            f"  $ws.AppActivate($proc.Id); "
-                            f"  Start-Sleep -Milliseconds 600; "
-                            f"  $ws.SendKeys('{{PGDN}}'); "
-                            f"}}"
-                        )
-                        subprocess.run(["powershell", "-NoProfile", "-Command", ps_scroll], capture_output=True, timeout=5)
+                # Automated comment injection
+                def inject_comment_action():
+                    time.sleep(3.5) # Wait for YouTube player to finish loading
+                    # Locate browser process dynamically (brave, chrome, msedge, or firefox)
+                    ps_comment_auto = (
+                        f"$ws = New-Object -ComObject WScript.Shell; "
+                        f"$proc = Get-Process brave, chrome, msedge, firefox -ErrorAction SilentlyContinue | Select-Object -First 1; "
+                        f"if ($proc) {{ "
+                        f"  $ws.AppActivate($proc.Id); "
+                        f"  Start-Sleep -Milliseconds 600; "
+                        f"  $ws.SendKeys('k'); "  # Pause video so it doesn't play over comments
+                        f"  Start-Sleep -Milliseconds 300; "
+                        f"  $ws.SendKeys('{{PGDN}}'); " # Scroll down to comments
+                        f"  Start-Sleep -Milliseconds 600; "
+                        f"  $ws.SendKeys('{{TAB}}'); "  # Focus comment box
+                        f"  Start-Sleep -Milliseconds 300; "
+                        f"  $ws.SendKeys('^v'); "  # Paste clipboard comment
+                        f"}}"
+                    )
+                    subprocess.run(["powershell", "-NoProfile", "-Command", ps_comment_auto], capture_output=True, timeout=8)
 
-                    threading.Thread(target=inject_comment_action, daemon=True).start()
+                threading.Thread(target=inject_comment_action, daemon=True).start()
 
             # Execution narrative
             if direct_video_url:
@@ -569,8 +574,8 @@ class AuraTUI(App):
             elif action == "like":
                 resp_lines.append("• Video play karke Like queue update kar di gayi hai.")
             elif action == "comment" and comment_text:
-                resp_lines.append(f"• Video ke comments section me draft load ho gaya: *\"{comment_text}\"*")
-                resp_lines.append("• **Clipboard Ready**: Comment aapke clipboard par bhi copy kar diya gaya hai (Ctrl+V se instant post kar sakte hain)!")
+                resp_lines.append(f"• Video load karke comments section focus kiya gaya aur comment draft inject kiya: *\"{comment_text}\"*")
+                resp_lines.append("• **One-Click/Enter Submit**: Agar comment box select ho chuka hai, to turant submit ho jayega (ya aap simply **Ctrl+V** / **Enter** press karke comment post kar sakte hain)!")
             else:
                 resp_lines.append("Aap bataiye konsi video play karni hai, subscribe karna hai, ya comment likhna hai!")
 
