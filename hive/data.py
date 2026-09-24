@@ -68,6 +68,9 @@ def load_from_huggingface(dataset_name: str, config: Optional[str] = None, split
     """
     from datasets import load_dataset
 
+    if dataset_name == "wikitext" and not config:
+        config = "wikitext-2-raw-v1"
+
     tokenizer = orion_corpus.load_bpe_compat()
     print(f"[DATASET] Streaming Hugging Face dataset {dataset_name} (split={split})...")
     ds = load_dataset(dataset_name, config, split=split, streaming=True)

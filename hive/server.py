@@ -460,7 +460,7 @@ HTML_CONTENT = """<!DOCTYPE html>
                     <div style="font-size: 11px; color: #888; margin-top: 4px;">
                         Quick Select: 
                         <a href="javascript:void(0)" onclick="document.getElementById('hf-input').value='niranjanh123/English-Hinglish-Pairs'" style="color: #64b5f6; margin-right: 8px;">Hindi-English</a>
-                        <a href="javascript:void(0)" onclick="document.getElementById('hf-input').value='MRR24/English_to_Telugu_Bilingual_Sentence_Pairs'" style="color: #64b5f6; margin-right: 8px;">Telugu-English</a>
+                        <a href="javascript:void(0)" onclick="document.getElementById('hf-input').value='HackHedron/English_Telugu_Parallel_Corpus'" style="color: #64b5f6; margin-right: 8px;">Telugu-English</a>
                         <a href="javascript:void(0)" onclick="document.getElementById('hf-input').value='wikitext'" style="color: #64b5f6;">English (Wikitext)</a>
                     </div>
                 </div>
