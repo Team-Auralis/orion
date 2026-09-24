@@ -1,0 +1,523 @@
+{
+  "generated_at": "2026-09-24T08:46:04.661272+00:00",
+  "sources": [
+    "D:\\orion\\logs\\training_runs.jsonl",
+    "D:\\orion\\data\\training\\corpus\\manifest.json",
+    "D:\\orion\\models\\tokenizer_bpe\\tokenizer.json",
+    "D:\\orion\\models\\comp001\\100m-real",
+    "D:\\orion\\logs\\forensic\\learning_curve.csv"
+  ],
+  "sources_note": "every fact above is read from these raw files / ledger rows; no prior report is trusted. F1 identity.json and F2 learning_curve.csv are only referenced for cross-checks where noted.",
+  "ledger_row_count": 103,
+  "A": {
+    "corpus": {
+      "manifest_path": "D:\\orion\\data\\training\\corpus\\manifest.json",
+      "gate_row": "corpus-gate-29e0bb76",
+      "gate_timestamp": "2026-09-23T09:14:11Z",
+      "gate_verdict": "ADEQUATE",
+      "gate_count": 6,
+      "corpus_train_tokens": 63827053,
+      "corpus_bytes_recorded_gate": 266004351,
+      "train_shard_bytes_on_disk": 264606126,
+      "train_shard_rows": 216959,
+      "train_shard_file_count": 9,
+      "total_shard_count": 13,
+      "per_source_train": {
+        "wikitext": {
+          "rows": 193051,
+          "bytes": 145627231,
+          "files": 5,
+          "license": "cc-by-sa-3.0, gfdl"
+        },
+        "HuggingFaceFW/fineweb-edu": {
+          "rows": 23908,
+          "bytes": 118978895,
+          "files": 4,
+          "license": "odc-by"
+        }
+      },
+      "manifest_total_bytes": 265994795,
+      "manifest_total_texts": 218170,
+      "manifest_split_counts": {
+        "train": 216959,
+        "test": 598,
+        "val": 613
+      },
+      "licenses": {
+        "wikitext": "cc-by-sa-3.0, gfdl",
+        "HuggingFaceFW/fineweb-edu": "odc-by"
+      },
+      "corpus_sha256_recorded": "2f111760e7f8b417fd2b9d5604320934504a3937e035faf58b1f081703f740e7",
+      "corpus_sha256_recomputed_train_files": "b9d9cc3f649f3efdf25b58a6ae72eec51718e1d9f32c9f267271677b1e32fe71",
+      "corpus_sha256_match": false,
+      "shard_sha256_verified": 13,
+      "shard_sha256_failed": [],
+      "tokenizer_vocab_size_gate": 10240,
+      "note_discrepancy_corpus_bytes": [
+        "gate records corpus_bytes=266004351; train shards on disk ",
+        "sum to ",
+        "264606126",
+        " (gate figure appears to include data/training/corpus/orion_dataset.jsonl, 9,556 bytes)"
+      ]
+    },
+    "tokenizer": {
+      "tokenizer_path": "D:\\orion\\models\\tokenizer_bpe\\tokenizer.json",
+      "vocab_size_exact": 10240,
+      "merges_count": 10032,
+      "model_type": "BPE",
+      "added_tokens_count": 4,
+      "added_tokens_ids": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "added_tokens_content": [
+        "<pad>",
+        "<bos>",
+        "<eos>",
+        "<unk>"
+      ],
+      "file_sha256": "01d3412bd91e28a6cef4893bb85065915d1c909e655d3911b698a07b7353229f",
+      "file_size_bytes": 697607,
+      "gate_tokenizer_vocab_size": 10240,
+      "vocab_crosscheck_gate_match": true
+    },
+    "dataset_hash": {
+      "recorded": "2f111760e7f8b417fd2b9d5604320934504a3937e035faf58b1f081703f740e7",
+      "run_count": 3,
+      "recomputed": "b9d9cc3f649f3efdf25b58a6ae72eec51718e1d9f32c9f267271677b1e32fe71",
+      "match": false
+    },
+    "training_config": {
+      "run_id": "comp-001-custom-100m-real-0d9808ff",
+      "status": "PARTIAL_FIRST_PASS",
+      "timestamp": "2026-09-23T10:18:18Z",
+      "params": {
+        "epochs": 2,
+        "model_size": "100m",
+        "max_steps": 0,
+        "lr": 0.001,
+        "seed": 42,
+        "train_token_budget": 700000,
+        "vocab_size": 10240,
+        "hidden_size": 768,
+        "intermediate_size": 3072,
+        "num_hidden_layers": 11,
+        "num_attention_heads": 12,
+        "num_key_value_heads": 4,
+        "max_position_embeddings": 512,
+        "max_len": 512,
+        "batch_size": 1,
+        "ckpt_every": 300,
+        "torch_threads": 6,
+        "resumed": true,
+        "resume_from_step": 623
+      },
+      "param_count": 110918656,
+      "optimizer": "NOT_RECORDED (name not present in ledger params or checkpoint hparams; optimizer state exp_avg/exp_avg_sq is present in checkpoint.pt \u2014 Adam-family inferred, see F2)",
+      "precision": "float32 (from exported config.json dtype + float32 checkpoint tensors; trainer-level precision NOT_RECORDED in ledger/hparams)"
+    },
+    "resume_history": {
+      "ckpt_steps": [
+        200,
+        400,
+        600,
+        623,
+        900,
+        1200,
+        1500,
+        1800,
+        1869,
+        1900,
+        1919
+      ]
+    },
+    "runs": {
+      "runs": [
+        {
+          "run_id": "comp-001-custom-100m-real-e08d7bb7",
+          "timestamp": "2026-09-23T09:52:02Z",
+          "status": "PARTIAL_FIRST_PASS",
+          "params": {
+            "epochs": 1,
+            "model_size": "100m",
+            "max_steps": 0,
+            "lr": 0.001,
+            "seed": 42,
+            "train_token_budget": 700000,
+            "vocab_size": 10240,
+            "hidden_size": 768,
+            "intermediate_size": 3072,
+            "num_hidden_layers": 11,
+            "num_attention_heads": 12,
+            "num_key_value_heads": 4,
+            "max_position_embeddings": 512,
+            "max_len": 512,
+            "batch_size": 1,
+            "ckpt_every": 200,
+            "torch_threads": 6,
+            "resumed": false,
+            "resume_from_step": 0
+          },
+          "seed": 42,
+          "dataset_hash": "2f111760e7f8b417fd2b9d5604320934504a3937e035faf58b1f081703f740e7",
+          "tokens_seen": 281813,
+          "train_tokens": 281813,
+          "epochs_seen": 1.0,
+          "corpus_total_tokens": 63827053,
+          "train_token_budget": 700000,
+          "slice_tokens_read": 700405,
+          "starting_loss": 9.460998,
+          "ending_loss": 6.56257,
+          "eval_loss": 7.622762,
+          "param_count": 110918656,
+          "duration_seconds": 1356.93,
+          "tokens_per_sec": 231.8,
+          "resumed": false,
+          "resume_from_step": 0,
+          "resume_checkpoint": "",
+          "checkpoints_listed": [
+            "checkpoint-200",
+            "checkpoint-400",
+            "checkpoint-600",
+            "checkpoint-623"
+          ],
+          "hardware": {
+            "cpu_cores": 6,
+            "cpu_threads": 12,
+            "total_ram_gb": 7.74,
+            "available_ram_gb": 1.86,
+            "torch_version": "2.13.0+cpu",
+            "cuda_available": false,
+            "git_commit": "19d9d9c3672ba8a2c40ee76c0449abfb139a8a68"
+          }
+        },
+        {
+          "run_id": "comp-001-custom-100m-real-0d9808ff",
+          "timestamp": "2026-09-23T10:18:18Z",
+          "status": "PARTIAL_FIRST_PASS",
+          "params": {
+            "epochs": 2,
+            "model_size": "100m",
+            "max_steps": 0,
+            "lr": 0.001,
+            "seed": 42,
+            "train_token_budget": 700000,
+            "vocab_size": 10240,
+            "hidden_size": 768,
+            "intermediate_size": 3072,
+            "num_hidden_layers": 11,
+            "num_attention_heads": 12,
+            "num_key_value_heads": 4,
+            "max_position_embeddings": 512,
+            "max_len": 512,
+            "batch_size": 1,
+            "ckpt_every": 300,
+            "torch_threads": 6,
+            "resumed": true,
+            "resume_from_step": 623
+          },
+          "seed": 42,
+          "dataset_hash": "2f111760e7f8b417fd2b9d5604320934504a3937e035faf58b1f081703f740e7",
+          "tokens_seen": 563626,
+          "train_tokens": 563626,
+          "epochs_seen": 2.0,
+          "corpus_total_tokens": 63827053,
+          "train_token_budget": 700000,
+          "slice_tokens_read": 700405,
+          "starting_loss": 6.574713,
+          "ending_loss": 5.877017,
+          "eval_loss": 7.938125,
+          "param_count": 110918656,
+          "duration_seconds": 3436.9,
+          "tokens_per_sec": 85.8,
+          "resumed": true,
+          "resume_from_step": 623,
+          "resume_checkpoint": "D:\\orion\\models\\comp001\\100m-real\\checkpoint-623",
+          "checkpoints_listed": [
+            "checkpoint-1200",
+            "checkpoint-1500",
+            "checkpoint-1800",
+            "checkpoint-1869",
+            "checkpoint-200",
+            "checkpoint-400",
+            "checkpoint-600",
+            "checkpoint-623",
+            "checkpoint-900"
+          ],
+          "hardware": {
+            "cpu_cores": 6,
+            "cpu_threads": 12,
+            "total_ram_gb": 7.74,
+            "available_ram_gb": 1.2,
+            "torch_version": "2.13.0+cpu",
+            "cuda_available": false,
+            "git_commit": "cb60b8375d0bf3477d06ed56c0cb93d7a195e4d6"
+          }
+        },
+        {
+          "run_id": "comp-001-custom-100m-real-9d8dfc35",
+          "timestamp": "2026-09-24T07:58:47Z",
+          "status": "PARTIAL_FIRST_PASS",
+          "params": {
+            "epochs": 10,
+            "model_size": "100m",
+            "max_steps": 50,
+            "lr": 0.001,
+            "seed": 42,
+            "train_token_budget": 800000,
+            "vocab_size": 10240,
+            "hidden_size": 768,
+            "intermediate_size": 3072,
+            "num_hidden_layers": 11,
+            "num_attention_heads": 12,
+            "num_key_value_heads": 4,
+            "max_position_embeddings": 512,
+            "max_len": 512,
+            "batch_size": 1,
+            "ckpt_every": 50,
+            "torch_threads": 6,
+            "resumed": true,
+            "resume_from_step": 1869
+          },
+          "seed": 42,
+          "dataset_hash": "2f111760e7f8b417fd2b9d5604320934504a3937e035faf58b1f081703f740e7",
+          "tokens_seen": 22401,
+          "train_tokens": 22401,
+          "epochs_seen": 0.0698,
+          "corpus_total_tokens": 63827053,
+          "train_token_budget": 800000,
+          "slice_tokens_read": 802467,
+          "starting_loss": 6.495296,
+          "ending_loss": 6.435823,
+          "eval_loss": 7.706575,
+          "param_count": 110918656,
+          "duration_seconds": 399.57,
+          "tokens_per_sec": 0.0,
+          "resumed": true,
+          "resume_from_step": 1869,
+          "resume_checkpoint": "models\\comp001\\100m-real\\checkpoint-1869",
+          "checkpoints_listed": [
+            "checkpoint-1200",
+            "checkpoint-1500",
+            "checkpoint-1800",
+            "checkpoint-1869",
+            "checkpoint-1900",
+            "checkpoint-1919",
+            "checkpoint-200",
+            "checkpoint-400",
+            "checkpoint-600",
+            "checkpoint-623",
+            "checkpoint-900"
+          ],
+          "hardware": {
+            "cpu_cores": 6,
+            "cpu_threads": 12,
+            "total_ram_gb": 7.74,
+            "available_ram_gb": 1.7,
+            "torch_version": "2.13.0+cpu",
+            "cuda_available": false,
+            "git_commit": "cda6215b554708a6290f12de305a47fe8ac1914a"
+          }
+        }
+      ]
+    },
+    "wall_clock": [
+      {
+        "run_id": "comp-001-custom-100m-real-e08d7bb7",
+        "duration": 1356.93,
+        "cores": 6,
+        "threads": 12,
+        "ram_total": 7.74,
+        "ram_avail": 1.86
+      },
+      {
+        "run_id": "comp-001-custom-100m-real-0d9808ff",
+        "duration": 3436.9,
+        "cores": 6,
+        "threads": 12,
+        "ram_total": 7.74,
+        "ram_avail": 1.2
+      },
+      {
+        "run_id": "comp-001-custom-100m-real-9d8dfc35",
+        "duration": 399.57,
+        "cores": 6,
+        "threads": 12,
+        "ram_total": 7.74,
+        "ram_avail": 1.7
+      }
+    ],
+    "budget_fraction": {
+      "corpus_train_tokens": 63827053,
+      "task_definition_final_invocation": {
+        "run_id": "comp-001-custom-100m-real-0d9808ff",
+        "tokens_seen": 563626,
+        "fraction": 0.008830518933719217,
+        "percent": 0.8830518933719217
+      },
+      "chronologically_last_invocation": {
+        "run_id": "comp-001-custom-100m-real-9d8dfc35",
+        "tokens_seen": 22401,
+        "fraction": 0.000350964034012349,
+        "percent": 0.0350964034012349
+      },
+      "cumulative_across_invocations": {
+        "tokens_seen_total": 867840,
+        "fraction": 0.013596742434591176,
+        "percent": 1.3596742434591176
+      },
+      "classification": "PARTIALLY_TRAINED (NOT fully trained)"
+    }
+  },
+  "B": {
+    "curve": {
+      "curve_rows": 1919,
+      "step_min": 1,
+      "step_max": 1919,
+      "eval_points": [
+        {
+          "step": 623,
+          "val_loss": 7.622762,
+          "val_ppl": 2044.2004213199334
+        },
+        {
+          "step": 1869,
+          "val_loss": 7.938125,
+          "val_ppl": 2802.101639078112
+        },
+        {
+          "step": 1919,
+          "val_loss": 7.706575,
+          "val_ppl": 2222.915718855317
+        }
+      ],
+      "slopes": {
+        "overall_step1_to_max": -0.001577254953076121,
+        "step1_to_1869": -0.0019186193790149892,
+        "step200_to_1869": -0.0007147729179149189,
+        "last_segment": 0.005895684210526313,
+        "last_two_avg": 0.010154100169779282,
+        "segments_used": [
+          0.01441251612903225,
+          0.005895684210526313
+        ]
+      },
+      "overfitting_intervals": [
+        {
+          "from_step": 623,
+          "to_step": 1869,
+          "val_delta": 0.3153630000000005,
+          "train_delta": -0.6855529999999996
+        }
+      ],
+      "verdict": "OVERFITTING",
+      "verdict_basis": "val loss rose +0.3154 from step 623 (7.6228) to step 1869 (7.9381) while train loss fell -0.6856 (6.5626 -> 5.8770) \u2014 matches the stated overfitting flag rule",
+      "signals": {
+        "overfitting_flag": true,
+        "divergence_spike": false,
+        "plateau": false,
+        "under_training": true
+      },
+      "best_by_val": {
+        "step": 623,
+        "val_loss": 7.622762,
+        "val_ppl": 2044.2004213199334,
+        "note": "lowest val loss / ppl among the 3 measured eval points (steps 623, 1869, 1919); no per-step val series exists to interpolate against"
+      },
+      "note_ambiguity": "overfitting flag fires on exactly ONE of the two measured val intervals (623->1869): the task's rule (val@623 < val@1869) holds. The 1869->1919 interval reversed (val fell) and absolute losses remain high, so under-training is also present; verdict below follows the explicit flag rule.",
+      "table": [
+        {
+          "step": 200,
+          "train_loss": 7.069973,
+          "val_loss": null,
+          "val_ppl": null,
+          "tokens": 90470
+        },
+        {
+          "step": 400,
+          "train_loss": 7.05933,
+          "val_loss": null,
+          "val_ppl": null,
+          "tokens": 180939
+        },
+        {
+          "step": 600,
+          "train_loss": 6.903358,
+          "val_loss": null,
+          "val_ppl": null,
+          "tokens": 271409
+        },
+        {
+          "step": 623,
+          "train_loss": 6.56257,
+          "val_loss": 7.622762,
+          "val_ppl": 2044.2004213199334,
+          "tokens": 281813
+        },
+        {
+          "step": 900,
+          "train_loss": 6.489686,
+          "val_loss": null,
+          "val_ppl": null,
+          "tokens": 407113
+        },
+        {
+          "step": 1200,
+          "train_loss": 6.138684,
+          "val_loss": null,
+          "val_ppl": null,
+          "tokens": 542818
+        },
+        {
+          "step": 1500,
+          "train_loss": 6.154689,
+          "val_loss": null,
+          "val_ppl": null,
+          "tokens": 678522
+        },
+        {
+          "step": 1800,
+          "train_loss": 6.036091,
+          "val_loss": null,
+          "val_ppl": null,
+          "tokens": 814227
+        },
+        {
+          "step": 1869,
+          "train_loss": 5.877017,
+          "val_loss": 7.938125,
+          "val_ppl": 2802.101639078112,
+          "tokens": 845439
+        },
+        {
+          "step": 1900,
+          "train_loss": 6.323805,
+          "val_loss": null,
+          "val_ppl": null,
+          "tokens": 859328
+        },
+        {
+          "step": 1919,
+          "train_loss": 6.435823,
+          "val_loss": 7.706575,
+          "val_ppl": 2222.915718855317,
+          "tokens": 867840
+        }
+      ]
+    },
+    "noise_sanity": {
+      "invoke1_steps": "0..623",
+      "invoke1_tokens": 281813,
+      "invoke1_tokens_per_step": 452.34831460674155,
+      "invoke2_steps": "623..1869",
+      "invoke2_tokens": 563626,
+      "invoke2_tokens_per_step": 452.34831460674155,
+      "invoke3_steps": "1869..1919",
+      "invoke3_tokens": 22401,
+      "invoke3_tokens_per_step": 448.02,
+      "consistent": true
+    }
+  }
+}

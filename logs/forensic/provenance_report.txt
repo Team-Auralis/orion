@@ -1,0 +1,108 @@
+==============================================================================
+ORION TRAINING-PROVENANCE FORENSICS REPORT (zero-trust, from raw files)
+generated_at: 2026-09-24T08:46:04.661272+00:00  source: ['D:\\orion\\logs\\training_runs.jsonl', 'D:\\orion\\data\\training\\corpus\\manifest.json', 'D:\\orion\\models\\tokenizer_bpe\\tokenizer.json', 'D:\\orion\\models\\comp001\\100m-real', 'D:\\orion\\logs\\forensic\\learning_curve.csv']
+ledger rows: 103 total ; 3 real-run rows ; 6 corpus-adequacy-gate rows ; latest gate = corpus-gate-29e0bb76
+
+A1. CORPUS  (verified from data/training/corpus/manifest.json + latest gate row)
+  train-only token count (corpus-adequacy-gate 'corpus-gate-29e0bb76' at 2026-09-23T09:14:11Z): 63,827,053
+  gate verdict: ADEQUATE
+  train shard files on disk: 9 (5 wikitext + 4 fineweb-edu); total shards (train+val+test): 13
+  train rows: 216,959 (manifest split_counts.train = 216,959; manifest.total_texts = 218,170)
+  train bytes on disk: 264,606,126 ; manifest.total_bytes (all 13 shards): 265,994,795 ; gate-recorded corpus_bytes: 266,004,351
+    - wikitext: 5 files, 193,051 rows, 145,627,231 bytes, license cc-by-sa-3.0, gfdl
+    - HuggingFaceFW/fineweb-edu: 4 files, 23,908 rows, 118,978,895 bytes, license odc-by
+  corpus SHA-256 (recorded in gate 'corpus-gate-29e0bb76' / real-run dataset_hash): 2f111760e7f8b417fd2b9d5604320934504a3937e035faf58b1f081703f740e7
+  corpus SHA-256 (recomputed: sha256 of concatenated train-file bytes, ledger file order): b9d9cc3f649f3efdf25b58a6ae72eec51718e1d9f32c9f267271677b1e32fe71
+  corpus SHA-256 match recorded-vs-recomputed: NO (mismatch)
+  per-shard SHA-256 verified against manifest bytes on disk: 13/13 match
+
+A2. TOKENIZER  (verified from models/tokenizer_bpe/tokenizer.json)
+  vocab size (exact from file): 10,240  model type: BPE  merges: 10,032
+  added tokens: 4 (ids [0, 1, 2, 3]: <pad>, <bos>, <eos>, <unk>)
+  tokenizer file SHA-256: 01d3412bd91e28a6cef4893bb85065915d1c909e655d3911b698a07b7353229f  (697,607 bytes)
+  gate cross-check tokenizer_vocab_size=10240 -> MATCH
+
+A3. DATASET HASH  (recorded in real-run ledger rows vs recomputed from train shards)
+  recorded dataset_hash (identical in all 3 real rows): 2f111760e7f8b417fd2b9d5604320934504a3937e035faf58b1f081703f740e7
+  recomputed sha256(train-*.jsonl concatenated, ledger file order): b9d9cc3f649f3efdf25b58a6ae72eec51718e1d9f32c9f267271677b1e32fe71
+  match: NO (mismatch) - per-shard hashes all match the manifest, so the recorded hash uses a different composition than raw concatenated shard bytes
+
+A4. TRAINING CONFIG  (from ledger params of the final 700k invocation 'comp-001-custom-100m-real-0d9808ff', cross-checked against checkpoint-*/checkpoint.json hparams)
+  run_id=comp-001-custom-100m-real-0d9808ff  status=PARTIAL_FIRST_PASS  timestamp=2026-09-23T10:18:18Z
+  seed=42  lr=0.001  epochs=2  model_size=100m  max_steps=0  ckpt_every=300  torch_threads=6
+  max_len=512  batch_size=1  train_token_budget=700000  vocab_size=10240
+  architecture: hidden_size=768 intermediate_size=3072 num_hidden_layers=11 num_attention_heads=12 num_key_value_heads=4 max_position_embeddings=512
+  ledger-recorded count: param_count=110,918,656, epoch_str label=2
+  optimizer: NOT_RECORDED (name not present in ledger params or checkpoint hparams; optimizer state exp_avg/exp_avg_sq is present in checkpoint.pt — Adam-family inferred, see F2)
+  precision: float32 (from exported config.json dtype + float32 checkpoint tensors; trainer-level precision NOT_RECORDED in ledger/hparams)
+
+A5. RESUME / CHECKPOINT HISTORY  (checkpoint dirs on disk + ledger rows)
+  checkpoint steps on disk (11): [200, 400, 600, 623, 900, 1200, 1500, 1800, 1869, 1900, 1919]
+    comp-001-custom-100m-real-e08d7bb7  ts=2026-09-23T09:52:02Z  status=PARTIAL_FIRST_PASS  resumed=False  resume_from_step=0  steps->['checkpoint-200', 'checkpoint-400', 'checkpoint-600', 'checkpoint-623']
+    comp-001-custom-100m-real-0d9808ff  ts=2026-09-23T10:18:18Z  status=PARTIAL_FIRST_PASS  resumed=True  resume_from_step=623  steps->['checkpoint-1200', 'checkpoint-1500', 'checkpoint-1800', 'checkpoint-1869', 'checkpoint-200', 'checkpoint-400', 'checkpoint-600', 'checkpoint-623', 'checkpoint-900']
+    comp-001-custom-100m-real-9d8dfc35  ts=2026-09-24T07:58:47Z  status=PARTIAL_FIRST_PASS  resumed=True  resume_from_step=1869  steps->['checkpoint-1200', 'checkpoint-1500', 'checkpoint-1800', 'checkpoint-1869', 'checkpoint-1900', 'checkpoint-1919', 'checkpoint-200', 'checkpoint-400', 'checkpoint-600', 'checkpoint-623', 'checkpoint-900']
+  invocation ranges: invoke-1 0..623 ; invoke-2 (resumed from ckpt-623) 623..1869 ; invoke-3 (resumed from ckpt-1869) 1869..1919
+
+A6. WALL-CLOCK + RESOURCES  (ledger duration_seconds + hardware)
+  comp-001-custom-100m-real-e08d7bb7: duration=1356.93s  cpu_cores=6  threads=12  total_ram=7.74GB  avail_ram=1.86GB
+  comp-001-custom-100m-real-0d9808ff: duration=3436.9s  cpu_cores=6  threads=12  total_ram=7.74GB  avail_ram=1.2GB
+  comp-001-custom-100m-real-9d8dfc35: duration=399.57s  cpu_cores=6  threads=12  total_ram=7.74GB  avail_ram=1.7GB
+
+A7. THE KEY NUMBER — TRAINING BUDGET FRACTION
+  corpus_train_tokens = 63,827,053 (latest gate row, train-only)
+  tokens_seen (final invocation per task definition, run comp-001-custom-100m-real-0d9808ff) = 563,626 -> fraction = 0.008831 = 0.88%
+  NOTE: the ledger also contains a THIRD invocation (comp-001-custom-100m-real-9d8dfc35, budget 800k, resumed 1869..1919) with tokens_seen=22,401 (0.035%), and checkpoints 1900/1919 on disk.
+  cumulative tokens_seen across all invocations (281,813 + 563,626 + 22,401) = 867,840 = 1.36% of corpus.
+  >>> model has consumed 563,626 of 63,827,053 tokens = 0.88% of the corpus (task-definition final invocation; 1.36% cumulative across all 3 ledger invocations)
+  classification: PARTIALLY_TRAINED (NOT fully trained) — the model saw roughly 1% of the available corpus, far below a full first pass; it is NOT fully trained by any measure.
+
+B. LEARNING-CURVE AUDIT  (source: logs/forensic/learning_curve.csv, 1919 per-step train-loss rows; checkpoint losses at the steps below)
+  step   train_loss   val_loss    val_ppl(e^loss)   tokens@step(linearized)
+    200   7.0700     -   -       90,470
+    400   7.0593     -   -      180,939
+    600   6.9034     -   -      271,409
+    623   6.5626     7.6228       2044.2        281,813
+    900   6.4897     -   -      407,113
+   1200   6.1387     -   -      542,818
+   1500   6.1547     -   -      678,522
+   1800   6.0361     -   -      814,227
+   1869   5.8770     7.9381       2802.1        845,439
+   1900   6.3238     -   -      859,328
+   1919   6.4358     7.7066       2222.9        867,840
+  slopes (delta-loss / delta-step): overall 1->1919 = -0.0015773 ; 1->1869 = -0.0019186 ; 200->1869 = -0.0007148 ; last segment = +0.0058957 ; last-two avg = +0.0101541
+  verdict: OVERFITTING  —  val loss rose +0.3154 from step 623 (7.6228) to step 1869 (7.9381) while train loss fell -0.6856 (6.5626 -> 5.8770) — matches the stated overfitting flag rule
+  ambiguity note: overfitting flag fires on exactly ONE of the two measured val intervals (623->1869): the task's rule (val@623 < val@1869) holds. The 1869->1919 interval reversed (val fell) and absolute losses remain high, so under-training is also present; verdict below follows the explicit flag rule.
+  BEST CHECKPOINT (lowest measured val loss/ppl of the 3 eval points): checkpoint-623 (val 7.6228, ppl 2044.2). lowest val loss / ppl among the 3 measured eval points (steps 623, 1869, 1919); no per-step val series exists to interpolate against  Train-loss minimum is at checkpoint-1869 (5.8770).
+  noise sanity: invoke-1 281,813 tokens over steps 0..623 = 452.35 tok/step ; invoke-2 563,626 over 623..1869 = 452.35 ; invoke-3 22,401 over 1869..1919 = 448.02 -> consistent=True
+
+==============================================================================
+RECONCILIATION ADDENDUM (F3b) - third-run reconciliation, appended 2026-09-24T09:05:54.794201+00:00
+previous sections above are untouched; new facts from raw files + checkpoint bytes.
+
+TRUE LATEST CHECKPOINT: checkpoint-1919  (HF export is STALE vs 1919:
+  model.safetensors is byte-identical to checkpoint-1869 per F1; NOT modified).
+
+DELTA 1869 -> 1919 (50 steps, new - old):
+  tensors=110,918,656 params | mean_abs=0.00185037  median_abs=0.00060493 std_abs=0.003377104 max_abs=0.129715949
+  fraction changed (abs>0)=0.999991327  abs>1e-6=0.996585633  >1e-4*std=0.988276111
+  largest layer by mean |d|: model.layers.8.post_attention_layernorm.weight (0.009027597)
+  largest layer by max |d|: model.layers.2.mlp.down_proj.weight (0.129715949)
+
+CURVE RE-AUDIT (all 3 eval points 623 / 1869 / 1919):
+  val loss: 7.6228 -> 7.9381 (+0.3154, overfit-signature leg) -> 7.7066 (-0.2315, recovery)
+  train loss at those steps: 6.5626 -> 5.8770 -> 6.4358 (final leg train ROSE while val FELL)
+  verdict: OVERFITTING (PARTIALLY_SUPPORTED)
+  basis: leg 623->1869 fired the flag rule: val rose +0.3154 (7.6228->7.9381) while train fell -0.6856 (6.5626->5.8770). leg 1869->1919 REVERSED it: val fell -0.2316 (7.9381->7.7066) while train ROSE +0.5588 (5.8770->6.4358) - the opposite of an overfit signature. 
+  caveat: With only 3 eval points there is no per-step val series, so the curve cannot distinguish 'val recovered (1869->1919)' from 'val noise band ~7.6-7.9 nats'. The 1869->1919 recovery (-0.2315) covered 73.4% of the 623->1869 rise (+0.3154), but 1919 (7.7066) still sits ABOVE 623 (7.6228) by +0.0838, so the decline was not fully reversed. Verdict is therefore PARTIALLY SUPPORTED at best.
+  BEST CHECKPOINT BY VAL LOSS: checkpoint-623 (7.6228, ppl 2044.2); 1919 does NOT beat it (7.7066 > 7.6228). best by train loss: checkpoint-1869 (5.8770).
+
+LEARNING-BUDGET (corrected):
+  naive sum of ledger tokens_seen = 867,840 (0.013597 = 1.36%) - WRONG, double counts
+  corrected cumulative = 586,027 tokens = 0.009181 = 0.918% of 63,827,053 token corpus
+  hazard: the ledger field name `tokens_seen` reads as a cumulative total, so naive tooling summing it across resumed rows over-counts: invoke-2's 563,626 counts 2 full passes over the same 623-block/281,813-token slice (one pass over data invoke-1 already processed), and summing rows treats invoke-1's 281,813 as new data twice -> naive 867,840 overstates the corrected cumulative 586,027 by exactly 281,813 tokens (+48%).
+  code-verified: train_comp001.py L588-595: tokens_seen is THIS process's own count (final_step = len(losses), local losses list; tokens_seen = divmod(final_step, per_epoch) full cycles x tokens_per_epoch + partial), NOT a chain-cumulative counter. L477-484 + L561: every invocation re-builds the SAME train_blocks slice (load_data(train_token_budget) from corpus head, seed 42) and indexes train_blocks[gstep % per_epoch], so all three invocations replay the same 281,813-token slice -> the literal unique-data floor is 281,813 tokens = 0.44% of the corpus, regardless of which cumulative convention is used.
+
+STALE-EXPORT: STALE - not updated since step 1869. NEVER overwrite models/comp001/100m-real/model.safetensors (canonical committed export).
+  Later forensic eval phases must load checkpoint-1919/checkpoint.pt in memory, or write a NEW export directory (e.g. models/comp001/100m-real/checkpoint-1919-export/); never modify the canonical export.
+==============================================================================
+END OF REPORT
