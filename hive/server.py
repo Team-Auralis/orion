@@ -456,7 +456,13 @@ HTML_CONTENT = """<!DOCTYPE html>
                 </div>
                 <div class="form-group" id="hf-group" style="display:none;">
                     <label>Hugging Face Dataset Name / Repo</label>
-                    <input type="text" id="hf-input" placeholder="e.g. wikitext or imdb">
+                    <input type="text" id="hf-input" placeholder="e.g. niranjanh123/English-Hinglish-Pairs or MRR24/English_to_Telugu_Bilingual_Sentence_Pairs">
+                    <div style="font-size: 11px; color: #888; margin-top: 4px;">
+                        Quick Select: 
+                        <a href="javascript:void(0)" onclick="document.getElementById('hf-input').value='niranjanh123/English-Hinglish-Pairs'" style="color: #64b5f6; margin-right: 8px;">Hindi-English</a>
+                        <a href="javascript:void(0)" onclick="document.getElementById('hf-input').value='MRR24/English_to_Telugu_Bilingual_Sentence_Pairs'" style="color: #64b5f6; margin-right: 8px;">Telugu-English</a>
+                        <a href="javascript:void(0)" onclick="document.getElementById('hf-input').value='wikitext'" style="color: #64b5f6;">English (Wikitext)</a>
+                    </div>
                 </div>
                 <div class="form-group" id="sqlite-group" style="display:none;">
                     <label>SQLite Database Path</label>

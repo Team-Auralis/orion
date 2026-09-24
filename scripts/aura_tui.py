@@ -22,11 +22,31 @@ class AuraNLP:
         self.greetings = ["Hey! AURA here.", "Hello! I'm online.", "Hi there.", "Hey Operator, AURA standing by."]
         
     def parse(self, text):
-        text_lower = text.lower()
-        if re.search(r'\b(hello|hi|hey|sup|morning|afternoon)\b', text_lower) and len(text_lower.split()) < 4:
+        text_lower = text.lower().strip()
+        # Common Greetings (Hinglish + Tenglish + Telugu + Hindi)
+        if re.search(r'\b(kaise\s+ho|kaisa\s+hai|kya\s+haal|kaise\s+hoo)\b', text_lower):
+            return "Main badhiya hoon! Aap bataiye, main aapki kya madad kar sakta hoon?"
+        if re.search(r'\b(bagunnara|ela\s+unnaru|ela\s+unnav|bavunnara)\b', text_lower):
+            return "Nenu chala bagunnanu! Meeru ela unnaru? Nenu meeku ela sahayapadagalanu?"
+        
+        # Identity & Name (Hindi/Hinglish + Telugu/Tenglish + English)
+        if re.search(r'\b(tera\s+naam|tumhara\s+naam|apka\s+naam|what\s+is\s+your\s+name|who\s+are\s+you|tum\s+kon\s+ho|tum\s+kaun\s+ho|tum\s+kon\s+hoo|ap\s+kaun\s+ho|mee\s+peru|ne\s+peru|meeru\s+evaru|nuvvu\s+evaru)\b', text_lower):
+            return "Naa peru AURA (Mera naam AURA hai) — ORION local AI assistant! Nenu / Main system tasks, model training, code search aur commands execute cheyagalanu."
+        
+        # Job / Role
+        if re.search(r'\b(kya\s+job|kya\s+kaam|what\s+is\s+your\s+job|what\s+do\s+you\s+do|mee\s+pani|ne\s+pani\s+enti)\b', text_lower):
+            return "Mera primary kaam ORION architecture manage karna hai: local LLMs run karna, multi-device federated training coordinate cheyadam, aur codebase assist karna."
+
+        # Capabilities / Help
+        if re.search(r'\b(kya\s+kya\s+kar|kya\s+kar\s+sa[kt]|kya\s+help|kaise\s+help|what\s+can\s+you\s+do|em\s+cheyagalaru|ela\s+help\s+chestaru)\b', text_lower):
+            return "Nenu / Main meeku in vishayalalo sahayapadagalanu:\n• '!' shell commands execute cheyadam (e.g. '! orbital')\n• '@' workspace files read & inspect cheyadam\n• Multi-device federated training monitor cheyadam\n• ORION system queries answer cheyadam"
+            
+        m_naam = re.search(r'\b(mera\s+naam|naa\s+peru)\s+([a-zA-Z]+)', text_lower)
+        if m_naam:
+            user_name = m_naam.group(2).capitalize()
+            return f"Namaste {user_name}! Aapse baat karke / kalisinanduku chala santhosham. Aaj hum kya execute karenge?"
+        if re.search(r'\b(hello|hi|hey|sup|morning|afternoon|namaste|pranam)\b', text_lower) and len(text_lower.split()) < 4:
             return random.choice(self.greetings)
-        if "who are you" in text_lower:
-            return "I'm AURA! I can execute shell commands (!), read files (@), and search the ORION codebase."
         if any(word in text_lower for word in ["status", "health"]):
             return "Cloud Node is OFFLINE. Edge Node is OFFLINE. Satellite Link is ONLINE."
         if text_lower in ["meow", "woof", "moo"]:
@@ -189,8 +209,8 @@ class AuraTUI(App):
                 await self.process_shell(cmd)
         elif text.startswith("@"):
             await self.process_file(text[1:].strip())
-        elif text.startswith("?"):
-            await self.process_api(text[1:].strip())
+        elif self.nlp.parse(text):
+            await self.append_message("AURA", self.nlp.parse(text))
         elif self.pytorch_model:
             await self.process_pytorch_llm(text)
         elif self.onnx_session:
@@ -214,8 +234,15 @@ class AuraTUI(App):
             from transformers import TextIteratorStreamer
             from threading import Thread
             
+            sys_prompt = (
+                "You are AURA, an advanced offline AI assistant for ORION. "
+                "You fluently understand English, Hindi, and Hinglish (Hindi words written using the English alphabet). "
+                "For example: 'kaise ho' means 'how are you', 'tum kaun ho' means 'who are you', and 'mera naam' means 'my name is'. "
+                "Never misinterpret Hinglish words as English medical terms. "
+                "Reply naturally and helpfully in the same language or tone as the user."
+            )
             messages = [
-                {"role": "system", "content": "You are AURA, an advanced offline AI assistant. Keep answers brief and helpful."},
+                {"role": "system", "content": sys_prompt},
                 {"role": "user", "content": text}
             ]
             prompt = self.pytorch_tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
