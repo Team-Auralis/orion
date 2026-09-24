@@ -352,7 +352,7 @@ class AuraTUI(App):
         return False, f"Could not find or launch application '{target}'"
 
     def send_keys_to_process(self, process_or_title: str, keys: str):
-        """Sends keystrokes to an active Windows process or window title using PowerShell WScript.Shell. ponytail: native zero-dep."""
+        """Sends keystrokes or pastes into an active Windows process/window using PowerShell. ponytail: native zero-dep."""
         try:
             # Escape quotes in keys
             sanitized = keys.replace("'", "''")
@@ -364,8 +364,11 @@ class AuraTUI(App):
                 f"  if ($proc) {{ $activated = $ws.AppActivate($proc.Id); }} "
                 f"}} "
                 f"if ($activated) {{ "
-                f"  Start-Sleep -Milliseconds 400; "
-                f"  $ws.SendKeys('{sanitized}'); "
+                f"  Start-Sleep -Milliseconds 300; "
+                f"  Set-Clipboard -Value '{sanitized}'; "
+                f"  $ws.SendKeys('^v'); "
+                f"  Start-Sleep -Milliseconds 150; "
+                f"  $ws.SendKeys('='); "
                 f"}}"
             )
             subprocess.run(["powershell", "-NoProfile", "-Command", ps_code], capture_output=True, timeout=5)
@@ -625,7 +628,7 @@ class AuraTUI(App):
             if math_eval:
                 def inject_calc():
                     time.sleep(1.2) # Allow UWP window to render
-                    keys = expr.replace(' ', '') + "="
+                    keys = expr.replace(' ', '')
                     self.send_keys_to_process("Calculator", keys)
                     self.send_keys_to_process("CalculatorApp", keys)
                 threading.Thread(target=inject_calc, daemon=True).start()
