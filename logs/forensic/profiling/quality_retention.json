@@ -1,0 +1,822 @@
+{
+  "method": "gguf lib 0.19.0 real block-dequantization (gguf.quants.dequantize) of the q8_0/q4_0 GGUF weight tensors -> fp32 -> run through the 11-layer Qwen2 torch model on CPU. ppl computed on one fixed 64-token held-out slice (first 64 BPE tokens of test-wiki-part-00000; same ids for all four states). f16 GGUF reference is the 1869-state export (weight tensors stored F16).",
+  "slice": {
+    "source": "D:\\orion\\data\\training\\corpus\\test-wiki-part-00000.jsonl",
+    "row0_text_prefix": " Barker 's sketches , drawings , and paintings of children were given to friends or to the parents of the subjects , don",
+    "token_ids": [
+      298,
+      634,
+      213,
+      324,
+      86,
+      1141,
+      277,
+      1701,
+      237,
+      2883,
+      623,
+      237,
+      238,
+      8302,
+      230,
+      1254,
+      412,
+      1717,
+      239,
+      3208,
+      348,
+      239,
+      212,
+      3017,
+      230,
+      212,
+      6574,
+      237,
+      1817,
+      405,
+      239,
+      812,
+      4197,
+      6135,
+      238,
+      2990,
+      7616,
+      1416,
+      2534,
+      237,
+      348,
+      4138,
+      676,
+      696,
+      1916,
+      965,
+      5463,
+      246,
+      1178,
+      4433,
+      2332,
+      4220,
+      7481,
+      237,
+      7596,
+      528,
+      466,
+      1253,
+      237,
+      238,
+      2074,
+      1216,
+      230,
+      1569
+    ],
+    "n_tokens": 64,
+    "note": "first 64 BPE ids of row 0; ppl over the 63 next-token predictions."
+  },
+  "gguf_files": {
+    "f16": {
+      "path": "D:\\orion\\models\\comp001\\100m-real\\gguf\\comp001-100m-real-f16.gguf",
+      "bytes_mb": 212.0,
+      "n_tensors": 135,
+      "dtype_counts": {
+        "F32": 56,
+        "F16": 79
+      },
+      "quantized_weight_tensors": [],
+      "embedding_output_dtype": {
+        "token_embd.weight": "F16",
+        "output.weight": "F16"
+      }
+    },
+    "q8_0": {
+      "path": "D:\\orion\\models\\comp001\\100m-real\\gguf\\comp001-100m-real-q8_0.gguf",
+      "bytes_mb": 112.9,
+      "n_tensors": 135,
+      "dtype_counts": {
+        "F32": 56,
+        "Q8_0": 79
+      },
+      "quantized_weight_tensors": [
+        "blk.0.attn_k.weight",
+        "blk.0.attn_output.weight",
+        "blk.0.attn_q.weight"
+      ],
+      "embedding_output_dtype": {
+        "token_embd.weight": "Q8_0",
+        "output.weight": "Q8_0"
+      }
+    },
+    "q4_0": {
+      "path": "D:\\orion\\models\\comp001\\100m-real\\gguf\\comp001-100m-real-q4_0.gguf",
+      "bytes_mb": 60.0,
+      "n_tensors": 135,
+      "dtype_counts": {
+        "F32": 56,
+        "Q4_0": 79
+      },
+      "quantized_weight_tensors": [
+        "blk.0.attn_k.weight",
+        "blk.0.attn_output.weight",
+        "blk.0.attn_q.weight"
+      ],
+      "embedding_output_dtype": {
+        "token_embd.weight": "Q4_0",
+        "output.weight": "Q4_0"
+      }
+    }
+  },
+  "embedding_output_quant_note": "Even in the f16 file token_embd.weight and output.weight are stored F16 (not F32); in q8_0/q4_0 files they are block-quantized Q8_0/Q4_0 like all other weight tensors. Norm/bias tensors (56 per file) are always F32.",
+  "ppl": {
+    "fp32_1919": {
+      "loss": 7.734027,
+      "ppl": 2284.785,
+      "tokens": 63,
+      "rss_after_load_mb": 685.7,
+      "load_s": 3.08,
+      "source": "checkpoint-1919 checkpoint.pt (checkpoint.pt (weights_only=True, mmap=True))"
+    },
+    "fp32_1869": {
+      "loss": 7.734079,
+      "ppl": 2284.9023,
+      "tokens": 63,
+      "rss_after_load_mb": 965.4,
+      "load_s": 2.4,
+      "source": "GGUF f16 (1869-state export)"
+    },
+    "q8_1869": {
+      "loss": 7.732564,
+      "ppl": 2281.445,
+      "tokens": 63,
+      "rss_after_load_mb": 868.0,
+      "load_s": 2.4,
+      "source": "GGUF q8_0 (1869-state export)"
+    },
+    "q4_1869": {
+      "loss": 7.722263,
+      "ppl": 2258.0647,
+      "tokens": 63,
+      "rss_after_load_mb": 822.7,
+      "load_s": 2.57,
+      "source": "GGUF q4_0 (1869-state export)"
+    }
+  },
+  "snr": {
+    "q8_0": {
+      "n_weight_tensors": 79,
+      "global_mean_snr_db": 45.15,
+      "global_min_snr_db": 43.58,
+      "worst_tensor": "blk.7.ffn_down.weight",
+      "per_tensor": [
+        {
+          "name": "blk.0.attn_q.weight",
+          "snr_db": 45.48
+        },
+        {
+          "name": "blk.0.attn_k.weight",
+          "snr_db": 45.7
+        },
+        {
+          "name": "blk.0.attn_v.weight",
+          "snr_db": 45.22
+        },
+        {
+          "name": "blk.0.attn_output.weight",
+          "snr_db": 45.56
+        },
+        {
+          "name": "blk.0.ffn_gate.weight",
+          "snr_db": 45.25
+        },
+        {
+          "name": "blk.0.ffn_down.weight",
+          "snr_db": 44.09
+        },
+        {
+          "name": "blk.0.ffn_up.weight",
+          "snr_db": 45.27
+        },
+        {
+          "name": "blk.1.attn_q.weight",
+          "snr_db": 45.47
+        },
+        {
+          "name": "blk.1.attn_k.weight",
+          "snr_db": 45.82
+        },
+        {
+          "name": "blk.1.attn_v.weight",
+          "snr_db": 45.02
+        },
+        {
+          "name": "blk.1.attn_output.weight",
+          "snr_db": 44.87
+        },
+        {
+          "name": "blk.1.ffn_gate.weight",
+          "snr_db": 45.4
+        },
+        {
+          "name": "blk.1.ffn_down.weight",
+          "snr_db": 44.75
+        },
+        {
+          "name": "blk.1.ffn_up.weight",
+          "snr_db": 45.4
+        },
+        {
+          "name": "blk.2.attn_q.weight",
+          "snr_db": 45.6
+        },
+        {
+          "name": "blk.2.attn_k.weight",
+          "snr_db": 45.84
+        },
+        {
+          "name": "blk.2.attn_v.weight",
+          "snr_db": 44.53
+        },
+        {
+          "name": "blk.2.attn_output.weight",
+          "snr_db": 44.54
+        },
+        {
+          "name": "blk.2.ffn_gate.weight",
+          "snr_db": 45.37
+        },
+        {
+          "name": "blk.2.ffn_down.weight",
+          "snr_db": 44.65
+        },
+        {
+          "name": "blk.2.ffn_up.weight",
+          "snr_db": 45.33
+        },
+        {
+          "name": "blk.3.attn_q.weight",
+          "snr_db": 45.57
+        },
+        {
+          "name": "blk.3.attn_k.weight",
+          "snr_db": 45.59
+        },
+        {
+          "name": "blk.3.attn_v.weight",
+          "snr_db": 44.78
+        },
+        {
+          "name": "blk.3.attn_output.weight",
+          "snr_db": 44.74
+        },
+        {
+          "name": "blk.3.ffn_gate.weight",
+          "snr_db": 45.35
+        },
+        {
+          "name": "blk.3.ffn_down.weight",
+          "snr_db": 44.57
+        },
+        {
+          "name": "blk.3.ffn_up.weight",
+          "snr_db": 45.35
+        },
+        {
+          "name": "blk.4.attn_q.weight",
+          "snr_db": 45.48
+        },
+        {
+          "name": "blk.4.attn_k.weight",
+          "snr_db": 45.59
+        },
+        {
+          "name": "blk.4.attn_v.weight",
+          "snr_db": 45.21
+        },
+        {
+          "name": "blk.4.attn_output.weight",
+          "snr_db": 45.2
+        },
+        {
+          "name": "blk.4.ffn_gate.weight",
+          "snr_db": 45.34
+        },
+        {
+          "name": "blk.4.ffn_down.weight",
+          "snr_db": 44.38
+        },
+        {
+          "name": "blk.4.ffn_up.weight",
+          "snr_db": 45.34
+        },
+        {
+          "name": "blk.5.attn_q.weight",
+          "snr_db": 45.37
+        },
+        {
+          "name": "blk.5.attn_k.weight",
+          "snr_db": 45.41
+        },
+        {
+          "name": "blk.5.attn_v.weight",
+          "snr_db": 45.22
+        },
+        {
+          "name": "blk.5.attn_output.weight",
+          "snr_db": 45.67
+        },
+        {
+          "name": "blk.5.ffn_gate.weight",
+          "snr_db": 45.3
+        },
+        {
+          "name": "blk.5.ffn_down.weight",
+          "snr_db": 43.98
+        },
+        {
+          "name": "blk.5.ffn_up.weight",
+          "snr_db": 45.28
+        },
+        {
+          "name": "blk.6.attn_q.weight",
+          "snr_db": 45.63
+        },
+        {
+          "name": "blk.6.attn_k.weight",
+          "snr_db": 45.76
+        },
+        {
+          "name": "blk.6.attn_v.weight",
+          "snr_db": 44.87
+        },
+        {
+          "name": "blk.6.attn_output.weight",
+          "snr_db": 44.89
+        },
+        {
+          "name": "blk.6.ffn_gate.weight",
+          "snr_db": 45.33
+        },
+        {
+          "name": "blk.6.ffn_down.weight",
+          "snr_db": 43.85
+        },
+        {
+          "name": "blk.6.ffn_up.weight",
+          "snr_db": 45.3
+        },
+        {
+          "name": "blk.7.attn_q.weight",
+          "snr_db": 45.51
+        },
+        {
+          "name": "blk.7.attn_k.weight",
+          "snr_db": 45.52
+        },
+        {
+          "name": "blk.7.attn_v.weight",
+          "snr_db": 44.99
+        },
+        {
+          "name": "blk.7.attn_output.weight",
+          "snr_db": 45.35
+        },
+        {
+          "name": "blk.7.ffn_gate.weight",
+          "snr_db": 45.31
+        },
+        {
+          "name": "blk.7.ffn_down.weight",
+          "snr_db": 43.58
+        },
+        {
+          "name": "blk.7.ffn_up.weight",
+          "snr_db": 45.29
+        },
+        {
+          "name": "blk.8.attn_q.weight",
+          "snr_db": 45.59
+        },
+        {
+          "name": "blk.8.attn_k.weight",
+          "snr_db": 45.62
+        },
+        {
+          "name": "blk.8.attn_v.weight",
+          "snr_db": 44.55
+        },
+        {
+          "name": "blk.8.attn_output.weight",
+          "snr_db": 44.92
+        },
+        {
+          "name": "blk.8.ffn_gate.weight",
+          "snr_db": 45.36
+        },
+        {
+          "name": "blk.8.ffn_down.weight",
+          "snr_db": 43.59
+        },
+        {
+          "name": "blk.8.ffn_up.weight",
+          "snr_db": 45.33
+        },
+        {
+          "name": "blk.9.attn_q.weight",
+          "snr_db": 45.5
+        },
+        {
+          "name": "blk.9.attn_k.weight",
+          "snr_db": 45.58
+        },
+        {
+          "name": "blk.9.attn_v.weight",
+          "snr_db": 44.68
+        },
+        {
+          "name": "blk.9.attn_output.weight",
+          "snr_db": 45.4
+        },
+        {
+          "name": "blk.9.ffn_gate.weight",
+          "snr_db": 45.38
+        },
+        {
+          "name": "blk.9.ffn_down.weight",
+          "snr_db": 43.81
+        },
+        {
+          "name": "blk.9.ffn_up.weight",
+          "snr_db": 45.43
+        },
+        {
+          "name": "blk.10.attn_q.weight",
+          "snr_db": 45.49
+        },
+        {
+          "name": "blk.10.attn_k.weight",
+          "snr_db": 45.59
+        },
+        {
+          "name": "blk.10.attn_v.weight",
+          "snr_db": 45.05
+        },
+        {
+          "name": "blk.10.attn_output.weight",
+          "snr_db": 45.42
+        },
+        {
+          "name": "blk.10.ffn_gate.weight",
+          "snr_db": 45.45
+        },
+        {
+          "name": "blk.10.ffn_down.weight",
+          "snr_db": 43.86
+        },
+        {
+          "name": "blk.10.ffn_up.weight",
+          "snr_db": 45.49
+        },
+        {
+          "name": "token_embd.weight",
+          "snr_db": 45.66
+        },
+        {
+          "name": "output.weight",
+          "snr_db": 44.93
+        }
+      ]
+    },
+    "q4_0": {
+      "n_weight_tensors": 79,
+      "global_mean_snr_db": 21.05,
+      "global_min_snr_db": 19.53,
+      "worst_tensor": "blk.7.ffn_down.weight",
+      "per_tensor": [
+        {
+          "name": "blk.0.attn_q.weight",
+          "snr_db": 21.36
+        },
+        {
+          "name": "blk.0.attn_k.weight",
+          "snr_db": 21.56
+        },
+        {
+          "name": "blk.0.attn_v.weight",
+          "snr_db": 21.13
+        },
+        {
+          "name": "blk.0.attn_output.weight",
+          "snr_db": 21.45
+        },
+        {
+          "name": "blk.0.ffn_gate.weight",
+          "snr_db": 21.15
+        },
+        {
+          "name": "blk.0.ffn_down.weight",
+          "snr_db": 20.01
+        },
+        {
+          "name": "blk.0.ffn_up.weight",
+          "snr_db": 21.16
+        },
+        {
+          "name": "blk.1.attn_q.weight",
+          "snr_db": 21.37
+        },
+        {
+          "name": "blk.1.attn_k.weight",
+          "snr_db": 21.71
+        },
+        {
+          "name": "blk.1.attn_v.weight",
+          "snr_db": 20.93
+        },
+        {
+          "name": "blk.1.attn_output.weight",
+          "snr_db": 20.8
+        },
+        {
+          "name": "blk.1.ffn_gate.weight",
+          "snr_db": 21.29
+        },
+        {
+          "name": "blk.1.ffn_down.weight",
+          "snr_db": 20.67
+        },
+        {
+          "name": "blk.1.ffn_up.weight",
+          "snr_db": 21.29
+        },
+        {
+          "name": "blk.2.attn_q.weight",
+          "snr_db": 21.49
+        },
+        {
+          "name": "blk.2.attn_k.weight",
+          "snr_db": 21.76
+        },
+        {
+          "name": "blk.2.attn_v.weight",
+          "snr_db": 20.49
+        },
+        {
+          "name": "blk.2.attn_output.weight",
+          "snr_db": 20.46
+        },
+        {
+          "name": "blk.2.ffn_gate.weight",
+          "snr_db": 21.26
+        },
+        {
+          "name": "blk.2.ffn_down.weight",
+          "snr_db": 20.57
+        },
+        {
+          "name": "blk.2.ffn_up.weight",
+          "snr_db": 21.23
+        },
+        {
+          "name": "blk.3.attn_q.weight",
+          "snr_db": 21.45
+        },
+        {
+          "name": "blk.3.attn_k.weight",
+          "snr_db": 21.48
+        },
+        {
+          "name": "blk.3.attn_v.weight",
+          "snr_db": 20.69
+        },
+        {
+          "name": "blk.3.attn_output.weight",
+          "snr_db": 20.64
+        },
+        {
+          "name": "blk.3.ffn_gate.weight",
+          "snr_db": 21.25
+        },
+        {
+          "name": "blk.3.ffn_down.weight",
+          "snr_db": 20.49
+        },
+        {
+          "name": "blk.3.ffn_up.weight",
+          "snr_db": 21.25
+        },
+        {
+          "name": "blk.4.attn_q.weight",
+          "snr_db": 21.36
+        },
+        {
+          "name": "blk.4.attn_k.weight",
+          "snr_db": 21.49
+        },
+        {
+          "name": "blk.4.attn_v.weight",
+          "snr_db": 21.11
+        },
+        {
+          "name": "blk.4.attn_output.weight",
+          "snr_db": 21.13
+        },
+        {
+          "name": "blk.4.ffn_gate.weight",
+          "snr_db": 21.23
+        },
+        {
+          "name": "blk.4.ffn_down.weight",
+          "snr_db": 20.32
+        },
+        {
+          "name": "blk.4.ffn_up.weight",
+          "snr_db": 21.24
+        },
+        {
+          "name": "blk.5.attn_q.weight",
+          "snr_db": 21.27
+        },
+        {
+          "name": "blk.5.attn_k.weight",
+          "snr_db": 21.33
+        },
+        {
+          "name": "blk.5.attn_v.weight",
+          "snr_db": 21.14
+        },
+        {
+          "name": "blk.5.attn_output.weight",
+          "snr_db": 21.54
+        },
+        {
+          "name": "blk.5.ffn_gate.weight",
+          "snr_db": 21.21
+        },
+        {
+          "name": "blk.5.ffn_down.weight",
+          "snr_db": 19.91
+        },
+        {
+          "name": "blk.5.ffn_up.weight",
+          "snr_db": 21.19
+        },
+        {
+          "name": "blk.6.attn_q.weight",
+          "snr_db": 21.53
+        },
+        {
+          "name": "blk.6.attn_k.weight",
+          "snr_db": 21.64
+        },
+        {
+          "name": "blk.6.attn_v.weight",
+          "snr_db": 20.8
+        },
+        {
+          "name": "blk.6.attn_output.weight",
+          "snr_db": 20.76
+        },
+        {
+          "name": "blk.6.ffn_gate.weight",
+          "snr_db": 21.22
+        },
+        {
+          "name": "blk.6.ffn_down.weight",
+          "snr_db": 19.78
+        },
+        {
+          "name": "blk.6.ffn_up.weight",
+          "snr_db": 21.21
+        },
+        {
+          "name": "blk.7.attn_q.weight",
+          "snr_db": 21.4
+        },
+        {
+          "name": "blk.7.attn_k.weight",
+          "snr_db": 21.42
+        },
+        {
+          "name": "blk.7.attn_v.weight",
+          "snr_db": 20.92
+        },
+        {
+          "name": "blk.7.attn_output.weight",
+          "snr_db": 21.24
+        },
+        {
+          "name": "blk.7.ffn_gate.weight",
+          "snr_db": 21.2
+        },
+        {
+          "name": "blk.7.ffn_down.weight",
+          "snr_db": 19.53
+        },
+        {
+          "name": "blk.7.ffn_up.weight",
+          "snr_db": 21.2
+        },
+        {
+          "name": "blk.8.attn_q.weight",
+          "snr_db": 21.48
+        },
+        {
+          "name": "blk.8.attn_k.weight",
+          "snr_db": 21.5
+        },
+        {
+          "name": "blk.8.attn_v.weight",
+          "snr_db": 20.44
+        },
+        {
+          "name": "blk.8.attn_output.weight",
+          "snr_db": 20.81
+        },
+        {
+          "name": "blk.8.ffn_gate.weight",
+          "snr_db": 21.26
+        },
+        {
+          "name": "blk.8.ffn_down.weight",
+          "snr_db": 19.53
+        },
+        {
+          "name": "blk.8.ffn_up.weight",
+          "snr_db": 21.22
+        },
+        {
+          "name": "blk.9.attn_q.weight",
+          "snr_db": 21.39
+        },
+        {
+          "name": "blk.9.attn_k.weight",
+          "snr_db": 21.47
+        },
+        {
+          "name": "blk.9.attn_v.weight",
+          "snr_db": 20.64
+        },
+        {
+          "name": "blk.9.attn_output.weight",
+          "snr_db": 21.3
+        },
+        {
+          "name": "blk.9.ffn_gate.weight",
+          "snr_db": 21.27
+        },
+        {
+          "name": "blk.9.ffn_down.weight",
+          "snr_db": 19.73
+        },
+        {
+          "name": "blk.9.ffn_up.weight",
+          "snr_db": 21.32
+        },
+        {
+          "name": "blk.10.attn_q.weight",
+          "snr_db": 21.37
+        },
+        {
+          "name": "blk.10.attn_k.weight",
+          "snr_db": 21.48
+        },
+        {
+          "name": "blk.10.attn_v.weight",
+          "snr_db": 20.97
+        },
+        {
+          "name": "blk.10.attn_output.weight",
+          "snr_db": 21.33
+        },
+        {
+          "name": "blk.10.ffn_gate.weight",
+          "snr_db": 21.34
+        },
+        {
+          "name": "blk.10.ffn_down.weight",
+          "snr_db": 19.79
+        },
+        {
+          "name": "blk.10.ffn_up.weight",
+          "snr_db": 21.39
+        },
+        {
+          "name": "token_embd.weight",
+          "snr_db": 21.53
+        },
+        {
+          "name": "output.weight",
+          "snr_db": 20.85
+        }
+      ]
+    }
+  },
+  "q4_k_m": {
+    "classification": "BLOCKED",
+    "reason": "No llama-quantize.exe / quantize binary on this box: third_party/BitNet/build/bin contains only llama-cli.exe; PATH search found none. gguf 0.19.0 K-quant quantize raises NotImplementedError (verified in earlier runs, recorded in logs/training_runs.jsonl comp001-100m-real-gguf-matrix runs). No Q4_K_M .gguf file exists on disk. NO Q4_K_M quality number is reported because none was measured."
+  },
+  "meta": {
+    "gguf_version": "0.19.0",
+    "torch": "2.13.0+cpu",
+    "cpu_count": 12,
+    "free_ram_mb_end": 529.6
+  }
+}

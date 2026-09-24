@@ -1,0 +1,138 @@
+{
+  "meta": {
+    "torch": "2.13.0+cpu",
+    "psutil": "7.2.2",
+    "cpu_count": 12,
+    "free_ram_mb_start": 1113.1,
+    "seed": 42,
+    "prompt": "The capital of France is a city in Europe and the seat of the nation. The sun rises in the east every morning and sets in the west. Water freezes at zero degrees Celsius under normal pressure on Earth.",
+    "free_ram_mb_end": 1084.7
+  },
+  "phase_0_gguf_runtime_probe": {
+    "method": "third_party/BitNet/build/bin/llama-cli.exe (b1-390c307) -m <gguf> -n 8 -t 6 -p 'The capital of France is' --no-display-prompt -st (single-turn; peak RSS sampled via psutil)",
+    "classification": "RUNNABLE",
+    "note": "BitNet llama.cpp fork loads STANDARD (non-BitNet) Qwen2 GGUFs fine: rc=0, no error, real tokens out. Two probe rounds: single-turn (-st) round recorded below; an earlier interactive-mode round observed f16 Prompt 1073.5 / Gen 65.3 t/s and q8_0 Prompt 1225.4 / Gen 87.7 t/s (same binary, different mode/warmup).",
+    "f16": {
+      "load": "ok",
+      "rc": 0,
+      "ftype": "F16",
+      "prompt_tok_s": 574.4,
+      "gen_tok_s": 51.3,
+      "peak_rss_mb": 225.4,
+      "generation": " the M\\nThe past-cre",
+      "earlier_interactive_gen_tok_s": 65.3,
+      "earlier_interactive_generation": [
+        " the",
+        " United",
+        " States",
+        " of",
+        " the",
+        " Bio",
+        " of"
+      ]
+    },
+    "q8_0": {
+      "load": "ok",
+      "rc": 0,
+      "ftype": "Q8_0",
+      "prompt_tok_s": 1011.1,
+      "gen_tok_s": 68.9,
+      "peak_rss_mb": 132.8,
+      "generation_prefix": " the lit PNM' (",
+      "earlier_interactive_gen_tok_s": 87.7
+    }
+  },
+  "size": {
+    "param_count": 110918656,
+    "fp32_bytes_mb": 423.1,
+    "checkpoint_pt_bytes_mb": 1269.5,
+    "loaded_from": "D:\\orion\\models\\comp001\\100m-real\\checkpoint-1919\\checkpoint.pt",
+    "loaded_note": "checkpoint.pt (weights_only=True, mmap=True)",
+    "max_position_embeddings": 512,
+    "rss_after_load_mb": 782.2
+  },
+  "prompt_ids": [
+    292,
+    3269,
+    230,
+    2760,
+    288,
+    210,
+    1417,
+    235,
+    1571,
+    238,
+    212,
+    6155,
+    230,
+    212,
+    3454,
+    17,
+    292,
+    2733,
+    1548,
+    224,
+    235,
+    212,
+    2257,
+    1162,
+    4324,
+    238,
+    5332,
+    235,
+    212,
+    2230,
+    17,
+    4519
+  ],
+  "prompt_text": "The capital of France is a city in Europe and the seat of the nation. The sun rises in the east every morning and sets in the west. Water freezes at zero degrees Celsius under normal pressure on Earth.",
+  "mem": {
+    "peak_decode_6t": 799.9,
+    "peak_decode_1t": 800.8
+  },
+  "latency_6t": {
+    "ttft_s": 0.1595,
+    "decode_steps": 50,
+    "mean_tok_s": 29.49,
+    "p50_ms": 32.59,
+    "p95_ms": 39.09,
+    "p99_ms": 61.35,
+    "wall_s": 1.703,
+    "cpu_pct_of_one_core": 579.8,
+    "cpu_cores_busy_equiv": 5.8,
+    "torch_num_threads": 6
+  },
+  "latency_1t": {
+    "decode_steps": 50,
+    "mean_tok_s": 25.03,
+    "p50_ms": 36.62,
+    "p95_ms": 52.08,
+    "p99_ms": 93.01,
+    "wall_s": 2.006,
+    "cpu_pct_of_one_core": 144.1,
+    "torch_num_threads": 1
+  },
+  "context_boundary": [
+    {
+      "len": 512,
+      "ok": true,
+      "elapsed_s": 0.412
+    },
+    {
+      "len": 768,
+      "ok": true,
+      "elapsed_s": 0.621
+    },
+    {
+      "len": 1024,
+      "ok": true,
+      "elapsed_s": 0.899
+    }
+  ],
+  "reload": {
+    "rss_before_del_mb": 852.9,
+    "rss_after_del_gc_mb": 822.7,
+    "rss_after_reload_mb": 866.2,
+    "step_reloaded": 1919
+  }
+}

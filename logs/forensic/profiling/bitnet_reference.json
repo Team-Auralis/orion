@@ -1,0 +1,17 @@
+{
+  "reference_line": {
+    "model": "microsoft/BitNet-b1.58-2B-4T-gguf (bitnet.cpp i2_s, external official reference)",
+    "file_mb": 1132.8,
+    "tok_per_s": 13.4,
+    "peak_rss_mb": 1238.0,
+    "threads": 6,
+    "prompt": "Daniel is a",
+    "params_b": 2.4,
+    "quantization": "i2_s",
+    "runtime": "bitnet.cpp llama-cli (official)",
+    "status": "VERIFIED",
+    "source": "logs/training_runs.jsonl run bitnet-ref-31284d32"
+  },
+  "not_quality_comparable": "BitNet-b1.58-2B-4T is a different size/arch/family than comp001-100m-real; the only valid 100m-vs-BitNet comparison is mechanical (speed / memory).",
+  "reused_not_remeasured": "T7-measured 2026-09-24 06:47Z on this same box; re-measure skipped because loading the 1132.8 MB GGUF wants ~1.2 GB peak RSS while free RAM is ~0.9 GB class (would risk OOM on the constrained box)."
+}
