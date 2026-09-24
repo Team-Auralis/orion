@@ -790,16 +790,21 @@ def cmd_research(args) -> int:
 # ---------------------------------------------------------------------------
 
 
+async def _run_gumroad(connector, operation, *args, **kwargs):
+    """Run one connector operation and close it on the same event loop."""
+    try:
+        return await operation(*args, **kwargs)
+    finally:
+        await connector.close()
+
+
 def cmd_gumroad_test(args) -> int:
     """Test Gumroad API connection."""
     from orion.connectors.gumroad import GumroadConnector
     import asyncio
 
     connector = GumroadConnector()
-    try:
-        ok = asyncio.run(connector.test_connection())
-    finally:
-        asyncio.run(connector.close())
+    ok = asyncio.run(_run_gumroad(connector, connector.test_connection))
 
     if ok:
         print("Gumroad connection: OK")
@@ -849,10 +854,7 @@ def cmd_gumroad_publish(args) -> int:
 
     # Dry-run auto-approved - execute
     connector = GumroadConnector()
-    try:
-        result = asyncio.run(connector.create_product(product))
-    finally:
-        asyncio.run(connector.close())
+    result = asyncio.run(_run_gumroad(connector, connector.create_product, product))
 
     if result.success:
         from orion.products import update_status
@@ -880,14 +882,15 @@ def cmd_gumroad_sales(args) -> int:
     import asyncio
 
     connector = GumroadConnector()
-    try:
-        sales = asyncio.run(
-            connector.list_sales(
-                after=args.after, before=args.before, product_id=args.product_id
-            )
+    sales = asyncio.run(
+        _run_gumroad(
+            connector,
+            connector.list_sales,
+            after=args.after,
+            before=args.before,
+            product_id=args.product_id,
         )
-    finally:
-        asyncio.run(connector.close())
+    )
 
     if not sales:
         print("no sales")
@@ -914,10 +917,7 @@ def cmd_gumroad_payouts(args) -> int:
     import asyncio
 
     connector = GumroadConnector()
-    try:
-        payouts = asyncio.run(connector.list_payouts())
-    finally:
-        asyncio.run(connector.close())
+    payouts = asyncio.run(_run_gumroad(connector, connector.list_payouts))
 
     if not payouts:
         print("no payouts")

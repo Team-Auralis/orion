@@ -111,13 +111,26 @@ class GumroadConnector:
         return self._client
 
     async def close(self) -> None:
-        if self._client and not self._client.is_closed:
-            await self._client.aclose()
+        try:
+            if self._client and not self._client.is_closed:
+                await self._client.aclose()
+        except Exception:
+            log.debug("gumroad client close raced the event loop; transport dropped")
+        finally:
             self._client = None
 
     def _get_token(self) -> Optional[str]:
         """Get access token from vault (never logged)."""
         return self._vault.get("gumroad_token")
+
+    def _redact_token(self, value: Any) -> str:
+        """Return an error string without exposing the vault token."""
+        text = str(value)
+        try:
+            token = self._get_token()
+        except Exception:
+            return text
+        return text.replace(token, "[REDACTED]") if token else text
 
     def _auth_headers(self) -> dict[str, str]:
         token = self._get_token()
@@ -165,13 +178,13 @@ class GumroadConnector:
                         "method": method,
                         "path": path,
                         "wait": wait,
-                        "error": str(e),
+                        "error": self._redact_token(e),
                     },
                 )
                 await asyncio.sleep(wait)
 
         raise GumroadAPIError(
-            f"request failed after 3 retries: {last_error}", 0
+            f"request failed after 3 retries: {self._redact_token(last_error)}", 0
         ) from last_error
 
     # -----------------------------------------------------------------------
@@ -210,7 +223,9 @@ class GumroadConnector:
         except GumroadAPIError:
             return False
         except Exception as e:
-            log.exception("gumroad test_connection error", extra={"error": str(e)})
+            log.error(
+                "gumroad test_connection error", extra={"error": self._redact_token(e)}
+            )
             return False
 
     # -----------------------------------------------------------------------
@@ -330,7 +345,8 @@ class GumroadConnector:
             else:
                 # Other error - fallback
                 error_msg = (
-                    f"Gumroad API error {response.status_code}: {response.text[:200]}"
+                    f"Gumroad API error {response.status_code}: "
+                    f"{self._redact_token(response.text[:200])}"
                 )
                 log.warning(
                     "gumroad create_product: API error, using draft bundle fallback",
@@ -347,12 +363,12 @@ class GumroadConnector:
             # Network/timeout error - fallback
             log.warning(
                 "gumroad create_product: network error, using draft bundle fallback",
-                extra={"error": str(e)},
+                extra={"error": self._redact_token(e)},
             )
             return PublishResult(
                 success=False,
                 method="draft_bundle",
-                error=f"Network error: {e}",
+                error=f"Network error: {self._redact_token(e)}",
                 draft_bundle_path=await self._create_draft_bundle(product_record),
             )
 
@@ -477,7 +493,8 @@ Generated: {metadata["created_at"]}
 
             if response.status_code != 200:
                 raise GumroadAPIError(
-                    f"Failed to fetch sales: {response.status_code} {response.text}",
+                    f"Failed to fetch sales: {response.status_code} "
+                    f"{self._redact_token(response.text)}",
                     response.status_code,
                 )
 
@@ -513,7 +530,8 @@ Generated: {metadata["created_at"]}
 
         if response.status_code != 200:
             raise GumroadAPIError(
-                f"Failed to fetch payouts: {response.status_code} {response.text}",
+                f"Failed to fetch payouts: {response.status_code} "
+                f"{self._redact_token(response.text)}",
                 response.status_code,
             )
 
