@@ -2,28 +2,64 @@
   "collapse-filter": false,
   "search": "",
   "showTags": true,
-  "showAttachments": false,
+  "showAttachments": true,
   "hideUnresolved": false,
   "showOrphans": true,
   "collapse-color-groups": false,
   "colorGroups": [
-    {"query": "tag:#module", "color": {"a": 1, "rgb": 14370513}},
-    {"query": "tag:#service", "color": {"a": 1, "rgb": 5431378}},
-    {"query": "tag:#security", "color": {"a": 1, "rgb": 16729344}},
-    {"query": "tag:#infrastructure", "color": {"a": 1, "rgb": 3407616}},
-    {"query": "tag:#architecture", "color": {"a": 1, "rgb": 8004608}},
-    {"query": "tag:#roadmap", "color": {"a": 1, "rgb": 16753920}}
+    {
+      "query": "tag:#module",
+      "color": {
+        "a": 1,
+        "rgb": 14370513
+      }
+    },
+    {
+      "query": "tag:#service",
+      "color": {
+        "a": 1,
+        "rgb": 5431378
+      }
+    },
+    {
+      "query": "tag:#security",
+      "color": {
+        "a": 1,
+        "rgb": 16729344
+      }
+    },
+    {
+      "query": "tag:#infrastructure",
+      "color": {
+        "a": 1,
+        "rgb": 3407616
+      }
+    },
+    {
+      "query": "tag:#architecture",
+      "color": {
+        "a": 1,
+        "rgb": 8004608
+      }
+    },
+    {
+      "query": "tag:#roadmap",
+      "color": {
+        "a": 1,
+        "rgb": 16753920
+      }
+    }
   ],
   "collapse-display": false,
   "showArrow": true,
-  "textFadeMultiplier": 0,
-  "nodeSizeMultiplier": 1.1,
-  "lineSizeMultiplier": 1,
+  "textFadeMultiplier": 0.7,
+  "nodeSizeMultiplier": 1.06318709457153,
+  "lineSizeMultiplier": 1.250554796859,
   "collapse-forces": true,
   "centerStrength": 0.518713,
   "repelStrength": 10,
   "linkStrength": 1,
   "linkDistance": 250,
-  "scale": 1,
+  "scale": 0.3657603826957605,
   "close": false
 }
