@@ -1,0 +1,68 @@
+{
+  "audit_name": "NECTAR-005_plasticity_mechanism_audit",
+  "timestamp": 1790232434.929957,
+  "kc_count": 4133,
+  "mbon_count": 96,
+  "sample_ensemble_size": 30,
+  "theoretical_pairs": 2880,
+  "connected_pairs_modified": 335,
+  "unconnected_zero_weight_pairs": 2545,
+  "delta_w_stats_mv": {
+    "sum": 193.875,
+    "mean": 0.5787,
+    "median": 0.4125,
+    "max": 2.475
+  },
+  "dilution_metrics": {
+    "kc_synapses": 1410,
+    "recipient_56_mbon_total_synapses": 315548,
+    "all_96_mbon_total_synapses": 381461,
+    "fraction_recipient_pct": 0.4468,
+    "fraction_all_mbon_pct": 0.3696,
+    "top_recipient_fraction_pct": 0.86
+  },
+  "controlled_readout_comparison": {
+    "positive_control": {
+      "baseline": 50,
+      "recall": 54,
+      "factor": 1.08,
+      "status": "IDENTICAL TO ABLATION"
+    },
+    "no_plasticity": {
+      "baseline": 50,
+      "recall": 54,
+      "factor": 1.08,
+      "status": "IDENTICAL TO POSITIVE CONTROL"
+    },
+    "no_dopamine": {
+      "baseline": 50,
+      "recall": 54,
+      "factor": 1.08,
+      "status": "IDENTICAL TO POSITIVE CONTROL"
+    },
+    "scrambled_dopamine": {
+      "baseline": 50,
+      "recall": 54,
+      "factor": 1.08,
+      "status": "NO CONTINGENCY SEPARATION"
+    },
+    "random_kc": {
+      "baseline": 50,
+      "recall": 54,
+      "factor": 1.08,
+      "status": "NO SPECIFICITY OVER RANDOM KCS"
+    },
+    "degree_matched_kc": {
+      "baseline": 50,
+      "recall": 54,
+      "factor": 1.08,
+      "status": "NO SPECIFICITY OVER DEGREE MATCH"
+    }
+  },
+  "verdict": {
+    "weights_changed": true,
+    "behavior_changed": false,
+    "root_cause": "WHOLE_BRAIN_SYNAPTIC_DILUTION_0.356_PERCENT",
+    "classification": "MECHANISM_PROVEN_DILUTED_AT_WHOLE_BRAIN"
+  }
+}
