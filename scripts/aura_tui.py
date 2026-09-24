@@ -351,16 +351,19 @@ class AuraTUI(App):
 
         return False, f"Could not find or launch application '{target}'"
 
-    def send_keys_to_process(self, process_name: str, keys: str):
-        """Sends keystrokes to an active Windows process using PowerShell WScript.Shell. ponytail: native zero-dep."""
+    def send_keys_to_process(self, process_or_title: str, keys: str):
+        """Sends keystrokes to an active Windows process or window title using PowerShell WScript.Shell. ponytail: native zero-dep."""
         try:
             # Escape quotes in keys
             sanitized = keys.replace("'", "''")
             ps_code = (
                 f"$ws = New-Object -ComObject WScript.Shell; "
-                f"$proc = Get-Process -Name {process_name} -ErrorAction SilentlyContinue | Select-Object -First 1; "
-                f"if ($proc) {{ "
-                f"  $ws.AppActivate($proc.Id); "
+                f"$activated = $ws.AppActivate('{process_or_title}'); "
+                f"if (-not $activated) {{ "
+                f"  $proc = Get-Process -Name '{process_or_title}' -ErrorAction SilentlyContinue | Select-Object -First 1; "
+                f"  if ($proc) {{ $activated = $ws.AppActivate($proc.Id); }} "
+                f"}} "
+                f"if ($activated) {{ "
                 f"  Start-Sleep -Milliseconds 400; "
                 f"  $ws.SendKeys('{sanitized}'); "
                 f"}}"
@@ -621,10 +624,10 @@ class AuraTUI(App):
             # Feed keys to calc if clean numbers
             if math_eval:
                 def inject_calc():
-                    time.sleep(0.8)
+                    time.sleep(1.2) # Allow UWP window to render
                     keys = expr.replace(' ', '') + "="
+                    self.send_keys_to_process("Calculator", keys)
                     self.send_keys_to_process("CalculatorApp", keys)
-                    self.send_keys_to_process("calc", keys)
                 threading.Thread(target=inject_calc, daemon=True).start()
 
             await self.append_message("AURA", f"Maine Calculator open kar diya hai!\n• **Equation**: `{expr}`\n• **Result**: **`{res}`**")
