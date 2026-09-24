@@ -1,0 +1,162 @@
+{
+  "timestamp": "2026-09-24T11:20:12Z",
+  "elapsed_seconds": 343.0,
+  "model": {
+    "checkpoint": "D:\\orion\\models\\comp001\\100m-real\\checkpoint-1919",
+    "step": 1919,
+    "params": 110918656,
+    "load": "checkpoint.pt (weights_only=True, mmap=True)",
+    "config": {
+      "vocab_size": 10240,
+      "hidden_size": 768,
+      "intermediate_size": 3072,
+      "num_hidden_layers": 11,
+      "num_attention_heads": 12,
+      "num_key_value_heads": 4,
+      "max_position_embeddings": 512,
+      "pad_token_id": 0,
+      "bos_token_id": 1,
+      "eos_token_id": 2,
+      "tie_word_embeddings": false
+    }
+  },
+  "controls": [
+    {
+      "id": "C1_fixed_input_reproducibility",
+      "name": "fixed-input output reproducibility (3x greedy, seed 42)",
+      "status": "PASS",
+      "criterion": "3 greedy generations of the same prompt (torch.manual_seed(42) before each) must be identical token-for-token",
+      "measured": {
+        "runs": 3,
+        "new_tokens": 16,
+        "identical": true,
+        "output_tokens_run1": [
+          172,
+          604,
+          256,
+          278,
+          286,
+          230,
+          212,
+          1055,
+          238,
+          212,
+          540,
+          230,
+          212,
+          230,
+          212,
+          230
+        ]
+      }
+    },
+    {
+      "id": "C2_checkpoint_save_load_equivalence",
+      "name": "checkpoint save/load equivalence",
+      "status": "PASS",
+      "criterion": "save in-memory state -> weights_only load -> per-tensor max abs diff vs original must be exactly 0.0",
+      "measured": {
+        "max_abs_diff": 0.0,
+        "tensors_compared": 135,
+        "loading": "weights_only=True, mmap=True",
+        "tmp_file_deleted": true
+      }
+    },
+    {
+      "id": "C4_shuffled_data_control",
+      "name": "shuffled-data control (test ppl, normal vs seeded-shuffled order)",
+      "status": "FAIL",
+      "criterion": "ppl over the test shards must be identical under a seeded document-order shuffle (token-level loss is order-invariant; any difference flags a layout-sensitive harness)",
+      "measured": {
+        "normal_order_ppl": 2036.791554,
+        "shuffled_order_ppl": 2038.689859,
+        "normal_order_loss": 7.61913108,
+        "shuffled_order_loss": 7.62006265,
+        "normal_tokens": 125310,
+        "shuffled_tokens": 125310,
+        "normal_blocks": 309,
+        "shuffled_blocks": 313,
+        "loss_diff": 0.0009315737,
+        "layout_sensitivity_note": "differs: greedy sequence-packing masks block boundaries, so row order changes which tokens are -100-masked; the eval harness is layout-sensitive at the block-boundary level"
+      }
+    },
+    {
+      "id": "C5_corrupted_checkpoint_detection",
+      "name": "corrupted-checkpoint detection (single-byte flip on a COPY)",
+      "status": "FAIL",
+      "criterion": "a checkpoint with one flipped byte must be caught (load error) or at minimum produce detectably different output; silently loading and emitting the same output = undetected corruption",
+      "measured": {
+        "checkpoint_bytes": 1331187373,
+        "probes": [
+          {
+            "flip_pos": 64,
+            "classification": "DETECTED",
+            "outputs_equal": null,
+            "logits_finite": null,
+            "load_error": "UnpicklingError: Weights only load failed. In PyTorch 2.6, we changed the default value of the `weights_only` argument in `torch.load` from `False` to `True`",
+            "forward_error": null
+          },
+          {
+            "flip_pos": 665593686,
+            "classification": "PARTIAL",
+            "outputs_equal": true,
+            "logits_finite": true,
+            "load_error": null,
+            "forward_error": null
+          }
+        ],
+        "overall_classification": "PARTIAL",
+        "honest_note": "zip-framed torch.save carries per-entry CRC32: payload byte flips raise at load (DETECTED). A flip that lands in a stored payload without being read is silent for THIS probe set. PARTIAL means the corruption was not uniformly caught across probes.",
+        "tmp_files_removed": true
+      }
+    },
+    {
+      "id": "C3_resume_equivalence",
+      "name": "resume equivalence (2 train steps from a fresh load)",
+      "status": "PASS",
+      "criterion": "two forward+backward steps (SGD lr=1e-5, seed 42) started from a fresh disk load must reproduce the same loss values and the same weight delta (max-diff == 0.0) as the first run",
+      "measured": {
+        "losses_run1": [
+          6.45632744,
+          6.45582008
+        ],
+        "losses_run2": [
+          6.45632744,
+          6.45582008
+        ],
+        "losses_equal": true,
+        "weight_delta_max_diff_run1_vs_run2": 0.0,
+        "per_tensor_delta_tensors": 135,
+        "interim_ckpt_saved_and_removed": true
+      }
+    },
+    {
+      "id": "C6_tokenizer_mismatch_detection",
+      "name": "tokenizer-mismatch detection (half-vocab embedding + truncated tokenizer)",
+      "status": "PASS",
+      "criterion": "the loader/runner must fail or error when token ids exceed the model vocab (embedding 5120 vs ids from the real 10240 tokenizer) and when the tokenizer config does not match the model vocab",
+      "measured": {
+        "ids_exceed_vocab_case": {
+          "vocab_size_real": 10240,
+          "half_vocab_model": 5120,
+          "sentence_max_id": 5720,
+          "natural_forward_error": "IndexError: index out of range in self",
+          "forced_forward_error": "IndexError: index out of range in self",
+          "classified": "DETECTED"
+        },
+        "truncated_tokenizer_case": {
+          "truncated_tokenizer_loaded": false,
+          "load_error": "Exception: Token `ĠVer` out of vocabulary at line 1 column 246530",
+          "classified": "DETECTED"
+        },
+        "note": "a truncated half-vocab tokenizer produces ids below 5120, so a silent loader would accept it; the structural vocab-size check (5120 vs 10240) is what detects it before any forward pass"
+      }
+    }
+  ],
+  "summary": {
+    "pass": 4,
+    "fail": 2,
+    "blocked": 0
+  },
+  "tmp_cleaned": true
+}

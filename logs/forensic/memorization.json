@@ -1,0 +1,284 @@
+{
+  "timestamp": "2026-09-24T11:33:34Z",
+  "elapsed_seconds": 88.7,
+  "method": "13-token rolling n-gram set (hash, substring-verified) over train-* shards in ONE pass; check_leak-style per-item scan NOT used for speed. Probe gate: only strings with >= 13 tokens count as contamination evidence.",
+  "eval_items": {
+    "n": 944
+  },
+  "probes": {
+    "total": 3103,
+    "windowed": 2834,
+    "fragments": 269,
+    "by_field": {
+      "gold": 944,
+      "opt1": 600,
+      "opt2": 448,
+      "opt3": 471,
+      "opt0": 587,
+      "ctx": 53
+    },
+    "fragment_gate_note": "fragments (< 13 tokens: single-word ARC answers, winogrande prefixes, ORION completion prompts/answers) are reported only as uninformative presence; they are NOT contamination evidence"
+  },
+  "exact_duplicate": {
+    "ngram_tokens": 13,
+    "docs_scanned": 216959,
+    "seconds": 72.1,
+    "window_hits": {},
+    "window_hit_keys": [],
+    "hit_keys_per_benchmark": {},
+    "details": {},
+    "orion_generation_corpus_hits": {},
+    "fragment": {
+      "fragment_present_keys": [
+        "orion|gold|orion-comp-thecapitalcityofvanuatui",
+        "orion|gold|orion-set-comp-compute the product of 9",
+        "orion|gold|orion-set-comp-the number of seconds in",
+        "orion|gold|orion-comp-raise7tothepowerof2thean",
+        "orion|gold|orion-set-comp-the result of raising 2 ",
+        "orion|gold|orion-set-comp-double 64 and then add 1",
+        "orion|gold|orion-set-comp-the capital city of vanu",
+        "orion|gold|orion-set-comp-the capital city of erit",
+        "orion|gold|orion-comp-inthepythonprogrammingla",
+        "orion|gold|orion-comp-thecapitalcityofnauruis",
+        "orion|gold|orion-set-comp-the capital city of ando",
+        "orion|gold|orion-comp-computetheproductof9and1",
+        "orion|gold|orion-set-comp-subtract 68 from 200. th",
+        "orion|gold|orion-comp-raise11tothepowerof2thea",
+        "orion|gold|orion-set-comp-raise 11 to the power of",
+        "orion|gold|orion-set-comp-raise 7 to the power of ",
+        "orion|gold|orion-comp-subtract68from200theresu",
+        "orion|gold|orion-comp-subtract147from500theres",
+        "orion|gold|orion-comp-computethesumof512and333",
+        "orion|gold|orion-set-comp-in the python programmin",
+        "orion|gold|orion-comp-thecapitalcityofdjibouti",
+        "orion|gold|orion-comp-thecapitalcityofkyrgyzst",
+        "orion|gold|orion-set-comp-compute the sum of 137 a",
+        "orion|gold|orion-set-comp-divide 96 by 8. the answ",
+        "orion|gold|orion-set-comp-compute the sum of 512 a",
+        "orion|gold|orion-comp-computetheproductof17and",
+        "orion|gold|orion-set-comp-compute the product of 1",
+        "orion|gold|orion-comp-computethesumof137and286",
+        "orion|gold|orion-comp-theresultofraising2tothe",
+        "orion|gold|orion-set-comp-divide 144 by 12. the an",
+        "orion|gold|orion-comp-double64andthenadd12thea",
+        "orion|gold|orion-comp-thecapitalcityofbhutanis",
+        "orion|gold|orion-comp-divide96by8theansweris",
+        "orion|gold|orion-comp-thecapitalcityofandorrai",
+        "orion|gold|orion-comp-thecapitalcityoferitreai",
+        "orion|gold|orion-set-comp-subtract 147 from 500. t",
+        "orion|gold|orion-comp-thenumberofsecondsintenm",
+        "orion|gold|orion-set-comp-the capital city of kyrg",
+        "orion|gold|orion-set-comp-the capital city of djib",
+        "orion|gold|orion-comp-computetheproductof12and",
+        "orion|gold|orion-comp-divide144by12theansweris",
+        "orion|gold|orion-set-comp-the number of minutes in",
+        "orion|gold|orion-comp-multiply15by6theansweris",
+        "orion|gold|orion-comp-thenumberofminutesinthre",
+        "orion|gold|orion-set-comp-the capital city of naur",
+        "orion|gold|orion-set-comp-the capital city of bhut",
+        "orion|gold|orion-set-comp-multiply 15 by 6. the an"
+      ],
+      "fragment_present_count": 47,
+      "uninformative": true
+    },
+    "f4_cross_reference": "F4 contamination_report.json reported 0 hits; this is the brute-force windowed double-check"
+  },
+  "verbatim_memorization": {
+    "exact_continuation_match_count": 0,
+    "corpus_prefix": [
+      {
+        "prompt": " The Independent Jane\nFor all the love, romance and scandal in Jane Austen’s books, what they are really about is freedom and",
+        "generated": " the\nThe, the\n- They a l.\n- Bv, the\n- Bvation, and the\n-\n- Bv,",
+        "corpus_continuation": " independence. Independence of thought and the freedom to choose.\nElizabeth’s refusal of Mr. Collins offer of marriage showed an independence",
+        "exact_padded_match": false,
+        "overlap_tokens": 0
+      },
+      {
+        "prompt": " Taking Play Seriously\nBy ROBIN MARANTZ HENIG\nPublished: February 17, 2008\nOn",
+        "generated": "\nThe FEN- The FENs, and the United States of the of the first of the of the of the first of the first of the United",
+        "corpus_continuation": " a drizzly Tuesday night in late January, 200 people came out to hear a psychiatrist talk rhapsodically about play -- not",
+        "exact_padded_match": false,
+        "overlap_tokens": 0
+      },
+      {
+        "prompt": " How do you get HIV?\nHIV can be passed on when infected bodily fluid, such as blood or semen, is passed into an un",
+        "generated": ".\nThe lingu, the first of the most of the most of the most of the most of the most of the most of the most of the most",
+        "corpus_continuation": "infected person. Semen is the liquid which is released from a man's penis during sex which carries sperm. It can be infected with HIV",
+        "exact_padded_match": false,
+        "overlap_tokens": 0
+      },
+      {
+        "prompt": " CTComms sends on average 2 million emails monthly on behalf of over 125 different charities and not for profits.\nTake",
+        "generated": ", and the\n-s, and the\n- The first of the\n-f, and the first of the United and the\n- They are a",
+        "corpus_continuation": " the complexity of technology and stir in the complexity of the legal system and what do you get? Software licenses! If you've ever",
+        "exact_padded_match": false,
+        "overlap_tokens": 0
+      },
+      {
+        "prompt": " Hold the salt: UCLA engineers develop revolutionary new desalination membrane\nProcess uses atmospheric pressure plasma to create fil",
+        "generated": "ation of the first of the most of the most of the most of the first of the first of the first of the most of the most of the most of",
+        "corpus_continuation": "tering 'brush layer'\nDesalination can become more economical and used as a viable alternate water resource.\nBy Wileen",
+        "exact_padded_match": false,
+        "overlap_tokens": 0
+      }
+    ],
+    "orion": [
+      {
+        "prompt": "The capital city of Nauru is",
+        "generated": " the of the of the of the of the of the of the of the of the of the of the of the of the of the of the of the of",
+        "gold_answer": "yaren"
+      },
+      {
+        "prompt": "The capital city of Tuvalu is",
+        "generated": " the United and the of the of the of the of the of the of the of the of the of the of the of the of the of the first of",
+        "gold_answer": "funafuti"
+      },
+      {
+        "prompt": "The capital city of Vanuatu is",
+        "generated": " the United and the first of the United States of the of the of the of the of the of the of the of the most of the most of the most",
+        "gold_answer": "port vila"
+      },
+      {
+        "prompt": "The capital city of Bhutan is",
+        "generated": " the most of the most of the of the of the of the of the of the of the of the of the of the of the of the of the of",
+        "gold_answer": "thimphu"
+      },
+      {
+        "prompt": "The capital city of Andorra is",
+        "generated": " the most of the of the of the first of the of the of the of the of the of the of the of the of the of the of the of",
+        "gold_answer": "andorra la vella"
+      }
+    ]
+  },
+  "near_duplicate": {
+    "sample_size": 20,
+    "corpus_rows_sampled": 5429,
+    "sample_step": 40,
+    "per_item": [
+      {
+        "benchmark": "orion",
+        "item_id": "orion-comp-computetheproductof9and1",
+        "max_bigram_jaccard": 0.0183,
+        "nearest_corpus_row": "determining the complexity of an algorithm means finding upper bounds or estimates of how many elementary operations such as additions and m"
+      },
+      {
+        "benchmark": "arc_easy",
+        "item_id": "arc-easy-test-886",
+        "max_bigram_jaccard": 0.0241,
+        "nearest_corpus_row": "do nothing to destroy the obscurity she so much desired , that now rests upon the event . it was , as i said , her last wish ... think what "
+      },
+      {
+        "benchmark": "hellaswag",
+        "item_id": "hellaswag-val-9684",
+        "max_bigram_jaccard": 0.0216,
+        "nearest_corpus_row": "the result of these changes has been a long and complex road to responsible government . effectively providing services and representation f"
+      },
+      {
+        "benchmark": "hellaswag",
+        "item_id": "hellaswag-val-2528",
+        "max_bigram_jaccard": 0.0317,
+        "nearest_corpus_row": "maskelyne published his initial results in the philosophical transactions of the royal society in 1775 , using preliminary data on the mount"
+      },
+      {
+        "benchmark": "winogrande",
+        "item_id": "winogrande-debiased-val-560",
+        "max_bigram_jaccard": 0.0204,
+        "nearest_corpus_row": "in october 2011 a fire started by spontaneous combustion in a stockpile at the port of tyne biomass facility . another fire occurred at the "
+      },
+      {
+        "benchmark": "arc_easy",
+        "item_id": "arc-easy-test-1556",
+        "max_bigram_jaccard": 0.0263,
+        "nearest_corpus_row": "in the base ten ( decimal ) number system , integer powers of 10 are written as the digit 1 followed or preceded by a number of zeroes deter"
+      },
+      {
+        "benchmark": "arc_easy",
+        "item_id": "arc-easy-test-1184",
+        "max_bigram_jaccard": 0.0435,
+        "nearest_corpus_row": "organizing committees for the olympic games ( ocogs ) are temporary committees responsible for the organization of each olympic games . ocog"
+      },
+      {
+        "benchmark": "arc_easy",
+        "item_id": "arc-easy-test-2010",
+        "max_bigram_jaccard": 0.02,
+        "nearest_corpus_row": "there are also larps that do without rules , instead relying on players to use their common sense or feel for dramatic appropriateness to co"
+      },
+      {
+        "benchmark": "hellaswag",
+        "item_id": "hellaswag-val-8443",
+        "max_bigram_jaccard": 0.0171,
+        "nearest_corpus_row": "laying pipe took several stages . first , the right of way had to be cleared with chainsaws , bulldozers , and scrapers who followed the rou"
+      },
+      {
+        "benchmark": "hellaswag",
+        "item_id": "hellaswag-val-10000",
+        "max_bigram_jaccard": 0.0273,
+        "nearest_corpus_row": "the water from the faucet is full of chlorine, and usually with chloramine, a toxic gas that is a popular disinfectant. the water we drink s"
+      },
+      {
+        "benchmark": "arc_easy",
+        "item_id": "arc-easy-test-1746",
+        "max_bigram_jaccard": 0.0241,
+        "nearest_corpus_row": "the episode features many themes of shakespeare 's romeo and juliet , and contains various allusions to shakespearean and victorian @-@ era "
+      },
+      {
+        "benchmark": "arc_easy",
+        "item_id": "arc-easy-test-1998",
+        "max_bigram_jaccard": 0.0385,
+        "nearest_corpus_row": "two plants found near twilight cove are regarded as hybrids between a. cuneatus and a. forrestii , the only two adenanthos species to occur "
+      },
+      {
+        "benchmark": "hellaswag",
+        "item_id": "hellaswag-val-7095",
+        "max_bigram_jaccard": 0.0221,
+        "nearest_corpus_row": "\" soul sound \" is a pop record that experiments with pop @-@ rock balladry . the song features guitar and bass instrumentation , and accordi"
+      },
+      {
+        "benchmark": "winogrande",
+        "item_id": "winogrande-debiased-val-26",
+        "max_bigram_jaccard": 0.0364,
+        "nearest_corpus_row": "on the basis of this letter , singapore argued that abdul rahman had only donated the mainland territories to hussein and had retained sover"
+      },
+      {
+        "benchmark": "arc_easy",
+        "item_id": "arc-easy-test-991",
+        "max_bigram_jaccard": 0.0164,
+        "nearest_corpus_row": "m. l. dulcis , commonly known as lavender @-@ flanked fairywren , is found in arnhem land . it was described in 1908 by amateur ornithologis"
+      },
+      {
+        "benchmark": "hellaswag",
+        "item_id": "hellaswag-val-5870",
+        "max_bigram_jaccard": 0.0248,
+        "nearest_corpus_row": "meditation is one of the five principles of yoga. it is the practice by which there is constant observation of the mind. it requires you to "
+      },
+      {
+        "benchmark": "hellaswag",
+        "item_id": "hellaswag-val-5489",
+        "max_bigram_jaccard": 0.0181,
+        "nearest_corpus_row": "getting to know your city! |your city has a lot to offer visitors living abroad. search for key tourist attractions that you feel are approp"
+      },
+      {
+        "benchmark": "arc_easy",
+        "item_id": "arc-easy-test-1301",
+        "max_bigram_jaccard": 0.019,
+        "nearest_corpus_row": "before 1948 , haifa 's municipality was fairly unusual as it developed cooperation between the mixed arab and jewish community in the city ,"
+      },
+      {
+        "benchmark": "winogrande",
+        "item_id": "winogrande-debiased-val-505",
+        "max_bigram_jaccard": 0.0161,
+        "nearest_corpus_row": "as the three condemned men were driven to their execution , apis remarked to the driver \" now it is clear to me and clear to you too , that "
+      },
+      {
+        "benchmark": "winogrande",
+        "item_id": "winogrande-debiased-val-783",
+        "max_bigram_jaccard": 0.0299,
+        "nearest_corpus_row": "the game was successfully released in august 2007 with a final budget of about $ 25 million . despite the critical success of the title , ma"
+      }
+    ],
+    "items_flagged_possible_near_dup": [],
+    "max_over_sample": 0.0435,
+    "note": "ponytail: 1/40 row sample, not an exhaustive scan; near-dup is a bounded approximate net for cheap triage, upgrade to a full index if any hits approach 0.8."
+  },
+  "tmp_created": []
+}

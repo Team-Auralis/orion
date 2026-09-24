@@ -1,0 +1,70 @@
+ORION 100m-real checkpoint-1919 - QUALITATIVE GENERATION DIAGNOSTICS
+==============================================================================
+WARNING: these samples are QUALITATIVE DIAGNOSTICS ONLY and are NOT
+capability evidence. The checkpoint is a 110M-param model trained on a
+small corpus; prompts are held-out or corpus-prefix probes and decoding
+is greedy (temperature 0, max 32 new tokens). Nothing here should be
+read as a claim about general knowledge, fluency, or capability.
+------------------------------------------------------------------------------
+timestamp: 2026-09-24T11:35:36Z
+checkpoint: D:\orion\models\comp001\100m-real\checkpoint-1919 (step 1919, 110,918,656 params)
+load: checkpoint.pt (weights_only=True, mmap=True)
+
+=== sample 1 [in-domain corpus prefix] ===
+PROMPT:  The Independent Jane
+For all the love, romance and scandal in Jane Austen’s books, what they are really about is freedom and
+CONTINUATION (32 new tokens):  the
+The, the
+- They a l.
+- Bv, the
+- Bvation, and the
+-
+- Bv,
+
+=== sample 2 [in-domain corpus prefix] ===
+PROMPT:  Taking Play Seriously
+By ROBIN MARANTZ HENIG
+Published: February 17, 2008
+On
+CONTINUATION (32 new tokens): 
+The FEN- The FENs, and the United States of the of the first of the of the of the first of the first of the United
+
+=== sample 3 [in-domain corpus prefix] ===
+PROMPT:  How do you get HIV?
+HIV can be passed on when infected bodily fluid, such as blood or semen, is passed into an un
+CONTINUATION (32 new tokens): .
+The lingu, the first of the most of the most of the most of the most of the most of the most of the most of the most
+
+=== sample 4 [in-domain corpus prefix] ===
+PROMPT:  CTComms sends on average 2 million emails monthly on behalf of over 125 different charities and not for profits.
+Take
+CONTINUATION (32 new tokens): , and the
+-s, and the
+- The first of the
+-f, and the first of the United and the
+- They are a
+
+=== sample 5 [in-domain corpus prefix] ===
+PROMPT:  Hold the salt: UCLA engineers develop revolutionary new desalination membrane
+Process uses atmospheric pressure plasma to create fil
+CONTINUATION (32 new tokens): ation of the first of the most of the most of the most of the first of the first of the first of the most of the most of the most of
+
+=== sample 6 [out-of-domain ORION set] ===
+PROMPT: The capital city of Nauru is
+CONTINUATION (32 new tokens):  the of the of the of the of the of the of the of the of the of the of the of the of the of the of the of the of
+
+=== sample 7 [out-of-domain ORION set] ===
+PROMPT: The capital city of Tuvalu is
+CONTINUATION (32 new tokens):  the United and the of the of the of the of the of the of the of the of the of the of the of the of the of the first of
+
+=== sample 8 [out-of-domain ORION set] ===
+PROMPT: The capital city of Vanuatu is
+CONTINUATION (32 new tokens):  the United and the first of the United States of the of the of the of the of the of the of the of the most of the most of the most
+
+=== sample 9 [out-of-domain ORION set] ===
+PROMPT: The capital city of Bhutan is
+CONTINUATION (32 new tokens):  the most of the most of the of the of the of the of the of the of the of the of the of the of the of the of the of
+
+=== sample 10 [out-of-domain ORION set] ===
+PROMPT: The capital city of Andorra is
+CONTINUATION (32 new tokens):  the most of the of the of the first of the of the of the of the of the of the of the of the of the of the of the of
