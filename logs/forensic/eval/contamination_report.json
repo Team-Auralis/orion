@@ -1,0 +1,53 @@
+{
+  "run_id": "forensic-eval-667f794d",
+  "manifest": "D:\\orion\\data\\training\\corpus\\manifest.json",
+  "per_benchmark": {
+    "hellaswag": {
+      "split": "validation",
+      "screened_strings": 379,
+      "hits": 0,
+      "dropped_items": 0,
+      "hit_details": {},
+      "clean_per_seed_after_drop": {
+        "42": 100,
+        "1337": 100,
+        "2026": 100
+      }
+    },
+    "arc_easy": {
+      "split": "test",
+      "screened_strings": 344,
+      "hits": 0,
+      "dropped_items": 0,
+      "hit_details": {},
+      "clean_per_seed_after_drop": {
+        "42": 100,
+        "1337": 100,
+        "2026": 100
+      }
+    },
+    "winogrande": {
+      "split": "winogrande_debiased validation",
+      "screened_strings": 334,
+      "hits": 0,
+      "dropped_items": 0,
+      "hit_details": {},
+      "clean_per_seed_after_drop": {
+        "42": 100,
+        "1337": 100,
+        "2026": 100
+      }
+    },
+    "orion": {
+      "split": "hardcoded",
+      "screened_strings": 40,
+      "hits": 0,
+      "dropped_items": 0,
+      "hit_details": {}
+    }
+  },
+  "total_screened": 1097,
+  "total_hits": 0,
+  "total_dropped": 0,
+  "screening_seconds": 3442.1
+}
