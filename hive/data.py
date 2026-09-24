@@ -62,7 +62,10 @@ def load_from_sqlite(db_path: str, table: str = "texts", column: str = "text", b
 
 
 def load_from_huggingface(dataset_name: str, config: Optional[str] = None, split: str = "train", text_column: str = "text", budget: int = 120000):
-    """Stream or load text rows directly from Hugging Face datasets."""
+    """Stream or load text rows directly from Hugging Face datasets.
+    
+    Dynamically finds string columns (e.g. English, Hinglish, text, sentence, document, translation).
+    """
     from datasets import load_dataset
 
     tokenizer = orion_corpus.load_bpe_compat()
@@ -70,16 +73,27 @@ def load_from_huggingface(dataset_name: str, config: Optional[str] = None, split
     ds = load_dataset(dataset_name, config, split=split, streaming=True)
     rows, slice_tokens = [], 0
     for item in ds:
-        text = item.get(text_column, "")
-        if not text and "content" in item:
+        text = ""
+        if text_column in item and isinstance(item[text_column], str):
+            text = item[text_column]
+        elif "content" in item and isinstance(item["content"], str):
             text = item["content"]
-        if not isinstance(text, str) or not text.strip():
+        else:
+            # Auto-detect all string fields or paired translation fields (e.g. English + Hinglish)
+            pieces = []
+            for k, v in item.items():
+                if isinstance(v, str) and v.strip():
+                    pieces.append(v.strip())
+            text = " \n ".join(pieces)
+        
+        if not text.strip():
             continue
         row = {"text": text, "provenance": f"hf://{dataset_name}/{split}"}
         rows.append(row)
         slice_tokens += len(tokenizer.encode(text).ids)
         if slice_tokens >= budget:
             break
+    print(f"[DATASET] Loaded {len(rows)} samples ({slice_tokens:,} tokens) from {dataset_name}")
     return rows, slice_tokens, tokenizer
 
 
