@@ -1,0 +1,630 @@
+{
+  "Regex_Fallback": {
+    "total_cases": 40,
+    "exact_accuracy_pct": 12.5,
+    "confusion_matrix": {
+      "CRITICAL": {
+        "CRITICAL": 0,
+        "HIGH": 4,
+        "MODERATE": 2,
+        "LOW": 14,
+        "UNKNOWN": 0
+      },
+      "HIGH": {
+        "CRITICAL": 1,
+        "HIGH": 5,
+        "MODERATE": 0,
+        "LOW": 14,
+        "UNKNOWN": 0
+      }
+    },
+    "critical_metrics": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "catastrophic_drops_to_mod_or_low": 16
+    },
+    "latency_ms": {
+      "mean": 0.025,
+      "p50": 0.003,
+      "p90": 0.086,
+      "p95": 0.157
+    },
+    "predictions": [
+      {
+        "id": "C01",
+        "subclass": "cardiac_arrest",
+        "gt": "CRITICAL",
+        "pred": "LOW",
+        "latency_ms": 0.438
+      },
+      {
+        "id": "C02",
+        "subclass": "drowning_pediatric",
+        "gt": "CRITICAL",
+        "pred": "MODERATE",
+        "latency_ms": 0.084
+      },
+      {
+        "id": "C03",
+        "subclass": "airway_compromise",
+        "gt": "CRITICAL",
+        "pred": "LOW",
+        "latency_ms": 0.003
+      },
+      {
+        "id": "C04",
+        "subclass": "anaphylaxis",
+        "gt": "CRITICAL",
+        "pred": "LOW",
+        "latency_ms": 0.003
+      },
+      {
+        "id": "C05",
+        "subclass": "traumatic_amputation",
+        "gt": "CRITICAL",
+        "pred": "LOW",
+        "latency_ms": 0.019
+      },
+      {
+        "id": "C06",
+        "subclass": "cardiac_tamponade",
+        "gt": "CRITICAL",
+        "pred": "LOW",
+        "latency_ms": 0.003
+      },
+      {
+        "id": "C07",
+        "subclass": "burns_inhalation",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 0.002
+      },
+      {
+        "id": "C08",
+        "subclass": "confined_space_toxic",
+        "gt": "CRITICAL",
+        "pred": "LOW",
+        "latency_ms": 0.003
+      },
+      {
+        "id": "C09",
+        "subclass": "hazmat_plume",
+        "gt": "CRITICAL",
+        "pred": "LOW",
+        "latency_ms": 0.003
+      },
+      {
+        "id": "C10",
+        "subclass": "mass_casualty_collapse",
+        "gt": "CRITICAL",
+        "pred": "LOW",
+        "latency_ms": 0.005
+      },
+      {
+        "id": "C11",
+        "subclass": "maritime_disaster",
+        "gt": "CRITICAL",
+        "pred": "MODERATE",
+        "latency_ms": 0.01
+      },
+      {
+        "id": "C12",
+        "subclass": "active_threat",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 0.002
+      },
+      {
+        "id": "C13",
+        "subclass": "bleve_hazard",
+        "gt": "CRITICAL",
+        "pred": "LOW",
+        "latency_ms": 0.003
+      },
+      {
+        "id": "C14",
+        "subclass": "train_derailment_toxic",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 0.002
+      },
+      {
+        "id": "C15",
+        "subclass": "critical_care_failure",
+        "gt": "CRITICAL",
+        "pred": "LOW",
+        "latency_ms": 0.003
+      },
+      {
+        "id": "C16",
+        "subclass": "imminent_dam_failure",
+        "gt": "CRITICAL",
+        "pred": "LOW",
+        "latency_ms": 0.003
+      },
+      {
+        "id": "C17",
+        "subclass": "tension_pneumothorax",
+        "gt": "CRITICAL",
+        "pred": "LOW",
+        "latency_ms": 0.003
+      },
+      {
+        "id": "C18",
+        "subclass": "gi_exsanguination",
+        "gt": "CRITICAL",
+        "pred": "LOW",
+        "latency_ms": 0.003
+      },
+      {
+        "id": "C19",
+        "subclass": "high_voltage_electrocution",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 0.002
+      },
+      {
+        "id": "C20",
+        "subclass": "pediatric_complete_fbao",
+        "gt": "CRITICAL",
+        "pred": "LOW",
+        "latency_ms": 0.011
+      },
+      {
+        "id": "H01",
+        "subclass": "open_femur_fracture",
+        "gt": "HIGH",
+        "pred": "LOW",
+        "latency_ms": 0.017
+      },
+      {
+        "id": "H02",
+        "subclass": "acute_coronary_syndrome",
+        "gt": "HIGH",
+        "pred": "LOW",
+        "latency_ms": 0.003
+      },
+      {
+        "id": "H03",
+        "subclass": "acute_ischemic_stroke",
+        "gt": "HIGH",
+        "pred": "LOW",
+        "latency_ms": 0.003
+      },
+      {
+        "id": "H04",
+        "subclass": "ocular_chemical_burn",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 0.086
+      },
+      {
+        "id": "H05",
+        "subclass": "second_degree_burns",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 0.157
+      },
+      {
+        "id": "H06",
+        "subclass": "extrication_stable",
+        "gt": "HIGH",
+        "pred": "LOW",
+        "latency_ms": 0.088
+      },
+      {
+        "id": "H07",
+        "subclass": "deep_venous_laceration",
+        "gt": "HIGH",
+        "pred": "LOW",
+        "latency_ms": 0.014
+      },
+      {
+        "id": "H08",
+        "subclass": "spinal_cord_injury_stable",
+        "gt": "HIGH",
+        "pred": "LOW",
+        "latency_ms": 0.005
+      },
+      {
+        "id": "H09",
+        "subclass": "moderate_asthma_exacerbation",
+        "gt": "HIGH",
+        "pred": "LOW",
+        "latency_ms": 0.003
+      },
+      {
+        "id": "H10",
+        "subclass": "pediatric_toxic_ingestion",
+        "gt": "HIGH",
+        "pred": "LOW",
+        "latency_ms": 0.003
+      },
+      {
+        "id": "H11",
+        "subclass": "structure_fire_contained",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 0.002
+      },
+      {
+        "id": "H12",
+        "subclass": "wildland_urban_threat",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 0.002
+      },
+      {
+        "id": "H13",
+        "subclass": "hazmat_diesel_highway",
+        "gt": "HIGH",
+        "pred": "CRITICAL",
+        "latency_ms": 0.003
+      },
+      {
+        "id": "H14",
+        "subclass": "moderate_mvc",
+        "gt": "HIGH",
+        "pred": "LOW",
+        "latency_ms": 0.003
+      },
+      {
+        "id": "H15",
+        "subclass": "outdoor_gas_leak_low_pressure",
+        "gt": "HIGH",
+        "pred": "LOW",
+        "latency_ms": 0.003
+      },
+      {
+        "id": "H16",
+        "subclass": "technical_rescue_hypothermia_risk",
+        "gt": "HIGH",
+        "pred": "LOW",
+        "latency_ms": 0.003
+      },
+      {
+        "id": "H17",
+        "subclass": "uxo_perimeter_secure",
+        "gt": "HIGH",
+        "pred": "LOW",
+        "latency_ms": 0.003
+      },
+      {
+        "id": "H18",
+        "subclass": "minor_localized_flooding",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 0.002
+      },
+      {
+        "id": "H19",
+        "subclass": "behavioral_crisis_contained",
+        "gt": "HIGH",
+        "pred": "LOW",
+        "latency_ms": 0.004
+      },
+      {
+        "id": "H20",
+        "subclass": "dka_severe",
+        "gt": "HIGH",
+        "pred": "LOW",
+        "latency_ms": 0.004
+      }
+    ]
+  },
+  "Laya_System1": {
+    "total_cases": 40,
+    "exact_accuracy_pct": 50.0,
+    "confusion_matrix": {
+      "CRITICAL": {
+        "CRITICAL": 3,
+        "HIGH": 17,
+        "MODERATE": 0,
+        "LOW": 0,
+        "UNKNOWN": 0
+      },
+      "HIGH": {
+        "CRITICAL": 0,
+        "HIGH": 17,
+        "MODERATE": 2,
+        "LOW": 1,
+        "UNKNOWN": 0
+      }
+    },
+    "critical_metrics": {
+      "precision": 1.0,
+      "recall": 0.15,
+      "f1": 0.2609,
+      "catastrophic_drops_to_mod_or_low": 0
+    },
+    "latency_ms": {
+      "mean": 420.749,
+      "p50": 299.465,
+      "p90": 351.228,
+      "p95": 455.642
+    },
+    "predictions": [
+      {
+        "id": "C01",
+        "subclass": "cardiac_arrest",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 4980.492
+      },
+      {
+        "id": "C02",
+        "subclass": "drowning_pediatric",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 337.73
+      },
+      {
+        "id": "C03",
+        "subclass": "airway_compromise",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 287.522
+      },
+      {
+        "id": "C04",
+        "subclass": "anaphylaxis",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 255.814
+      },
+      {
+        "id": "C05",
+        "subclass": "traumatic_amputation",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 332.001
+      },
+      {
+        "id": "C06",
+        "subclass": "cardiac_tamponade",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 337.374
+      },
+      {
+        "id": "C07",
+        "subclass": "burns_inhalation",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 282.925
+      },
+      {
+        "id": "C08",
+        "subclass": "confined_space_toxic",
+        "gt": "CRITICAL",
+        "pred": "CRITICAL",
+        "latency_ms": 332.088
+      },
+      {
+        "id": "C09",
+        "subclass": "hazmat_plume",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 343.55
+      },
+      {
+        "id": "C10",
+        "subclass": "mass_casualty_collapse",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 281.444
+      },
+      {
+        "id": "C11",
+        "subclass": "maritime_disaster",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 271.783
+      },
+      {
+        "id": "C12",
+        "subclass": "active_threat",
+        "gt": "CRITICAL",
+        "pred": "CRITICAL",
+        "latency_ms": 268.231
+      },
+      {
+        "id": "C13",
+        "subclass": "bleve_hazard",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 271.955
+      },
+      {
+        "id": "C14",
+        "subclass": "train_derailment_toxic",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 279.205
+      },
+      {
+        "id": "C15",
+        "subclass": "critical_care_failure",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 292.488
+      },
+      {
+        "id": "C16",
+        "subclass": "imminent_dam_failure",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 268.881
+      },
+      {
+        "id": "C17",
+        "subclass": "tension_pneumothorax",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 250.522
+      },
+      {
+        "id": "C18",
+        "subclass": "gi_exsanguination",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 284.318
+      },
+      {
+        "id": "C19",
+        "subclass": "high_voltage_electrocution",
+        "gt": "CRITICAL",
+        "pred": "HIGH",
+        "latency_ms": 287.305
+      },
+      {
+        "id": "C20",
+        "subclass": "pediatric_complete_fbao",
+        "gt": "CRITICAL",
+        "pred": "CRITICAL",
+        "latency_ms": 250.484
+      },
+      {
+        "id": "H01",
+        "subclass": "open_femur_fracture",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 286.559
+      },
+      {
+        "id": "H02",
+        "subclass": "acute_coronary_syndrome",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 291.983
+      },
+      {
+        "id": "H03",
+        "subclass": "acute_ischemic_stroke",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 261.834
+      },
+      {
+        "id": "H04",
+        "subclass": "ocular_chemical_burn",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 267.177
+      },
+      {
+        "id": "H05",
+        "subclass": "second_degree_burns",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 309.992
+      },
+      {
+        "id": "H06",
+        "subclass": "extrication_stable",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 299.465
+      },
+      {
+        "id": "H07",
+        "subclass": "deep_venous_laceration",
+        "gt": "HIGH",
+        "pred": "MODERATE",
+        "latency_ms": 351.228
+      },
+      {
+        "id": "H08",
+        "subclass": "spinal_cord_injury_stable",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 389.95
+      },
+      {
+        "id": "H09",
+        "subclass": "moderate_asthma_exacerbation",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 455.642
+      },
+      {
+        "id": "H10",
+        "subclass": "pediatric_toxic_ingestion",
+        "gt": "HIGH",
+        "pred": "LOW",
+        "latency_ms": 284.868
+      },
+      {
+        "id": "H11",
+        "subclass": "structure_fire_contained",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 301.128
+      },
+      {
+        "id": "H12",
+        "subclass": "wildland_urban_threat",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 311.934
+      },
+      {
+        "id": "H13",
+        "subclass": "hazmat_diesel_highway",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 277.514
+      },
+      {
+        "id": "H14",
+        "subclass": "moderate_mvc",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 326.33
+      },
+      {
+        "id": "H15",
+        "subclass": "outdoor_gas_leak_low_pressure",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 309.676
+      },
+      {
+        "id": "H16",
+        "subclass": "technical_rescue_hypothermia_risk",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 322.234
+      },
+      {
+        "id": "H17",
+        "subclass": "uxo_perimeter_secure",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 310.974
+      },
+      {
+        "id": "H18",
+        "subclass": "minor_localized_flooding",
+        "gt": "HIGH",
+        "pred": "MODERATE",
+        "latency_ms": 310.27
+      },
+      {
+        "id": "H19",
+        "subclass": "behavioral_crisis_contained",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 332.512
+      },
+      {
+        "id": "H20",
+        "subclass": "dka_severe",
+        "gt": "HIGH",
+        "pred": "HIGH",
+        "latency_ms": 332.575
+      }
+    ]
+  }
+}

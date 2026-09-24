@@ -1,0 +1,352 @@
+[
+  {
+    "idx": 0,
+    "text": "The residential timber dwelling is fully engulfed in flames, three children unaccounted for.",
+    "gt": "CRITICAL",
+    "laya": "HIGH",
+    "regex": "LOW"
+  },
+  {
+    "idx": 1,
+    "text": "The individual has ceased respiration and pulses are undetectable, beginning chest compressions.",
+    "gt": "CRITICAL",
+    "laya": "HIGH",
+    "regex": "LOW"
+  },
+  {
+    "idx": 2,
+    "text": "Industrial toxic chlorine gas cloud released after pipeline rupture, drifting rapidly toward elementary school.",
+    "gt": "CRITICAL",
+    "laya": "HIGH",
+    "regex": "LOW"
+  },
+  {
+    "idx": 3,
+    "text": "Multi-vehicle collision on interstate; passenger vehicle crushed under fuel tanker with heavy gasoline spill.",
+    "gt": "CRITICAL",
+    "laya": "HIGH",
+    "regex": "LOW"
+  },
+  {
+    "idx": 4,
+    "text": "Patient displaying arterial spurting from neck laceration, loss of consciousness imminent.",
+    "gt": "CRITICAL",
+    "laya": "HIGH",
+    "regex": "LOW"
+  },
+  {
+    "idx": 5,
+    "text": "Structural support beam collapsed in underground coal mine, twelve miners trapped beneath rubble.",
+    "gt": "CRITICAL",
+    "laya": "HIGH",
+    "regex": "LOW"
+  },
+  {
+    "idx": 6,
+    "text": "Commercial airliner reporting dual engine failure on final approach, glider configuration over dense urban center.",
+    "gt": "CRITICAL",
+    "laya": "HIGH",
+    "regex": "LOW"
+  },
+  {
+    "idx": 7,
+    "text": "Hydroelectric dam spillway gate fractured under hydraulic load, downstream valley facing immediate submersion.",
+    "gt": "CRITICAL",
+    "laya": "HIGH",
+    "regex": "LOW"
+  },
+  {
+    "idx": 8,
+    "text": "Active shooter reported in shopping concourse, multiple casualties on floor, barricaded in storeroom.",
+    "gt": "CRITICAL",
+    "laya": "HIGH",
+    "regex": "LOW"
+  },
+  {
+    "idx": 9,
+    "text": "Toddler discovered prone and cyanotic at the bottom of the swimming facility.",
+    "gt": "CRITICAL",
+    "laya": "HIGH",
+    "regex": "LOW"
+  },
+  {
+    "idx": 10,
+    "text": "Hospital backup diesel generators seized during total power blackout; neonatal ICU ventilators running on 10-minute battery.",
+    "gt": "CRITICAL",
+    "laya": "HIGH",
+    "regex": "CRITICAL"
+  },
+  {
+    "idx": 11,
+    "text": "High-pressure municipal natural gas trunk line severed by excavator, massive hiss heard, surrounding residences evacuated.",
+    "gt": "CRITICAL",
+    "laya": "HIGH",
+    "regex": "LOW"
+  },
+  {
+    "idx": 12,
+    "text": "River levels breached embankment, two-meter wall of brown water rushing down Main Street.",
+    "gt": "HIGH",
+    "laya": "HIGH",
+    "regex": "MODERATE"
+  },
+  {
+    "idx": 13,
+    "text": "Elderly resident experiencing unilateral facial droop and sudden slurred speech.",
+    "gt": "HIGH",
+    "laya": "HIGH",
+    "regex": "LOW"
+  },
+  {
+    "idx": 14,
+    "text": "Apartment electrical panel emitting continuous sparks and dense acrid gray smoke.",
+    "gt": "HIGH",
+    "laya": "HIGH",
+    "regex": "HIGH"
+  },
+  {
+    "idx": 15,
+    "text": "Driver trapped inside overturned vehicle in drainage ditch, conscious and complaining of spinal pain.",
+    "gt": "HIGH",
+    "laya": "HIGH",
+    "regex": "LOW"
+  },
+  {
+    "idx": 16,
+    "text": "Wildfire perimeter jumped containment trench, currently 500 meters from suburban neighborhood edge.",
+    "gt": "HIGH",
+    "laya": "HIGH",
+    "regex": "HIGH"
+  },
+  {
+    "idx": 17,
+    "text": "Severe chemical burn from concentrated sulfuric acid splash across worker's forearms.",
+    "gt": "HIGH",
+    "laya": "HIGH",
+    "regex": "HIGH"
+  },
+  {
+    "idx": 18,
+    "text": "School bus stalled on railroad crossing, warning bells active, train headlight visible in distance.",
+    "gt": "HIGH",
+    "laya": "HIGH",
+    "regex": "LOW"
+  },
+  {
+    "idx": 19,
+    "text": "Pedestrian struck by cyclist at high speed, compound fracture of the lower tibia with moderate bleeding.",
+    "gt": "HIGH",
+    "laya": "HIGH",
+    "regex": "LOW"
+  },
+  {
+    "idx": 20,
+    "text": "Substation transformer explosion knocked out electricity across southern hospital district.",
+    "gt": "HIGH",
+    "laya": "HIGH",
+    "regex": "LOW"
+  },
+  {
+    "idx": 21,
+    "text": "Suspected unexploded ordnance unearthed during commercial foundation excavation.",
+    "gt": "HIGH",
+    "laya": "HIGH",
+    "regex": "LOW"
+  },
+  {
+    "idx": 22,
+    "text": "Basement sump pump failed during heavy rain; water depth currently 15 centimeters and rising slowly.",
+    "gt": "MODERATE",
+    "laya": "MODERATE",
+    "regex": "MODERATE"
+  },
+  {
+    "idx": 23,
+    "text": "Minor collision in grocery parking lot; bumper damage, both drivers standing and exchanging insurance info.",
+    "gt": "MODERATE",
+    "laya": "LOW",
+    "regex": "LOW"
+  },
+  {
+    "idx": 24,
+    "text": "Tree limb fell across secondary residential road, blocking one lane of vehicular traffic.",
+    "gt": "MODERATE",
+    "laya": "MODERATE",
+    "regex": "LOW"
+  },
+  {
+    "idx": 25,
+    "text": "Tenant reports strong odor of sewage emanating from basement floor drain.",
+    "gt": "MODERATE",
+    "laya": "MODERATE",
+    "regex": "LOW"
+  },
+  {
+    "idx": 26,
+    "text": "Child twisted ankle on playground swingset, swelling present, able to bear partial weight.",
+    "gt": "MODERATE",
+    "laya": "MODERATE",
+    "regex": "LOW"
+  },
+  {
+    "idx": 27,
+    "text": "Traffic signals dark at 4-way intersection due to local fuse trip; motorists executing courtesy stops.",
+    "gt": "MODERATE",
+    "laya": "MODERATE",
+    "regex": "LOW"
+  },
+  {
+    "idx": 28,
+    "text": "Storefront glass window broken overnight; inventory undisturbed, premises secured with caution tape.",
+    "gt": "MODERATE",
+    "laya": "HIGH",
+    "regex": "LOW"
+  },
+  {
+    "idx": 29,
+    "text": "Stray dog displaying aggressive behavior toward pedestrians on sidewalk.",
+    "gt": "MODERATE",
+    "laya": "MODERATE",
+    "regex": "LOW"
+  },
+  {
+    "idx": 30,
+    "text": "Minor diesel spill estimated at 10 liters from delivery truck fuel cap onto concrete loading bay.",
+    "gt": "MODERATE",
+    "laya": "LOW",
+    "regex": "CRITICAL"
+  },
+  {
+    "idx": 31,
+    "text": "Commercial fire alarm sounding continuously; no smoke or thermal signature detected upon preliminary sweep.",
+    "gt": "MODERATE",
+    "laya": "MODERATE",
+    "regex": "HIGH"
+  },
+  {
+    "idx": 32,
+    "text": "I am dying of laughter, that was the funniest stand-up comedy special ever created!",
+    "gt": "LOW",
+    "laya": "MODERATE",
+    "regex": "LOW"
+  },
+  {
+    "idx": 33,
+    "text": "The autumn maple leaves have a gorgeous bright fire color against the evening sunset.",
+    "gt": "LOW",
+    "laya": "MODERATE",
+    "regex": "HIGH"
+  },
+  {
+    "idx": 34,
+    "text": "My manager killed the project proposal during today's afternoon budget review.",
+    "gt": "LOW",
+    "laya": "MODERATE",
+    "regex": "CRITICAL"
+  },
+  {
+    "idx": 35,
+    "text": "That spicy habanero salsa really burned my tongue, need some milk.",
+    "gt": "LOW",
+    "laya": "MODERATE",
+    "regex": "HIGH"
+  },
+  {
+    "idx": 36,
+    "text": "The football team's defense attacked the line of scrimmage with tremendous energy.",
+    "gt": "LOW",
+    "laya": "MODERATE",
+    "regex": "LOW"
+  },
+  {
+    "idx": 37,
+    "text": "The new pop single just exploded onto the global music charts this morning.",
+    "gt": "LOW",
+    "laya": "MODERATE",
+    "regex": "LOW"
+  },
+  {
+    "idx": 38,
+    "text": "Can someone help me move this heavy wooden sofa into the den upstairs?",
+    "gt": "LOW",
+    "laya": "MODERATE",
+    "regex": "MODERATE"
+  },
+  {
+    "idx": 39,
+    "text": "I had a sudden panic attack when I thought I misplaced my car keys, but they were in my coat.",
+    "gt": "LOW",
+    "laya": "HIGH",
+    "regex": "LOW"
+  },
+  {
+    "idx": 40,
+    "text": "Our software engineers are crushing bugs and shooting down backlog tickets all week.",
+    "gt": "LOW",
+    "laya": "MODERATE",
+    "regex": "LOW"
+  },
+  {
+    "idx": 41,
+    "text": "The campfire was completely extinguished with water and cold ashes hours ago.",
+    "gt": "LOW",
+    "laya": "HIGH",
+    "regex": "HIGH"
+  },
+  {
+    "idx": 42,
+    "text": "Looking for recommendations on the best heart-healthy breakfast smoothies.",
+    "gt": "LOW",
+    "laya": "MODERATE",
+    "regex": "LOW"
+  },
+  {
+    "idx": 43,
+    "text": "Practicing safe evacuation procedures during the scheduled elementary school fire drill.",
+    "gt": "LOW",
+    "laya": "MODERATE",
+    "regex": "HIGH"
+  },
+  {
+    "idx": 44,
+    "text": "Checking the weather forecast to see if it will rain during Saturday's community picnic.",
+    "gt": "LOW",
+    "laya": "LOW",
+    "regex": "LOW"
+  },
+  {
+    "idx": 45,
+    "text": "Lost my reading glasses somewhere between the front desk and the break room.",
+    "gt": "LOW",
+    "laya": "MODERATE",
+    "regex": "LOW"
+  },
+  {
+    "idx": 46,
+    "text": "The library will be closed on Monday in observance of the statutory public holiday.",
+    "gt": "LOW",
+    "laya": "MODERATE",
+    "regex": "LOW"
+  },
+  {
+    "idx": 47,
+    "text": "Inquiring about renewing a standard municipal residential parking permit online.",
+    "gt": "LOW",
+    "laya": "MODERATE",
+    "regex": "LOW"
+  },
+  {
+    "idx": 48,
+    "text": "Street sweeping is scheduled along Elm Avenue between 8 AM and 12 PM tomorrow.",
+    "gt": "LOW",
+    "laya": "MODERATE",
+    "regex": "LOW"
+  },
+  {
+    "idx": 49,
+    "text": "Submitting a routine inquiry regarding community center swimming pool public hours.",
+    "gt": "LOW",
+    "laya": "MODERATE",
+    "regex": "LOW"
+  }
+]
