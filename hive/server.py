@@ -72,12 +72,20 @@ def get_lan_ips():
     try:
         host = socket.gethostname()
         for ip in socket.gethostbyname_ex(host)[2]:
-            if not ip.startswith("127."):
+            if not ip.startswith("127.") and not ip.startswith("169.254."):
                 ips.append(ip)
     except Exception:
         pass
     if not ips:
         ips.append("127.0.0.1")
+    # Prioritize physical Wi-Fi/Ethernet networks over VirtualBox/VMware host-only adapters (e.g. 192.168.56.*)
+    def ip_priority(ip):
+        if ip.startswith("192.168.56."):  # VirtualBox default
+            return 99
+        if ip.startswith("192.168.") or ip.startswith("10.") or ip.startswith("172."):
+            return 1
+        return 50
+    ips.sort(key=ip_priority)
     return ips
 
 
@@ -174,6 +182,8 @@ def _run_training_thread(req: TrainRequest):
     if req.sqlite_db:
         cmd.extend(["--sqlite-db", req.sqlite_db])
 
+    env = os.environ.copy()
+    env["PYTHONUNBUFFERED"] = "1"
     try:
         proc = subprocess.Popen(
             cmd,
@@ -182,6 +192,7 @@ def _run_training_thread(req: TrainRequest):
             text=True,
             bufsize=1,
             cwd=str(REPO_ROOT),
+            env=env,
         )
         ACTIVE_PROC = proc
         for line in proc.stdout:
@@ -579,7 +590,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="ORION-HIVE Web Dashboard Server")
     parser.add_argument("--host", type=str, default="0.0.0.0", help="Host interface to bind")
-    parser.add_argument("--port", type=int, default=8080, help="HTTP port (default: 8080)")
+    parser.add_argument("--port", type=int, default=7860, help="HTTP port (default: 7860)")
     args = parser.parse_args()
 
     print(f"\n========================================================")
