@@ -23,28 +23,35 @@ class AuraNLP:
         
     def parse(self, text):
         text_lower = text.lower().strip()
-        # Common Greetings (Hinglish + Tenglish + Telugu + Hindi)
+        # Greetings
         if re.search(r'\b(kaise\s+ho|kaisa\s+hai|kya\s+haal|kaise\s+hoo)\b', text_lower):
             return "Main badhiya hoon! Aap bataiye, main aapki kya madad kar sakta hoon?"
         if re.search(r'\b(bagunnara|ela\s+unnaru|ela\s+unnav|bavunnara)\b', text_lower):
             return "Nenu chala bagunnanu! Meeru ela unnaru? Nenu meeku ela sahayapadagalanu?"
         
-        # Identity & Name (Hindi/Hinglish + Telugu/Tenglish + English)
-        if re.search(r'\b(tera\s+naam|tumhara\s+naam|apka\s+naam|what\s+is\s+your\s+name|who\s+are\s+you|tum\s+kon\s+ho|tum\s+kaun\s+ho|tum\s+kon\s+hoo|ap\s+kaun\s+ho|mee\s+peru|ne\s+peru|meeru\s+evaru|nuvvu\s+evaru)\b', text_lower):
-            return "Naa peru AURA (Mera naam AURA hai) — ORION local AI assistant! Nenu / Main system tasks, model training, code search aur commands execute cheyagalanu."
-        
-        # Job / Role
-        if re.search(r'\b(kya\s+job|kya\s+kaam|what\s+is\s+your\s+job|what\s+do\s+you\s+do|mee\s+pani|ne\s+pani\s+enti)\b', text_lower):
-            return "Mera primary kaam ORION architecture manage karna hai: local LLMs run karna, multi-device federated training coordinate cheyadam, aur codebase assist karna."
+        # Telugu-English / Tenglish Intents
+        if re.search(r'\b(mee\s+peru|ne\s+peru|meeru\s+evaru|nuvvu\s+evaru)\b', text_lower):
+            return "Naa peru AURA — ORION local intelligent AI assistant! Nenu mee system tasks, model training, code search mariyu commands execute cheyagalanu."
+        if re.search(r'\b(mee\s+pani|ne\s+pani\s+enti|em\s+pani\s+chestaru)\b', text_lower):
+            return "Naa mukhyamaina pani ORION architecture manage cheyadam: local LLMs run cheyadam, multi-device federated training coordinate cheyadam, mariyu codebase lo assist cheyadam."
+        if re.search(r'\b(em\s+cheyagalaru|ela\s+help\s+chestaru|em\s+chestaru)\b', text_lower):
+            return "Nenu meeku ee vishayalalo sahayapadagalanu:\n• '!' shell commands execute cheyadam (e.g. '! orbital')\n• '@' workspace files read mariyu inspect cheyadam\n• Multi-device federated training monitor cheyadam\n• ORION codebase questions ki answers ivvadam"
+        m_tel_naam = re.search(r'\bnaa\s+peru\s+([a-zA-Z]+)', text_lower)
+        if m_tel_naam:
+            user_name = m_tel_naam.group(1).capitalize()
+            return f"Namaskaram {user_name}! Mimmalni kalisinanduku chala santhosham. Eeroju manam em execute cheddam?"
 
-        # Capabilities / Help
-        if re.search(r'\b(kya\s+kya\s+kar|kya\s+kar\s+sa[kt]|kya\s+help|kaise\s+help|what\s+can\s+you\s+do|em\s+cheyagalaru|ela\s+help\s+chestaru)\b', text_lower):
-            return "Nenu / Main meeku in vishayalalo sahayapadagalanu:\n• '!' shell commands execute cheyadam (e.g. '! orbital')\n• '@' workspace files read & inspect cheyadam\n• Multi-device federated training monitor cheyadam\n• ORION system queries answer cheyadam"
-            
-        m_naam = re.search(r'\b(mera\s+naam|naa\s+peru)\s+([a-zA-Z]+)', text_lower)
-        if m_naam:
-            user_name = m_naam.group(2).capitalize()
-            return f"Namaste {user_name}! Aapse baat karke / kalisinanduku chala santhosham. Aaj hum kya execute karenge?"
+        # Hindi-English / Hinglish Intents
+        if re.search(r'\b(tera\s+naam|tumhara\s+naam|apka\s+naam|who\s+are\s+you|tum\s+kon\s+ho|tum\s+kaun\s+ho|tum\s+kon\s+hoo|ap\s+kaun\s+ho)\b', text_lower):
+            return "Mera naam AURA hai — ORION ka local intelligent AI assistant. Main aapke system tasks, model training, code search aur commands sambhalta hoon."
+        if re.search(r'\b(kya\s+job|kya\s+kaam|what\s+is\s+your\s+job|what\s+do\s+you\s+do)\b', text_lower):
+            return "Mera primary kaam ORION architecture manage karna hai: local LLMs run karna, multi-device federated training coordinate karna, aur codebase me assist karna."
+        if re.search(r'\b(kya\s+kya\s+kar|kya\s+kar\s+sa[kt]|kya\s+help|kaise\s+help|what\s+can\s+you\s+do)\b', text_lower):
+            return "Main aapko in cheezon me help kar sakta hoon:\n• '!' lagakar shell commands execute karna (e.g. '! orbital')\n• '@' lagakar workspace files read/inspect karna\n• Local cluster federated training monitor karna\n• ORION modules aur codebase ke questions answer karna"
+        m_hin_naam = re.search(r'\bmera\s+naam\s+([a-zA-Z]+)', text_lower)
+        if m_hin_naam:
+            user_name = m_hin_naam.group(1).capitalize()
+            return f"Namaste {user_name}! Aapse baat karke achha laga. Aaj hum kya execute karne wale hain?"
         if re.search(r'\b(hello|hi|hey|sup|morning|afternoon|namaste|pranam)\b', text_lower) and len(text_lower.split()) < 4:
             return random.choice(self.greetings)
         if any(word in text_lower for word in ["status", "health"]):
