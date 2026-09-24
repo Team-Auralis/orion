@@ -4,6 +4,9 @@ import time
 import random
 import asyncio
 import subprocess
+import threading
+import webbrowser
+import urllib.parse
 from rich.markup import escape
 from textual.app import App, ComposeResult
 from textual.containers import VerticalScroll
@@ -166,6 +169,17 @@ class AuraTUI(App):
         Binding("ctrl+c", "quit", "Quit", show=True),
         Binding("ctrl+l", "clear", "Clear", show=True),
     ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.nlp = AuraNLP()
+        self.agent = LocalCodebaseAgent(os.getcwd())
+        self.total_tokens_used = 0
+        self.max_token_budget = 1_000_000
+        self.pytorch_model = None
+        self.pytorch_tokenizer = None
+        self.onnx_session = None
+        self.laya_router = None
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -445,7 +459,6 @@ class AuraTUI(App):
             if not search_query:
                 search_query = "trending"
 
-            import urllib.parse
             encoded_q = urllib.parse.quote(search_query)
             yt_url = f"https://www.youtube.com/results?search_query={encoded_q}"
             
@@ -464,7 +477,6 @@ class AuraTUI(App):
                     browser_launched = True
                     break
             if not browser_launched:
-                import webbrowser
                 webbrowser.open(yt_url)
 
             # Execution narrative
@@ -496,7 +508,6 @@ class AuraTUI(App):
             subprocess.Popen(["notepad.exe"], shell=False)
             
             # Send keystrokes via background thread
-            import threading
             def inject_notepad():
                 time.sleep(1.0) # Wait for window to settle
                 self.send_keys_to_process("notepad", content_to_write + "{ENTER}")
@@ -526,7 +537,6 @@ class AuraTUI(App):
                     keys = expr.replace(' ', '') + "="
                     self.send_keys_to_process("CalculatorApp", keys)
                     self.send_keys_to_process("calc", keys)
-                import threading
                 threading.Thread(target=inject_calc, daemon=True).start()
 
             await self.append_message("AURA", f"Maine Calculator open kar diya hai!\n• **Equation**: `{expr}`\n• **Result**: **`{res}`**")
@@ -569,7 +579,6 @@ class AuraTUI(App):
             cmd = text[1:].strip()
             if cmd == "orbital":
                 await self.append_message("Tool", "> Initializing ORION Orbital View subsystem...")
-                import subprocess
                 subprocess.Popen('start cmd /k "npm install && npm run dev -- --host localhost --port 4173"', shell=True, cwd=os.path.join(os.getcwd(), "modules", "orbital-view"))
                 await self.append_message("AURA", "ORION Orbital View initialized!\nA new terminal window has opened to run the server.\nOnce it says 'ready', open http://localhost:4173 in your browser.")
             else:
