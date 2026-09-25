@@ -73,3 +73,8 @@ models/comp001/
 # Model weights (any torch checkpoint)
 *.pt
 models/hive/
+
+# transient run logs
+ctx_ext.*
+push_*.log
+
