@@ -1,0 +1,37 @@
+{
+  "probe_2k": {
+    "@25%": {
+      "ctx_len": 2048,
+      "response": "are a lot of the most a lot of the",
+      "correct": false
+    },
+    "@50%": {
+      "ctx_len": 2048,
+      "response": ".\nThe linguation of the first of",
+      "correct": false
+    },
+    "@75%": {
+      "ctx_len": 2048,
+      "response": "ation of the most a lot of the most a",
+      "correct": false
+    }
+  },
+  "probe_4k": {
+    "@25%": {
+      "ctx_len": 4096,
+      "response": "ation, and the most the most a lot of",
+      "correct": false
+    },
+    "@50%": {
+      "ctx_len": 4096,
+      "response": "ation, and the most the most a lot of",
+      "correct": false
+    },
+    "@75%": {
+      "ctx_len": 4096,
+      "response": "a lot of the most the first of the most",
+      "correct": false
+    }
+  },
+  "note": "needle must be emitted verbatim; detection is exact-match"
+}
