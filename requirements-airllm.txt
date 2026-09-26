@@ -1,0 +1,37 @@
+# airllm — layer-wise inference for low-memory machines (lyogavin/airllm)
+#
+# Purpose: optional CPU-only teacher inference for ORION distillation, for
+# checkpoints that do not fit in RAM. CPU inference is supported upstream
+# since v2.10.1.
+#
+# ------------------------------------------------------------------
+# NO-DOWNGRADE EVIDENCE (recorded 2026-09-26, before the real install)
+# ------------------------------------------------------------------
+# Interpreter: CPython 3.14.6 (win_amd64), pip 26.2.1
+# Pre-installed and left untouched by this file:
+#   torch 2.14.0+cpu, transformers 4.57.6, accelerate 1.14.0,
+#   numpy 2.5.1, safetensors 0.8.0, huggingface-hub 0.36.2, psutil 7.2.2
+#
+# $ pip index versions airllm
+#   airllm (4.0.0)
+#   Available versions: 4.0.0, 3.3.0, 3.2.0, 3.1.0, 3.0.1, 3.0.0, 2.11.0,
+#   2.10.2, 2.10.1, 2.9.1, 2.9, 2.8.6, ... 0.9.1
+#
+# $ pip install airllm --dry-run
+#   Collecting airllm
+#     Using cached airllm-4.0.0-py3-none-any.whl.metadata (19 kB)
+#   Requirement already satisfied: torch>=2.4 ... (2.14.0)
+#   Requirement already satisfied: transformers<6,>=4.49 ... (4.57.6)
+#   Requirement already satisfied: accelerate>=1.0 ... (1.14.0)
+#   ... every other transitive dependency reported "already satisfied" ...
+#   Would install airllm-4.0.0
+#
+# VERDICT: the dry run resolves to airllm alone. airllm is a pure-python
+# wheel (py3-none-any) and every dependency it declares is already
+# satisfied, so installing it does NOT downgrade torch, transformers or
+# accelerate. The real install was therefore allowed to proceed.
+#
+# airllm 4.0.0 is pinned exactly because the flat version list has no
+# compatibility guarantees between major releases; a floating pin could
+# silently change disk layout or conversion behaviour under our feet.
+airllm==4.0.0
