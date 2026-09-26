@@ -16,8 +16,8 @@ import random
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-OUT = REPO_ROOT / "data" / "training" / "vision_actions.jsonl"
-EVAL_OUT = REPO_ROOT / "data" / "training" / "vision_actions_eval.jsonl"
+OUT = REPO_ROOT / "data" / "training" / "vision_actions2.jsonl"
+EVAL_OUT = REPO_ROOT / "data" / "training" / "vision_actions_eval2.jsonl"
 SEED = 907
 
 CAPTIONS = [
@@ -31,28 +31,28 @@ CAPTIONS = [
     "a computer screen with a code on it",
 ]
 
-# command -> (verb, full action)
+# command -> verb (verb-only responses: the whole task is picking the verb)
 INTENTS = [
     ("see what's on my screen", "see"),
     ("look at the screen", "see"),
     ("describe the screen", "see"),
     ("what can you see", "see"),
-    ("open chrome", "open chrome"),
-    ("open the browser", "open chrome"),
-    ("open notepad", "open notepad"),
-    ("open my documents folder", "open documents"),
-    ("open the project", "open d: orion"),
-    ("open https://github.com", "open https://github.com"),
-    ("open the settings", "open settings"),
-    ("launch the terminal", "open terminal"),
-    ("open the calculator", "open calculator"),
-    ("type hello", "type hello"),
-    ("write my name", "type my name"),
-    ("enter the code", "type the code"),
-    ("press enter", "key enter"),
-    ("hit escape", "key esc"),
-    ("press the tab key", "key tab"),
-    ("hit ctrl and s", "key ctrl+s"),
+    ("open chrome", "open"),
+    ("open the browser", "open"),
+    ("open notepad", "open"),
+    ("open my documents folder", "open"),
+    ("open the project", "open"),
+    ("open https://github.com", "open"),
+    ("open the settings", "open"),
+    ("launch the terminal", "open"),
+    ("open the calculator", "open"),
+    ("type hello", "type"),
+    ("write my name", "type"),
+    ("enter the code", "type"),
+    ("press enter", "key"),
+    ("hit escape", "key"),
+    ("press the tab key", "key"),
+    ("hit ctrl and s", "key"),
     ("click", "click"),
     ("click the mouse", "click"),
     ("left click", "click"),

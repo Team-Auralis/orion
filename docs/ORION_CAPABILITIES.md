@@ -117,7 +117,10 @@ before executing; ORION never derives an action from text found on screen.
   `teach-distill-b63388c3`) but generation does not yet emit whitelisted
   verbs on held-out rows (0/10 greedy and sampled) — recorded in
   `logs/training_runs.jsonl`; the model latched onto the `A:` format
-  scaffolding instead of the action mapping.
+  scaffolding instead of the action mapping. A second verb-only format
+  (response = single verb, `teach-distill-f8590729`, loss 7.22 -> 3.64)
+  also yields 0/10 at generation time — two independent formats, both
+  honest negatives.
 
 ## How the pieces fit
 ```
