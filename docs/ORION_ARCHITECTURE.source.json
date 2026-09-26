@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "ORION — runtime architecture (verified paths)",
+    "subtitle": "Primary incident path: Haven UI -> Keycloak token -> orion-api -> NATS incident.created -> Sentinel -> Ollama",
+    "quality_profile": "showcase",
+    "viewBox": [1300, 700],
+    "views": [
+      {
+        "id": "primary-path",
+        "label": "Primary path",
+        "focus": ["citizen", "dashboard", "keycloak", "api", "nats", "sentinel", "engine"],
+        "note": "Follow one incident from the Haven dashboard through auth, the API, the NATS bus, sentinel triage, and the local Ollama model."
+      },
+      {
+        "id": "state",
+        "label": "State & work",
+        "focus": ["redis", "worker", "postgres"],
+        "note": "Durable state and worker consumption of the JetStream bus."
+      }
+    ]
+  },
+  "components": [
+    { "id": "citizen", "type": "external", "label": "Operator", "sublabel": "Haven user", "pos": [20, 100], "size": [150, 72] },
+    { "id": "dashboard", "type": "frontend", "label": "orion-dashboard", "sublabel": "Next.js Haven app", "pos": [200, 100], "size": [150, 72] },
+    { "id": "api", "type": "backend", "label": "orion-api", "sublabel": "FastAPI :8001", "pos": [380, 100], "size": [150, 72] },
+    { "id": "nats", "type": "messagebus", "label": "NATS JetStream", "sublabel": ":4222 bus", "pos": [560, 100], "size": [150, 72] },
+    { "id": "sentinel", "type": "backend", "label": "orion-sentinel", "sublabel": "AI orchestration", "pos": [740, 100], "size": [150, 72] },
+    { "id": "engine", "type": "external", "label": "Ollama", "sublabel": "qwen2.5:3b local", "pos": [920, 100], "size": [150, 72] },
+    { "id": "keycloak", "type": "security", "label": "Keycloak SSO", "sublabel": "realm:orion :8080", "pos": [20, 440], "size": [150, 72] },
+    { "id": "redis", "type": "database", "label": "Redis", "sublabel": "cache & queues", "pos": [380, 440], "size": [150, 72] },
+    { "id": "worker", "type": "backend", "label": "orion-worker", "sublabel": "+ service modules", "pos": [560, 440], "size": [150, 72] },
+    { "id": "postgres", "type": "database", "label": "PostgreSQL", "sublabel": "durable store", "pos": [740, 440], "size": [150, 72] }
+  ],
+  "connections": [
+    { "id": "citizen-to-dashboard", "from": "citizen", "to": "dashboard", "label": "HTTPS", "variant": "emphasis" },
+    { "id": "dashboard-to-keycloak", "from": "dashboard", "to": "keycloak", "label": "token grant" },
+    { "id": "dashboard-to-api", "from": "dashboard", "to": "api", "label": "POST /v1/incidents", "variant": "emphasis", "labelDy": -28 },
+    { "id": "api-to-nats", "from": "api", "to": "nats", "label": "publish incident.created", "labelDy": -28 },
+    { "id": "nats-to-sentinel", "from": "nats", "to": "sentinel", "label": "subscribe (durable sentience_ai)", "variant": "emphasis", "labelDy": -28 },
+    { "id": "sentinel-to-engine", "from": "sentinel", "to": "engine", "label": "Ollama inference / fallback", "labelDy": -28 },
+    { "id": "api-to-redis", "from": "api", "to": "redis", "label": "cache / rate-limit", "labelDy": 24, "fromSide": "bottom", "toSide": "top" },
+    { "id": "nats-to-worker", "from": "nats", "to": "worker", "label": "JetStream work items", "labelDy": 24, "fromSide": "bottom", "toSide": "top" },
+    { "id": "worker-to-postgres", "from": "worker", "to": "postgres", "label": "persist results", "labelDy": 58 }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Trust boundary", "items": ["External: browser (operator), Keycloak SSO, Ollama local model", "Everything else sits behind the internal NATS/API bus", "Primary path is a real code path: apps/dashboard/src/app/haven/page.tsx -> services/ai_sentinel/main.py:262-314"] },
+    { "dot": "amber", "title": "Honest notes", "items": ["Sentinel runs an Ollama health check at startup; FALLBACK_ENGINE_ID handles triage until Ollama is ready", "orion-worker bundles aegis, ascend, cic, cyber, forge, mathsage, mirror, nectar, nexus, omnis modules", "Security layer (compose): orion-aegis gateway + OPA policy daemon guard the API", "hive mesh (coordinator/server/worker/transport/envelope) peers with workers; not on primary path"] },
+    { "dot": "slate", "title": "Observability & edge", "items": ["compose-deployed: prometheus, grafana, jaeger, ascend-lb", "Generated with archify from ground-truth repo evidence"] }
+  ]
+}
