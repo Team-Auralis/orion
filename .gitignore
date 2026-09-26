@@ -84,3 +84,6 @@ gen_selfcheck.*
 
 # generated audio
 logs/orion_speak*
+
+# live runtime audit log
+logs/chronos_audit.jsonl
