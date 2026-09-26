@@ -51,3 +51,17 @@
 *Last updated: 2026-09-24*
 
 *Generated from forensic phases F1-F7. See individual forensic write-ups for detailed per-phase evidence. The graph above is a static summary - for dynamic navigation, use Obsidian's graph view with the above wikilinks.*
+
+---
+
+<!-- VAULT:AUTO:START note=kg-orion -->
+## ORION Capability Nodes (auto)
+
+> Last sync: 2026-09-26T17:19+00:00
+
+- `ORION Capabilities` → `ORION Training Ledger` : every verified run/claim
+- `ORION Screen-Vision & Actions` → `ORION Capabilities` : the see/act layer is a verified capability
+- `ORION Capabilities` → `Forensic Audit` : same provenance discipline, model-scale
+- Edges as wikilinks: [[ORION Capabilities]], [[ORION Screen-Vision & Actions]],
+  [[ORION Training Ledger]]
+<!-- VAULT:AUTO:END -->

@@ -39,3 +39,22 @@ re-read whole files.
 After big code changes, refresh the graph with `graft build` (deterministic,
 no API key, $0).
 <!-- graft:end -->
+
+## Obsidian vault rule (every commit)
+
+- The repo contains an Obsidian vault at `vault/`. It must always reflect the
+  current repo state (training ledger, recent commits, capability status).
+- **Before/with EVERY commit** run: `python scripts/vault/build_vault.py`
+  (installed pre-commit hook does it automatically —
+  `scripts/hooks/install-hooks.ps1` installs it; the hook stages `vault/`
+  changes into the in-progress commit).
+- Include the vault changes in the commit that caused them; never leave the
+  vault stale relative to `logs/training_runs.jsonl`, `git log`, or
+  `docs/ORION_CAPABILITIES.md`.
+- Generated notes are guarded by `<!-- VAULT:AUTO:` markers — edit
+  `scripts/vault/build_vault.py`, never the generated content. Hand-written
+  notes (outside markers) are never touched.
+- Backlinks: every generated note links to `[[ORION]]`,
+  `[[ORION Capabilities]]`, `[[ORION Training Ledger]]`, `[[ORION Screen-Vision
+  & Actions]]`, and the Home/Knowledge-Graph notes. Keep that pattern when
+  adding notes so the graph stays connected.

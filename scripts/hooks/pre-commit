@@ -1,0 +1,9 @@
+#!/bin/sh
+# ORION pre-commit hook — vault rule: keep the Obsidian vault in sync on
+# every commit (see AGENTS.md "Obsidian vault rule"). Stages any vault
+# changes into the in-progress commit. Never blocks the commit.
+repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+cd "$repo_root" || exit 0
+python scripts/vault/build_vault.py >/dev/null 2>&1 || echo "[VAULT] build failed (commit continues)"
+git add vault >/dev/null 2>&1 || true
+exit 0
