@@ -57,13 +57,50 @@ is the CLI wrapper.
 - **VERIFIED:** produced a real audio file from
   `"Hello, I am ORION. Voice online."` — 25 KB, playable.
 
+## 6. Low-memory inference — `orion_runner/airllm_bridge.py` (airllm 4.0.0)
+Layer-wise inference: airllm streams one layer at a time from disk, so peak
+RAM stays flat (~386 MB measured) at the cost of disk I/O per token. The
+bridge adds an honest `disk_gate()` that refuses any model that cannot fit
+free disk minus a 1.5 GB margin BEFORE any download, plus an opt-in
+`teacher_answer()` backend (the default teacher remains Ollama qwen2.5:3b).
+
+- **VERIFIED:** real CPU generation on Qwen2.5-0.5B-Instruct — 16 tokens in
+  108.5 s, peak RSS flat at 386 MB:
+  `'Hello, I am ORION. I have been created by the Orion Project as a virtual
+  assistant that helps people find'`
+- **BLOCKED (by disk, not RAM):** Qwen2.5-7B (~15.2 GB) cannot fit the 8.6 GB
+  free on D:; measured by `scripts/tools/probe_airllm.py`. 3B (~6.2 GB) is
+  MARGINAL (0.9 GB headroom after margin) and already runs faster via Ollama.
+  airllm buys model size at the cost of latency — CPU layer streaming is
+  tens of seconds per token, not a speedup over Ollama.
+- Pinned `airllm==4.0.0` in `requirements-airllm.txt` (no torch/transformers
+  downgrade verified via `pip install --dry-run`).
+
+## 7. Architecture diagrams — archify skill (vendored) + generated ORION map
+The `archify` agent skill (MIT) is vendored at `.agents/skills/archify/`
+(project-local; node-based, zero-dependency renderers; `skills-lock.json`
+records the source hash). It turns a typed JSON IR into an explorable,
+self-contained HTML diagram (inline SVG, dark/light themes, trace motion).
+
+- **VERIFIED:** `docs/ORION_ARCHITECTURE.html` (813 KB) generated from
+  `docs/ORION_ARCHITECTURE.source.json`; 9/9 quality checks, 0 errors,
+  0 warnings; delivers a SHA-256 receipt on every run (artifact
+  `9423ccf0...`). Primary path is grounded in real code: Haven UI →
+  Keycloak token → `POST :8001/v1/incidents` → NATS `incident.created`
+  (durable `sentience_ai`) → ai_sentinel → Ollama / fallback engine.
+- Reproducible: `node .agents/skills/archify/bin/archify.mjs deliver
+  architecture docs/ORION_ARCHITECTURE.source.json
+  docs/ORION_ARCHITECTURE.html --quality showcase --json`
+
 ## How the pieces fit
 ```
 Image ──► vision.py (Florence-2) ──► caption ──► ORION (100M)
 Text  ──► gen.py (tiny-sd) ──► PNG
-Teacher (qwen2.5:3b) ──► curriculum ──► distill_train.py ──► ORION LoRA
+Teacher (Ollama qwen2.5:3b) ──► curriculum ──► distill_train.py ──► ORION LoRA
+Bigger teacher (airllm bridge) ──► layer-streamed from disk (gate: free disk)
 Text  ──► voice.py (edge-tts/SAPI) ──► audio
 Context: 512 ─► YaRN ─► 4096 (extend_context.py)
+Repo  ──► archify skill ──► docs/ORION_ARCHITECTURE.html (interactive map)
 ```
 
 ## Reproducibility
@@ -73,3 +110,8 @@ Context: 512 ─► YaRN ─► 4096 (extend_context.py)
 - Vision self-check: `python -m orion_runner.vision`
 - Generation self-check: `python -m orion_runner.gen`
 - Voice: `python scripts/orion_speak.py "Hello I am ORION" --play`
+- Low-memory inference probe: `python scripts/tools/probe_airllm.py`
+- Low-memory inference self-check: `python -m orion_runner.airllm_bridge`
+- Archify diagram: `node .agents/skills/archify/bin/archify.mjs deliver
+  architecture docs/ORION_ARCHITECTURE.source.json
+  docs/ORION_ARCHITECTURE.html --quality showcase --json`
