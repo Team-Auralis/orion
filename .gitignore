@@ -78,3 +78,6 @@ models/hive/
 ctx_ext.*
 push_*.log
 
+
+# transient self-check logs
+gen_selfcheck.*
