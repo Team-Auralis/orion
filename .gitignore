@@ -81,3 +81,6 @@ push_*.log
 
 # transient self-check logs
 gen_selfcheck.*
+
+# generated audio
+logs/orion_speak*
