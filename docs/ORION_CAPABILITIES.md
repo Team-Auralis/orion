@@ -111,6 +111,13 @@ before executing; ORION never derives an action from text found on screen.
 - **Not (yet):** full autonomous UI-driving by ORION itself — the 100M
   model's instruction-following is UNPROVEN, so choosing the action stays
   with the user; this module is the safe, honest bridge.
+- **Small vision-action SFT (experiment, honest negative):** a 192-row
+  synthetic run teaching ORION to pick a whitelist verb from
+  `caption + user request` converged (loss 7.27 → 4.00, run
+  `teach-distill-b63388c3`) but generation does not yet emit whitelisted
+  verbs on held-out rows (0/10 greedy and sampled) — recorded in
+  `logs/training_runs.jsonl`; the model latched onto the `A:` format
+  scaffolding instead of the action mapping.
 
 ## How the pieces fit
 ```

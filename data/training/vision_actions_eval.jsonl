@@ -1,0 +1,10 @@
+{"id": "va-084", "teacher": "template", "temperature": 0.0, "instruction": "Screen: a file explorer with several folders | User wants: open the calculator | What should ORION do?", "response": "open calculator"}
+{"id": "va-068", "teacher": "template", "temperature": 0.0, "instruction": "Screen: a notes application with white text on a dark background | User wants: click | What should ORION do?", "response": "click"}
+{"id": "va-157", "teacher": "template", "temperature": 0.0, "instruction": "Screen: a settings window with several toggles | User wants: type hello | What should ORION do?", "response": "type hello"}
+{"id": "va-002", "teacher": "template", "temperature": 0.0, "instruction": "Screen: a desktop with a terminal window and a code editor | User wants: describe the screen | What should ORION do?", "response": "see"}
+{"id": "va-114", "teacher": "template", "temperature": 0.0, "instruction": "Screen: an empty desktop with a wallpaper | User wants: press the tab key | What should ORION do?", "response": "key tab"}
+{"id": "va-175", "teacher": "template", "temperature": 0.0, "instruction": "Screen: a computer screen with a code on it | User wants: open my documents folder | What should ORION do?", "response": "open documents"}
+{"id": "va-113", "teacher": "template", "temperature": 0.0, "instruction": "Screen: an empty desktop with a wallpaper | User wants: hit escape | What should ORION do?", "response": "key esc"}
+{"id": "va-024", "teacher": "template", "temperature": 0.0, "instruction": "Screen: a browser window with a search bar | User wants: see what's on my screen | What should ORION do?", "response": "see"}
+{"id": "va-100", "teacher": "template", "temperature": 0.0, "instruction": "Screen: an empty desktop with a wallpaper | User wants: open chrome | What should ORION do?", "response": "open chrome"}
+{"id": "va-155", "teacher": "template", "temperature": 0.0, "instruction": "Screen: a settings window with several toggles | User wants: launch the terminal | What should ORION do?", "response": "open terminal"}
