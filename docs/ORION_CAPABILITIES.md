@@ -1,0 +1,75 @@
+# ORION Capabilities (laptop-trainable stack)
+
+Everything below runs on the development laptop (CPU-only, ~8 GB RAM). Status
+labels follow the repository's honesty discipline: **VERIFIED** (mechanism
+proven end-to-end with real output), **UNPROVEN** (built but not proven to
+produce fluent results), **BLOCKED** (requires hardware we do not have).
+
+## 1. Context window extension (YaRN) — `scripts/training/extend_context.py`
+ORION 100M was trained with `max_position_embeddings=512`. This applies YaRN
+rope scaling (factor 8 => max_pos 4096), runs a short LoRA continued-pretrain
+pass on long packed windows, and produces a standalone merged model
+(`models/comp001/100m-context8k-merged`) with the scaling baked into
+`config.json`.
+
+- **VERIFIED:** the model loads and generates at 2K/4K prompt lengths with no
+  indexing errors; RoPE scaling is correctly persisted and round-trips.
+- **UNPROVEN:** needle-in-a-haystack retrieval at 2K/4K is `False` at all
+  depths. The 100M was never trained to do retrieval; the short pass moved loss
+  only ~0.6% (noise). This is a mechanics flag, not a capability claim.
+
+## 2. Teacher distillation — `scripts/teacher/`
+`generate_curriculum.py` pulls live Q&A from the local Ollama model
+(`qwen2.5:3b`) into `data/training/teacher_curriculum.jsonl` (20 rows, temp 0.3,
+all answers verified correct). `distill_train.py` LoRA-SFTs ORION 100M on the
+teacher's answers.
+
+- **VERIFIED:** loss 6.33 -> 6.14 (−3.06%) on 64 train rows; eval loss 5.58;
+  adapter logit delta `True` (per-token mean 5e-4). End-to-end pipeline works
+  and is audited in `logs/training_runs.jsonl`.
+- **UNPROVEN:** generated answers are not yet fluent Q/A. A 100M model
+  recovering from 0.9%-of-corpus training needs far more curriculum than 64
+  examples; the recipe is the point, not yet the outcome.
+
+## 3. Vision (read images) — `orion_runner/vision.py`
+ORION is a text model. `describe(image)` routes an image through
+Florence-2-base (0.23B, CPU) and returns a caption ORION can reason over. This
+is an honest pipeline — the vision encoder and ORION are separate; ORION reads
+the description.
+
+- **VERIFIED:** captioned a real test image: `three primary colors`.
+
+## 4. Image generation — `orion_runner/gen.py`
+`generate(prompt, out)` runs `segmind/tiny-sd` (distilled SD, ~1 GB, CPU) at
+512x512, 8 steps.
+
+- **VERIFIED:** generated a real 512x512 RGB PNG from
+  `"a small cute robot waving hello, flat vector style"` (258 KB) in a few
+  minutes on CPU.
+- Note: CPU here means minutes per image and serviceable-not-photorealistic
+  output. No GPU exists on this box.
+
+## 5. Voice / TTS — `orion_runner/voice.py`, `scripts/orion_speak.py`
+`speak(text)` uses Microsoft Edge neural voices via `edge-tts` (natural, needs
+internet) with a Windows SAPI fallback (offline, zero deps). `orion_speak.py`
+is the CLI wrapper.
+
+- **VERIFIED:** produced a real audio file from
+  `"Hello, I am ORION. Voice online."` — 25 KB, playable.
+
+## How the pieces fit
+```
+Image ──► vision.py (Florence-2) ──► caption ──► ORION (100M)
+Text  ──► gen.py (tiny-sd) ──► PNG
+Teacher (qwen2.5:3b) ──► curriculum ──► distill_train.py ──► ORION LoRA
+Text  ──► voice.py (edge-tts/SAPI) ──► audio
+Context: 512 ─► YaRN ─► 4096 (extend_context.py)
+```
+
+## Reproducibility
+- Teacher curriculum: `python scripts/teacher/generate_curriculum.py`
+- Distill: `python scripts/teacher/distill_train.py`
+- Context extend: `python scripts/training/extend_context.py`
+- Vision self-check: `python -m orion_runner.vision`
+- Generation self-check: `python -m orion_runner.gen`
+- Voice: `python scripts/orion_speak.py "Hello I am ORION" --play`

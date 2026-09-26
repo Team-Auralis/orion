@@ -234,3 +234,6 @@ See `THIRD_PARTY.md` and the repository copyright header. All rights reserved.
 - **Twitter:** [@TeamAuralis](https://twitter.com/TeamAuralis)
 - **Email:** contact@auralis.team (replace with actual)
 - **GitHub:** [Team-Auralis/orion](https://github.com/Team-Auralis/orion)
+## Capabilities (laptop stack)
+
+ORION now ships five runnable capability modules — context extension (YaRN), teacher distillation from qwen2.5:3b, image reading (Florence-2), image generation (tiny-sd), and voice/TTS. Each is small, CPU-runnable, and honestly labeled VERIFIED / UNPROVEN / BLOCKED. See [docs/ORION_CAPABILITIES.md](docs/ORION_CAPABILITIES.md).
