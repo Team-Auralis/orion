@@ -87,3 +87,6 @@ logs/orion_speak*
 
 # live runtime audit log
 logs/chronos_audit.jsonl
+# screen-vision transient artifacts
+data/screenshots/
+logs/orion_actions.jsonl
