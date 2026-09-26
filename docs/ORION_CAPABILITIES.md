@@ -92,6 +92,26 @@ self-contained HTML diagram (inline SVG, dark/light themes, trace motion).
   architecture docs/ORION_ARCHITECTURE.source.json
   docs/ORION_ARCHITECTURE.html --quality showcase --json`
 
+## 8. Screen vision + confirmed actions — `orion_runner/screen.py`, `scripts/orion_see.py`, `scripts/orion_act.py`
+
+ORION can "see your screen" through the same honest bridge as section 3: a
+screenshot is captured with PIL `ImageGrab` and captioned by Florence-2-base
+(CPU, ~0.23B), so ORION works from the *description*, never from raw pixels.
+Actions are a **whitelist only**, and every action asks `confirm? [y/N]`
+before executing; ORION never derives an action from text found on screen.
+
+- `python scripts/orion_see.py` — live capture + caption
+  (VERIFIED: desktop captioned in real time; shots in `data/screenshots/`).
+- `python scripts/orion_act.py` — confirm-first loop: `open <app|url|file>`
+  via `os.startfile` (zero deps), plus `type <text>` / `key <name>` /
+  `click` when the optional `pyautogui` package is installed. Every attempt
+  is logged to `logs/orion_actions.jsonl` (confirmed / aborted / error).
+- **VERIFIED:** `open notepad` confirmed → Notepad launched, screen
+  re-captured + re-described; an aborted run recorded `"confirmed": false`.
+- **Not (yet):** full autonomous UI-driving by ORION itself — the 100M
+  model's instruction-following is UNPROVEN, so choosing the action stays
+  with the user; this module is the safe, honest bridge.
+
 ## How the pieces fit
 ```
 Image ──► vision.py (Florence-2) ──► caption ──► ORION (100M)
