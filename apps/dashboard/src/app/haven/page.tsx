@@ -27,7 +27,7 @@ export default function HavenApp() {
       tokenParams.append("client_id", "orion-api");
       tokenParams.append("grant_type", "password");
       tokenParams.append("username", "citizen1");
-      tokenParams.append("password", "citizenpass");
+      tokenParams.append("password", process.env.NEXT_PUBLIC_CITIZEN_PASSWORD ?? "");
       
       const kcRes = await fetch("http://localhost:8080/realms/orion/protocol/openid-connect/token", {
         method: "POST",

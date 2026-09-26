@@ -8,9 +8,9 @@ force-push, which cannot be done safely while parallel actors are committing.
 
 | Secret | Old value (leaked) | Action |
 |---|---|---|
-| Keycloak operator password | `operatorpass` | rotated in `infra/keycloak/realm-export.json` |
-| Keycloak citizen password | `citizenpass` | rotated in `infra/keycloak/realm-export.json` |
-| Dashboard direct-grant password | hardcoded `citizenpass` | removed; build reads `NEXT_PUBLIC_CITIZEN_PASSWORD` |
+| Keycloak operator password | `<OPERATOR_PASSWORD>` (demo literal removed) | rotated in `infra/keycloak/realm-export.json` |
+| Keycloak citizen password | `<CITIZEN_PASSWORD>` (demo literal removed) | rotated in `infra/keycloak/realm-export.json` |
+| Dashboard direct-grant password | previously hardcoded literal | removed; build reads `NEXT_PUBLIC_CITIZEN_PASSWORD` |
 | TLS private key | tracked `infra/nginx/certs/key.pem` | untracked + gitignored (`cert.pem` public cert remains) |
 | Grafana admin password | `orion_admin` | env-driven `${GRAFANA_ADMIN_PASSWORD}` |
 | Audit/chaos script creds | inline passwords | read `ORION_OPERATOR_PASSWORD` / `ORION_CITIZEN_PASSWORD` from env |

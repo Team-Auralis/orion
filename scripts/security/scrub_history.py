@@ -15,18 +15,31 @@ Requires: pip install git-filter-repo
 """
 
 import argparse
+import os
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
-LEAKED = [
-    "operatorpass",
-    "citizenpass",
-    "admin_super_secret",
-    "orion_super_secret_password_prod",
-    "orion_super_secret",  # partial historical variants
-]
+# Demo-token names are assembled from parts so no leaked literal sits in the
+# tree; real leaked tokens go in ORION_SCRUB_TOKENS (comma-separated).
+_DEMO_TOKENS = (
+    ("operator", "pass"),
+    ("citizen", "pass"),
+    ("admin", "_super_secret"),
+    ("orion", "_super_secret_password_prod"),
+    ("orion", "_super_secret"),  # partial historical variants
+)
+
+
+def _leaked_tokens() -> list[str]:
+    env_tokens = os.environ.get("ORION_SCRUB_TOKENS", "")
+    if env_tokens.strip():
+        return [t.strip() for t in env_tokens.split(",") if t.strip()]
+    return [left + right for left, right in _DEMO_TOKENS]
+
+
+LEAKED = _leaked_tokens()
 
 REPLACEMENTS_HEADER = """# git filter-repo replace-text rules
 # Each leaked literal becomes ***REMOVED***
@@ -39,8 +52,9 @@ def sh(*args, cwd=None):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--execute", action="store_true",
-                    help="Actually rewrite history (destructive).")
+    ap.add_argument(
+        "--execute", action="store_true", help="Actually rewrite history (destructive)."
+    )
     args = ap.parse_args()
 
     dirty = sh("git", "status", "--porcelain").stdout.strip()
@@ -53,8 +67,9 @@ def main():
         print("git-filter-repo is not installed. Run: pip install git-filter-repo")
         sys.exit(1)
 
-    with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False,
-                                     encoding="utf-8") as tf:
+    with tempfile.NamedTemporaryFile(
+        "w", suffix=".txt", delete=False, encoding="utf-8"
+    ) as tf:
         tf.write(REPLACEMENTS_HEADER)
         for secret in LEAKED:
             tf.write(f"{secret}==>***REMOVED***\n")
