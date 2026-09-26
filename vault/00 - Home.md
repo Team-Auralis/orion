@@ -112,7 +112,7 @@
 <!-- VAULT:AUTO:START note=home-training -->
 ### ORION Model & Training (auto)
 
-> Last sync: 2026-09-26T17:19+00:00
+> Last sync: 2026-09-26T17:21+00:00
 
 - [[ORION Capabilities]] — capability matrix with verified/unproven labels
 - [[ORION Training Ledger]] — every training run, honest numbers

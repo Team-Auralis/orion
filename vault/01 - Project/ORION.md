@@ -128,7 +128,7 @@ graph TD
 <!-- VAULT:AUTO:START note=orion-current -->
 ## Autonomously Trained Capabilities — auto
 
-> Last sync: 2026-09-26T17:19+00:00 · source: `scripts/vault/build_vault.py` · full truth in
+> Last sync: 2026-09-26T17:21+00:00 · source: `scripts/vault/build_vault.py` · full truth in
 > [[ORION Capabilities]], [[ORION Screen-Vision & Actions]], [[ORION Training Ledger]]
 
 - [[ORION Capabilities]] — verified capability matrix (screen vision, TTS, image gen, airllm, context)
@@ -137,10 +137,10 @@ graph TD
 
 Recent commits:
 
+- `289c72a chore(vault): Obsidian vault sync rule - auto-update on every commit`
 - `2151aab feat(train): training marathon 2 - expanded distill + vision-action v2`
 - `cc97b69 feat(train): vision-action SFT experiment (honest negative)`
 - `62d8eb7 feat(assistant): ORION assistant router - plain words to screen actions`
 - `fcedded docs: capabilities section 8 - screen vision + confirmed actions`
 - `ae78a18 feat(screen): confirm-first whitelisted action loop (orion_act.py)`
-- `d7b90db feat(screen): ORION can see the screen (capture + Florence-2 caption)`
 <!-- VAULT:AUTO:END -->

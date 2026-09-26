@@ -57,7 +57,7 @@
 <!-- VAULT:AUTO:START note=kg-orion -->
 ## ORION Capability Nodes (auto)
 
-> Last sync: 2026-09-26T17:19+00:00
+> Last sync: 2026-09-26T17:21+00:00
 
 - `ORION Capabilities` → `ORION Training Ledger` : every verified run/claim
 - `ORION Screen-Vision & Actions` → `ORION Capabilities` : the see/act layer is a verified capability
