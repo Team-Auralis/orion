@@ -1,0 +1,497 @@
+{
+  "tag": "synth_control",
+  "n_rows": 48,
+  "n_gen_rows": 12,
+  "epochs": 25,
+  "lr": 0.0003,
+  "losses": [
+    6.9248,
+    6.9145,
+    6.9033,
+    6.8911,
+    6.8772,
+    6.8615,
+    6.8441,
+    6.825,
+    6.8041,
+    6.7819,
+    6.7561,
+    6.7313,
+    6.7067,
+    6.6799,
+    6.649,
+    6.6178,
+    6.5844,
+    6.5517,
+    6.5189,
+    6.4853,
+    6.452,
+    6.4165,
+    6.3784,
+    6.3419,
+    6.3016
+  ],
+  "grad_norms": {
+    "mean": 0.3489,
+    "max": 0.61868,
+    "first": 0.26222,
+    "last": 0.61868,
+    "nan_or_inf": false
+  },
+  "act_layer5": {
+    "before": {
+      "mean": -16.608261108398438,
+      "std": 308.0054016113281
+    },
+    "after": {
+      "mean": -18.110767364501953,
+      "std": 314.9307861328125
+    }
+  },
+  "teacher_forced": [
+    {
+      "q": "minus five one",
+      "a": "four",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times three one",
+      "a": "three",
+      "acc": 0.125,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "minus four three",
+      "a": "one",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times three five",
+      "a": "fifteen",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "plus one four",
+      "a": "five",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "plus five two",
+      "a": "seven",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times four one",
+      "a": "four",
+      "acc": 0.125,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "plus one five",
+      "a": "six",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "minus four two",
+      "a": "two",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "plus three one",
+      "a": "four",
+      "acc": 0.125,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times five five",
+      "a": "twenty five",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 2
+    },
+    {
+      "q": "plus five three",
+      "a": "eight",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times two two",
+      "a": "four",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "plus five five",
+      "a": "ten",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "plus one one",
+      "a": "two",
+      "acc": 0.125,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times two five",
+      "a": "ten",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "minus two one",
+      "a": "one",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times four three",
+      "a": "twelve",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "plus four four",
+      "a": "eight",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "minus four one",
+      "a": "three",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times one five",
+      "a": "five",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "minus three one",
+      "a": "two",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times three four",
+      "a": "twelve",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "plus three three",
+      "a": "six",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times one one",
+      "a": "one",
+      "acc": 0.125,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times two three",
+      "a": "six",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "minus five two",
+      "a": "three",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times four four",
+      "a": "sixteen",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 2
+    },
+    {
+      "q": "plus three four",
+      "a": "seven",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times three two",
+      "a": "six",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times five three",
+      "a": "fifteen",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "plus one three",
+      "a": "four",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "minus three two",
+      "a": "one",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times one three",
+      "a": "three",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "plus two one",
+      "a": "three",
+      "acc": 0.125,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "minus five four",
+      "a": "one",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times four two",
+      "a": "eight",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times two four",
+      "a": "eight",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "plus two two",
+      "a": "four",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times five two",
+      "a": "ten",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "plus two four",
+      "a": "six",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "plus three five",
+      "a": "eight",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "plus four one",
+      "a": "five",
+      "acc": 0.125,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "plus four three",
+      "a": "seven",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times three three",
+      "a": "nine",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "plus one two",
+      "a": "three",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "plus two three",
+      "a": "five",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    },
+    {
+      "q": "times two one",
+      "a": "two",
+      "acc": 0.125,
+      "answer_acc": 0.0,
+      "answer_n": 1
+    }
+  ],
+  "generation": [
+    {
+      "q": "times one four",
+      "want": "four",
+      "got": "The\nThe\nThe\n-\nThe\n-\n-\n-\n-\n-\n-\n-\n-\nThe\n-\n-",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    },
+    {
+      "q": "plus five four",
+      "want": "nine",
+      "got": "-\n-\nThe\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    },
+    {
+      "q": "times four five",
+      "want": "twenty",
+      "got": "The\nThe\nThe\n-\nThe\n-\n-\n-\n-\n-\n-\n-\nThe\n-\n-\n-",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    },
+    {
+      "q": "plus three two",
+      "want": "five",
+      "got": "The\nThe\nThe\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    },
+    {
+      "q": "plus four two",
+      "want": "six",
+      "got": "-\n-\nThe\nThe\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    },
+    {
+      "q": "plus five one",
+      "want": "six",
+      "got": "-\nThe\nThe\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    },
+    {
+      "q": "times five one",
+      "want": "five",
+      "got": "The\nThe\nThe\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    },
+    {
+      "q": "times five four",
+      "want": "twenty",
+      "got": "The\nThe\nThe\n-\nThe\n-\n-\n-\n-\n-\n-\n-\nThe\n-\n-\n-",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    },
+    {
+      "q": "minus five three",
+      "want": "two",
+      "got": "-\n-\nThe FEN)\nThe\nThe\n-\n-\nThe\n-\n-\nThe\n- BENLENL",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    },
+    {
+      "q": "plus four five",
+      "want": "nine",
+      "got": "-\nThe\nThe\n-\nThe\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    },
+    {
+      "q": "plus two five",
+      "want": "seven",
+      "got": "The\nThe\nThe\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    },
+    {
+      "q": "times one two",
+      "want": "two",
+      "got": "The\nThe\nThe\n-\nThe\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    }
+  ],
+  "exact_match_n": 0,
+  "exact_match_pct": 0.0,
+  "exact_norm_n": 0,
+  "exact_norm_pct": 0.0,
+  "train_answer_acc": 0.0,
+  "probe_n": 12,
+  "probe_train_n": 48,
+  "probe_exact": 0,
+  "probe_exact_pct": 0.0,
+  "probe_latch": 0
+}

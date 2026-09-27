@@ -1,0 +1,316 @@
+{
+  "config": {
+    "vocab": 10240,
+    "bos": [
+      "<bos>",
+      1
+    ],
+    "eos": [
+      "<eos>",
+      2
+    ],
+    "pad": [
+      "<pad>",
+      0
+    ]
+  },
+  "roundtrip": [
+    {
+      "ok": true,
+      "text": "Q: What is the area of a square with side length 5 cm?\nA: To",
+      "decoded": "Q: What is the area of a square with side length 5 cm?\nA: To",
+      "ids": [
+        52,
+        29,
+        2554,
+        288,
+        212,
+        1263,
+        230,
+        210,
+        4402,
+        304,
+        1711,
+        2811
+      ]
+    },
+    {
+      "ok": true,
+      "text": "Q: If apples cost 30 cents each, how much do 12 apples cost?",
+      "decoded": "Q: If apples cost 30 cents each, how much do 12 apples cost?",
+      "ids": [
+        52,
+        29,
+        1456,
+        662,
+        635,
+        1828,
+        1515,
+        223,
+        547,
+        1037,
+        15,
+        751
+      ]
+    },
+    {
+      "ok": true,
+      "text": "Q: What is the capital of Australia?\nA: The capital of Austr",
+      "decoded": "Q: What is the capital of Australia?\nA: The capital of Austr",
+      "ids": [
+        52,
+        29,
+        2554,
+        288,
+        212,
+        3269,
+        230,
+        2383,
+        34,
+        172,
+        36,
+        29
+      ]
+    },
+    {
+      "ok": true,
+      "text": "Q: Solve for x: 2x + 6 = 14\nA: To solve the equation \\(2x + ",
+      "decoded": "Q: Solve for x: 2x + 6 = 14\nA: To solve the equation \\(2x + ",
+      "ids": [
+        52,
+        29,
+        5620,
+        650,
+        280,
+        4301,
+        29,
+        321,
+        91,
+        4707,
+        713,
+        3725
+      ]
+    },
+    {
+      "ok": true,
+      "text": "Q: Convert 2.5 hours into minutes.\nA: To convert hours into ",
+      "decoded": "Q: Convert 2.5 hours into minutes.\nA: To convert hours into ",
+      "ids": [
+        52,
+        29,
+        984,
+        3650,
+        321,
+        17,
+        24,
+        2461,
+        595,
+        2865,
+        17,
+        172
+      ]
+    },
+    {
+      "ok": true,
+      "text": "Q: What is the tallest mountain in the world?\nA: The tallest",
+      "decoded": "Q: What is the tallest mountain in the world?\nA: The tallest",
+      "ids": [
+        52,
+        29,
+        2554,
+        288,
+        212,
+        5819,
+        331,
+        5441,
+        235,
+        212,
+        997,
+        34
+      ]
+    },
+    {
+      "ok": true,
+      "text": "Q: What is the tallest mountain in the world?\nA: The tallest",
+      "decoded": "Q: What is the tallest mountain in the world?\nA: The tallest",
+      "ids": [
+        52,
+        29,
+        2554,
+        288,
+        212,
+        5819,
+        331,
+        5441,
+        235,
+        212,
+        997,
+        34
+      ]
+    },
+    {
+      "ok": true,
+      "text": "Q: What is a habitat?\nA: A habitat is the natural environmen",
+      "decoded": "Q: What is a habitat?\nA: A habitat is the natural environmen",
+      "ids": [
+        52,
+        29,
+        2554,
+        288,
+        210,
+        6324,
+        34,
+        172,
+        36,
+        29,
+        262,
+        6324
+      ]
+    },
+    {
+      "ok": true,
+      "text": "Q: What does JS stand for in web development?\nA: JS stands f",
+      "decoded": "Q: What does JS stand for in web development?\nA: JS stands f",
+      "ids": [
+        52,
+        29,
+        2554,
+        1338,
+        374,
+        54,
+        1398,
+        280,
+        235,
+        5257,
+        1546,
+        34
+      ]
+    },
+    {
+      "ok": true,
+      "text": "Q: If you have 100 cookies and share them equally among 4 fr",
+      "decoded": "Q: If you have 100 cookies and share them equally among 4 fr",
+      "ids": [
+        52,
+        29,
+        1456,
+        469,
+        434,
+        1763,
+        5058,
+        356,
+        238,
+        3282,
+        615,
+        8592
+      ]
+    },
+    {
+      "ok": true,
+      "text": "Q: \nA: ",
+      "decoded": "Q: \nA: ",
+      "ids": [
+        52,
+        29,
+        173,
+        172,
+        36,
+        29,
+        173
+      ]
+    },
+    {
+      "ok": true,
+      "text": "Q: 42\nA: 42",
+      "decoded": "Q: 42\nA: 42",
+      "ids": [
+        52,
+        29,
+        6522,
+        172,
+        36,
+        29,
+        6522
+      ]
+    },
+    {
+      "ok": true,
+      "text": "Q: How are you?\nA: 😀",
+      "decoded": "Q: How are you?\nA: 😀",
+      "ids": [
+        52,
+        29,
+        1010,
+        354,
+        469,
+        34,
+        172,
+        36,
+        29,
+        173,
+        171,
+        205
+      ]
+    },
+    {
+      "ok": true,
+      "text": "A: broken format here",
+      "decoded": "A: broken format here",
+      "ids": [
+        36,
+        29,
+        5444,
+        6850,
+        2220
+      ]
+    },
+    {
+      "ok": true,
+      "text": "Q: zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+      "decoded": "Q: zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+      "ids": [
+        52,
+        29,
+        2213,
+        3993,
+        3993,
+        3993,
+        3993,
+        3993,
+        3993,
+        3993,
+        3993,
+        3993
+      ]
+    },
+    {
+      "ok": true,
+      "text": "\n\n\nQ: x\nA: y\n\n",
+      "decoded": "\n\n\nQ: x\nA: y\n\n",
+      "ids": [
+        172,
+        172,
+        172,
+        52,
+        29,
+        4301,
+        172,
+        36,
+        29,
+        335,
+        172,
+        172
+      ]
+    }
+  ],
+  "label_alignment": {
+    "n_blocks": 137,
+    "unmasked_positions_checked": 61119,
+    "mismatches": 0
+  },
+  "format_stats": {
+    "block_tokens": 61806,
+    "format_tokens": 5567,
+    "format_pct": 9.01
+  }
+}

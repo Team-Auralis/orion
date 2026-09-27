@@ -159,6 +159,11 @@ with `error_message`. Run → capability links: [[ORION Capabilities]] and
 | `teach-vision-cls-df34c868` | COMPLETED | vision_actions_cls.jsonl | 708 | 8 | - → - | - | - | 459.55 |
 | `teach-distill-d63fcb38` | COMPLETED | teacher_curriculum_merged6.jsonl | 687 | 10 | 6.7330 → 5.8357 | 13.33 | 5.8892 | 1806.12 |
 | `teach-distill-139e1cb0` | COMPLETED | teacher_curriculum_merged6.jsonl | 687 | 14 | 6.7328 → 5.6673 | 15.83 | 5.7566 | 2817.44 |
+| `gen-root-cause-20260927` | COMPLETED | ? | - | - | - → - | - | - | - |
+| `rc-tiny-overfit-e40-lr3e-4` | COMPLETED | beta mapping) | 8 | 40 | 7.0618 → 6.3038 | 10.74 | - | - |
+| `rc-tiny-overfit-e300-lr3e-4` | COMPLETED | beta mapping) | 8 | 300 | 7.0618 → 1.0919 | 84.54 | - | - |
+| `rc-tiny-overfit-e300-lr3e-3` | COMPLETED | beta mapping) | 8 | 300 | 7.0618 → 4.6481 | 34.17 | - | - |
+| `rc-synth-control-e25-lr3e-4` | COMPLETED | times one..five) | 48 | 25 | 6.9248 → 6.3016 | 9.0 | - | - |
 
 ## Honest warnings
 
@@ -169,12 +174,12 @@ with `error_message`. Run → capability links: [[ORION Capabilities]] and
 
 ## Recent commits (context)
 
+- `bffd60f train(eval): marathon 3c complete - v8 best same-split eval 5.7566, gen matrix proven`
 - `d083ba9 docs: generation proof matrix (honest - held-out/generalization/fluency quantified)`
 - `b2dcdd6 test(eval): generation-probe matrix - quantifies held-out/generalization/fluency`
 - `1c515ce feat(runner): classifier reuses last real screen caption when available`
 - `daded6e feat(runner): self-check for classifier + rules + router layers`
 - `0650f74 feat(vision): classification-head verb mapping (VERIFIED 19/20 held-out) + layered router`
-- `dc3d1d1 feat(train): marathon 3b - expanded 79-question curriculum (426 rows), best eval 5.6913`
 
 ## Related
 

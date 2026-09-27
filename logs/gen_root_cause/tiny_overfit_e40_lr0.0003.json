@@ -1,0 +1,195 @@
+{
+  "tag": "tiny_overfit",
+  "n_rows": 8,
+  "n_gen_rows": 8,
+  "epochs": 40,
+  "lr": 0.0003,
+  "losses": [
+    7.0618,
+    7.0553,
+    7.0484,
+    7.0416,
+    7.0356,
+    7.0288,
+    7.0218,
+    7.0144,
+    7.0058,
+    6.9961,
+    6.9853,
+    6.974,
+    6.9624,
+    6.9502,
+    6.9372,
+    6.9221,
+    6.907,
+    6.8928,
+    6.8785,
+    6.8616,
+    6.8441,
+    6.826,
+    6.8056,
+    6.7842,
+    6.7634,
+    6.7414,
+    6.7172,
+    6.6938,
+    6.6672,
+    6.642,
+    6.6135,
+    6.5832,
+    6.5534,
+    6.5222,
+    6.4892,
+    6.456,
+    6.4194,
+    6.3827,
+    6.3445,
+    6.3038
+  ],
+  "grad_norms": {
+    "mean": 0.18117,
+    "max": 0.25589,
+    "first": 0.16273,
+    "last": 0.25589,
+    "nan_or_inf": false
+  },
+  "act_layer5": {
+    "before": {
+      "mean": -16.608261108398438,
+      "std": 308.0054016113281
+    },
+    "after": {
+      "mean": -17.196651458740234,
+      "std": 343.9107360839844
+    }
+  },
+  "teacher_forced": [
+    {
+      "q": "alpha beta",
+      "a": "zeta eta",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 5
+    },
+    {
+      "q": "beta gamma",
+      "a": "eta theta",
+      "acc": 0.07692307692307693,
+      "answer_acc": 0.0,
+      "answer_n": 4
+    },
+    {
+      "q": "gamma delta",
+      "a": "theta kappa",
+      "acc": 0.07142857142857142,
+      "answer_acc": 0.0,
+      "answer_n": 5
+    },
+    {
+      "q": "alpha gamma",
+      "a": "zeta theta",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 5
+    },
+    {
+      "q": "beta delta",
+      "a": "eta kappa",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 5
+    },
+    {
+      "q": "alpha delta",
+      "a": "zeta kappa",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 6
+    },
+    {
+      "q": "epsilon alpha",
+      "a": "lambda zeta",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 6
+    },
+    {
+      "q": "epsilon gamma",
+      "a": "lambda theta",
+      "acc": 0.0,
+      "answer_acc": 0.0,
+      "answer_n": 5
+    }
+  ],
+  "generation": [
+    {
+      "q": "alpha beta",
+      "want": "zeta eta",
+      "got": "-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    },
+    {
+      "q": "beta gamma",
+      "want": "eta theta",
+      "got": "the:\n-\n-:\n-\n-\n-:\n-\n-\n-\n-\n-\n-\n-\n-\n-",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    },
+    {
+      "q": "gamma delta",
+      "want": "theta kappa",
+      "got": "the)\n-\n-: the\n-\n-:\n-\n-\n-\n-::\n-\n-\n-\n-:",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    },
+    {
+      "q": "alpha gamma",
+      "want": "zeta theta",
+      "got": "-:: the\n-\n-:\n-\n-\n-:\n-\n-\n-\n-\n-\n-\n-",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    },
+    {
+      "q": "beta delta",
+      "want": "eta kappa",
+      "got": "-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    },
+    {
+      "q": "alpha delta",
+      "want": "zeta kappa",
+      "got": "-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    },
+    {
+      "q": "epsilon alpha",
+      "want": "lambda zeta",
+      "got": "::::::::::::\n- B)\n-\n-\n-\n-\n-\n-\n-\n-",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    },
+    {
+      "q": "epsilon gamma",
+      "want": "lambda theta",
+      "got": "the\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-",
+      "exact": false,
+      "exact_norm": false,
+      "latch": false
+    }
+  ],
+  "exact_match_n": 0,
+  "exact_match_pct": 0.0,
+  "exact_norm_n": 0,
+  "exact_norm_pct": 0.0,
+  "train_answer_acc": 0.0
+}

@@ -1,0 +1,227 @@
+{
+  "results": [
+    {
+      "kind": "heldout",
+      "prompt": "Q: What is 13 * 7?\nA:",
+      "cfg": "greedy",
+      "cont": "\nA:\nA:\nA:\nA:\nA:\n",
+      "latch": true
+    },
+    {
+      "kind": "heldout",
+      "prompt": "Q: What is 13 * 7?\nA:",
+      "cfg": "temp0.5",
+      "cont": " What is a numberst, in the process of the first year of the",
+      "latch": false
+    },
+    {
+      "kind": "heldout",
+      "prompt": "Q: What is 13 * 7?\nA:",
+      "cfg": "temp0.9",
+      "cont": " In the mid\nThe path,, which are already of the tri distinct",
+      "latch": false
+    },
+    {
+      "kind": "heldout",
+      "prompt": "Q: What is 13 * 7?\nA:",
+      "cfg": "topk10",
+      "cont": " In the mid: A few:\n: The country of the most number of",
+      "latch": false
+    },
+    {
+      "kind": "heldout",
+      "prompt": "Q: What is 13 * 7?\nA:",
+      "cfg": "topk50",
+      "cont": " In the mid\nThe path,, which are already of the tri distinct",
+      "latch": false
+    },
+    {
+      "kind": "heldout",
+      "prompt": "Q: What is 13 * 7?\nA:",
+      "cfg": "topp0.8",
+      "cont": " In the mid: A few:\n: The country of the most number of",
+      "latch": false
+    },
+    {
+      "kind": "heldout",
+      "prompt": "Q: What is 13 * 7?\nA:",
+      "cfg": "topp0.95",
+      "cont": " In the mid\nThe path,000) are already of the tri distinct of",
+      "latch": false
+    },
+    {
+      "kind": "heldout",
+      "prompt": "Q: What is the capital of Spain?\nA:",
+      "cfg": "greedy",
+      "cont": "\nA:\nA:\nA:\nA:\nA:\n",
+      "latch": true
+    },
+    {
+      "kind": "heldout",
+      "prompt": "Q: What is the capital of Spain?\nA:",
+      "cfg": "temp0.5",
+      "cont": " What is:\nA:\nA: The number of the number of the",
+      "latch": false
+    },
+    {
+      "kind": "heldout",
+      "prompt": "Q: What is the capital of Spain?\nA:",
+      "cfg": "temp0.9",
+      "cont": " What is:\nA: The water -2% of the tri to achieve",
+      "latch": false
+    },
+    {
+      "kind": "heldout",
+      "prompt": "Q: What is the capital of Spain?\nA:",
+      "cfg": "topk10",
+      "cont": " What is:\nA: The: It is the best than the number of",
+      "latch": false
+    },
+    {
+      "kind": "heldout",
+      "prompt": "Q: What is the capital of Spain?\nA:",
+      "cfg": "topk50",
+      "cont": " What is:\nAF:\n| The two of the tri? Why",
+      "latch": false
+    },
+    {
+      "kind": "heldout",
+      "prompt": "Q: What is the capital of Spain?\nA:",
+      "cfg": "topp0.8",
+      "cont": " What is:\nA: The, which the country of the most to those",
+      "latch": false
+    },
+    {
+      "kind": "heldout",
+      "prompt": "Q: What is the capital of Spain?\nA:",
+      "cfg": "topp0.95",
+      "cont": " What is:\nA: The water -2% of the tri? The",
+      "latch": false
+    },
+    {
+      "kind": "fresh",
+      "prompt": "Q: What is an API?\nA:",
+      "cfg": "greedy",
+      "cont": "\nA:\nA:\nA:\nA:\nA:\n",
+      "latch": true
+    },
+    {
+      "kind": "fresh",
+      "prompt": "Q: What is an API?\nA:",
+      "cfg": "temp0.5",
+      "cont": "\nA:\nA:\nA:\nA: In the number of",
+      "latch": true
+    },
+    {
+      "kind": "fresh",
+      "prompt": "Q: What is an API?\nA:",
+      "cfg": "temp0.9",
+      "cont": " What is:\nA the great, which are already the year to the pas",
+      "latch": false
+    },
+    {
+      "kind": "fresh",
+      "prompt": "Q: What is an API?\nA:",
+      "cfg": "topk10",
+      "cont": " What is:\nA the number, which are a significant to the numbe",
+      "latch": false
+    },
+    {
+      "kind": "fresh",
+      "prompt": "Q: What is an API?\nA:",
+      "cfg": "topk50",
+      "cont": " What is:\nA AS:\n: The two the child is to those",
+      "latch": false
+    },
+    {
+      "kind": "fresh",
+      "prompt": "Q: What is an API?\nA:",
+      "cfg": "topp0.8",
+      "cont": " What is:\nA the number, which are a desert to the to achieve",
+      "latch": false
+    },
+    {
+      "kind": "fresh",
+      "prompt": "Q: What is an API?\nA:",
+      "cfg": "topp0.95",
+      "cont": " What is:\nA the great, which are a big than the Great area",
+      "latch": false
+    },
+    {
+      "kind": "fresh",
+      "prompt": "Q: Who wrote 'Pride and Prejudice'?\nA:",
+      "cfg": "greedy",
+      "cont": "\nA:\n:\nA:\nA:\nA:\n\n",
+      "latch": true
+    },
+    {
+      "kind": "fresh",
+      "prompt": "Q: Who wrote 'Pride and Prejudice'?\nA:",
+      "cfg": "temp0.5",
+      "cont": "\n\nA:\nA:\n:\nA: In the number of",
+      "latch": true
+    },
+    {
+      "kind": "fresh",
+      "prompt": "Q: Who wrote 'Pride and Prejudice'?\nA:",
+      "cfg": "temp0.9",
+      "cont": " In the UNgr:\n|ding the United Nations to identify",
+      "latch": false
+    },
+    {
+      "kind": "fresh",
+      "prompt": "Q: Who wrote 'Pride and Prejudice'?\nA:",
+      "cfg": "topk10",
+      "cont": " In the UN:\nA:\nA: In: What in the",
+      "latch": false
+    },
+    {
+      "kind": "fresh",
+      "prompt": "Q: Who wrote 'Pride and Prejudice'?\nA:",
+      "cfg": "topk50",
+      "cont": " In the UNgrate, which are two the most biversity.",
+      "latch": false
+    },
+    {
+      "kind": "fresh",
+      "prompt": "Q: Who wrote 'Pride and Prejudice'?\nA:",
+      "cfg": "topp0.8",
+      "cont": " In the UNpopate, which are to the most to the past",
+      "latch": false
+    },
+    {
+      "kind": "fresh",
+      "prompt": "Q: Who wrote 'Pride and Prejudice'?\nA:",
+      "cfg": "topp0.95",
+      "cont": " In the UNgrate, which are to the most to the past",
+      "latch": false
+    }
+  ],
+  "summary": {
+    "heldout": {
+      "latch_by_cfg": {
+        "greedy": true,
+        "temp0.5": false,
+        "temp0.9": false,
+        "topk10": false,
+        "topk50": false,
+        "topp0.8": false,
+        "topp0.95": false
+      },
+      "any_clean": true
+    },
+    "fresh": {
+      "latch_by_cfg": {
+        "greedy": true,
+        "temp0.5": true,
+        "temp0.9": false,
+        "topk10": false,
+        "topk50": false,
+        "topp0.8": false,
+        "topp0.95": false
+      },
+      "any_clean": true
+    },
+    "all_clean_any_cfg": true
+  }
+}

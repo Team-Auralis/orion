@@ -1,0 +1,1039 @@
+{
+  "rows": [
+    {
+      "tag": "base",
+      "kind": "heldout",
+      "prompt": "Q: What is 13 * 7?\nA:",
+      "steps": [
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -2.285
+        },
+        {
+          "tok": "The",
+          "id": 604,
+          "logprob": -1.953
+        },
+        {
+          "tok": " l",
+          "id": 256,
+          "logprob": -4.449
+        },
+        {
+          "tok": "v",
+          "id": 89,
+          "logprob": -4.1
+        },
+        {
+          "tok": "v",
+          "id": 89,
+          "logprob": -3.701
+        },
+        {
+          "tok": "v",
+          "id": 89,
+          "logprob": -3.741
+        },
+        {
+          "tok": ".",
+          "id": 17,
+          "logprob": -3.673
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.415
+        },
+        {
+          "tok": "The",
+          "id": 604,
+          "logprob": -1.947
+        },
+        {
+          "tok": " l",
+          "id": 256,
+          "logprob": -4.3
+        },
+        {
+          "tok": "v",
+          "id": 89,
+          "logprob": -4.091
+        },
+        {
+          "tok": "v",
+          "id": 89,
+          "logprob": -3.565
+        }
+      ],
+      "cont": "\nThe lvvv.\nThe lvv",
+      "latch": false
+    },
+    {
+      "tag": "base",
+      "kind": "heldout",
+      "prompt": "Q: What is the capital of Spain?\nA:",
+      "steps": [
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -2.298
+        },
+        {
+          "tok": "The",
+          "id": 604,
+          "logprob": -1.849
+        },
+        {
+          "tok": " first",
+          "id": 540,
+          "logprob": -4.422
+        },
+        {
+          "tok": " of",
+          "id": 230,
+          "logprob": -2.292
+        },
+        {
+          "tok": " the",
+          "id": 212,
+          "logprob": -1.651
+        },
+        {
+          "tok": " most",
+          "id": 652,
+          "logprob": -4.055
+        },
+        {
+          "tok": " of",
+          "id": 230,
+          "logprob": -1.807
+        },
+        {
+          "tok": " the",
+          "id": 212,
+          "logprob": -1.592
+        },
+        {
+          "tok": " first",
+          "id": 540,
+          "logprob": -4.237
+        },
+        {
+          "tok": " of",
+          "id": 230,
+          "logprob": -1.769
+        },
+        {
+          "tok": " the",
+          "id": 212,
+          "logprob": -1.689
+        },
+        {
+          "tok": " of",
+          "id": 230,
+          "logprob": -3.783
+        }
+      ],
+      "cont": "\nThe first of the most of the first of the of",
+      "latch": false
+    },
+    {
+      "tag": "base",
+      "kind": "fresh",
+      "prompt": "Q: What is an API?\nA:",
+      "steps": [
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.835
+        },
+        {
+          "tok": "The",
+          "id": 604,
+          "logprob": -2.007
+        },
+        {
+          "tok": " l",
+          "id": 256,
+          "logprob": -4.514
+        },
+        {
+          "tok": " of",
+          "id": 230,
+          "logprob": -4.088
+        },
+        {
+          "tok": " the",
+          "id": 212,
+          "logprob": -1.791
+        },
+        {
+          "tok": " first",
+          "id": 540,
+          "logprob": -4.254
+        },
+        {
+          "tok": " of",
+          "id": 230,
+          "logprob": -2.549
+        },
+        {
+          "tok": " the",
+          "id": 212,
+          "logprob": -1.581
+        },
+        {
+          "tok": " of",
+          "id": 230,
+          "logprob": -3.177
+        },
+        {
+          "tok": " the",
+          "id": 212,
+          "logprob": -1.598
+        },
+        {
+          "tok": " most",
+          "id": 652,
+          "logprob": -4.295
+        },
+        {
+          "tok": " of",
+          "id": 230,
+          "logprob": -1.01
+        }
+      ],
+      "cont": "\nThe l of the first of the of the most of",
+      "latch": false
+    },
+    {
+      "tag": "base",
+      "kind": "fresh",
+      "prompt": "Q: Who wrote 'Pride and Prejudice'?\nA:",
+      "steps": [
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -2.625
+        },
+        {
+          "tok": "The",
+          "id": 604,
+          "logprob": -2.608
+        },
+        {
+          "tok": " F",
+          "id": 337,
+          "logprob": -4.541
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -4.077
+        },
+        {
+          "tok": "The",
+          "id": 604,
+          "logprob": -2.429
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -4.358
+        },
+        {
+          "tok": "-",
+          "id": 16,
+          "logprob": -2.64
+        },
+        {
+          "tok": " B",
+          "id": 298,
+          "logprob": -3.505
+        },
+        {
+          "tok": "EN",
+          "id": 5762,
+          "logprob": -3.486
+        },
+        {
+          "tok": ")",
+          "id": 12,
+          "logprob": -3.821
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -2.149
+        },
+        {
+          "tok": "The",
+          "id": 604,
+          "logprob": -2.518
+        }
+      ],
+      "cont": "\nThe F\nThe\n- BEN)\nThe",
+      "latch": false
+    },
+    {
+      "tag": "base",
+      "kind": "fluency",
+      "prompt": "Q: Hello, how are you?\nA:",
+      "steps": [
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.676
+        },
+        {
+          "tok": "The",
+          "id": 604,
+          "logprob": -2.015
+        },
+        {
+          "tok": ",",
+          "id": 15,
+          "logprob": -4.019
+        },
+        {
+          "tok": " and",
+          "id": 238,
+          "logprob": -3.174
+        },
+        {
+          "tok": " the",
+          "id": 212,
+          "logprob": -2.683
+        },
+        {
+          "tok": " first",
+          "id": 540,
+          "logprob": -4.46
+        },
+        {
+          "tok": " of",
+          "id": 230,
+          "logprob": -2.899
+        },
+        {
+          "tok": " the",
+          "id": 212,
+          "logprob": -1.649
+        },
+        {
+          "tok": " of",
+          "id": 230,
+          "logprob": -4.112
+        },
+        {
+          "tok": " the",
+          "id": 212,
+          "logprob": -1.986
+        },
+        {
+          "tok": " of",
+          "id": 230,
+          "logprob": -3.763
+        },
+        {
+          "tok": " the",
+          "id": 212,
+          "logprob": -1.947
+        }
+      ],
+      "cont": "\nThe, and the first of the of the of the",
+      "latch": false
+    },
+    {
+      "tag": "v7",
+      "kind": "heldout",
+      "prompt": "Q: What is 13 * 7?\nA:",
+      "steps": [
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.221
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -1.032
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.442
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.21
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -1.103
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.402
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.123
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -1.195
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.514
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.187
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -1.418
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.54
+        }
+      ],
+      "cont": "\nA:\nA:\nA:\nA:",
+      "latch": true
+    },
+    {
+      "tag": "v7",
+      "kind": "heldout",
+      "prompt": "Q: What is the capital of Spain?\nA:",
+      "steps": [
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.406
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.986
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.254
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.278
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -1.241
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.431
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.187
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -1.282
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.446
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.307
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -1.155
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.507
+        }
+      ],
+      "cont": "\nA:\nA:\nA:\nA:",
+      "latch": true
+    },
+    {
+      "tag": "v7",
+      "kind": "fresh",
+      "prompt": "Q: What is an API?\nA:",
+      "steps": [
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.308
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.842
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.303
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.178
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -1.132
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.615
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -0.986
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.865
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.563
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -0.994
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.96
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.483
+        }
+      ],
+      "cont": "\nA:\nA:\nA:\nA:",
+      "latch": true
+    },
+    {
+      "tag": "v7",
+      "kind": "fresh",
+      "prompt": "Q: Who wrote 'Pride and Prejudice'?\nA:",
+      "steps": [
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.275
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -1.643
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.554
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.314
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -1.898
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.69
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.231
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -2.217
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -2.066
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.976
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.166
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -1.962
+        }
+      ],
+      "cont": "\nA:\nA:\n\nA:\nA",
+      "latch": true
+    },
+    {
+      "tag": "v7",
+      "kind": "fluency",
+      "prompt": "Q: Hello, how are you?\nA:",
+      "steps": [
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.202
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.779
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.562
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.16
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -1.296
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.54
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.203
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.919
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.547
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.234
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.809
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.46
+        }
+      ],
+      "cont": "\nA:\nA:\nA:\nA:",
+      "latch": true
+    },
+    {
+      "tag": "v8",
+      "kind": "heldout",
+      "prompt": "Q: What is 13 * 7?\nA:",
+      "steps": [
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -2.051
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -1.024
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.357
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.363
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.926
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.262
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.043
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.908
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.309
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.239
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.846
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.351
+        }
+      ],
+      "cont": "\nA:\nA:\nA:\nA:",
+      "latch": true
+    },
+    {
+      "tag": "v8",
+      "kind": "heldout",
+      "prompt": "Q: What is the capital of Spain?\nA:",
+      "steps": [
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -2.013
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.803
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.425
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -2.008
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.897
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.704
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.218
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.818
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.776
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.635
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.987
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.448
+        }
+      ],
+      "cont": "\nA:\nA:\nA:\nA:",
+      "latch": true
+    },
+    {
+      "tag": "v8",
+      "kind": "fresh",
+      "prompt": "Q: What is an API?\nA:",
+      "steps": [
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.173
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -1.01
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.683
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.209
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.959
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.744
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -0.861
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.894
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.975
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -0.928
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.879
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.815
+        }
+      ],
+      "cont": "\nA:\nA:\nA:\nA:",
+      "latch": true
+    },
+    {
+      "tag": "v8",
+      "kind": "fresh",
+      "prompt": "Q: Who wrote 'Pride and Prejudice'?\nA:",
+      "steps": [
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.045
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -1.438
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.193
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -0.908
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -1.103
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.299
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -1.401
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.52
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -0.923
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -1.679
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.357
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -0.825
+        }
+      ],
+      "cont": "\nA:\n:\nA:\nA:\n",
+      "latch": true
+    },
+    {
+      "tag": "v8",
+      "kind": "fluency",
+      "prompt": "Q: Hello, how are you?\nA:",
+      "steps": [
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.313
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.617
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -0.589
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.405
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.566
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -1.254
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.341
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.611
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -2.167
+        },
+        {
+          "tok": "\n",
+          "id": 172,
+          "logprob": -1.501
+        },
+        {
+          "tok": "A",
+          "id": 36,
+          "logprob": -0.799
+        },
+        {
+          "tok": ":",
+          "id": 29,
+          "logprob": -1.291
+        }
+      ],
+      "cont": "\nA:\nA:\nA:\nA:",
+      "latch": true
+    }
+  ]
+}
