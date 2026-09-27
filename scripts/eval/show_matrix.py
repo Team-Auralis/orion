@@ -1,6 +1,7 @@
 import json
 
-for tag in ["base", "v6", "v7"]:
+tags = ["base", "v6", "v7", "v8"]
+for tag in tags:
     s = json.load(open(f"logs/gen_probe_summary_{tag}.json", encoding="utf-8"))
     print("==== tag", tag, "====")
     for name, a in s["sets"].items():

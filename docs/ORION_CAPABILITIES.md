@@ -40,9 +40,18 @@ teacher's answers.
   `teach-distill-e160eb96` (426 rows @10ep, loss 6.5917 → 5.7196, +13.23%,
   eval **5.6913** = best so far, vs 6.2509 prior-best: **−8.9% relative**).
   Adapters: `100m-teacher-distill-v4` (246-row best), `-v5`, `-v6` (best).
+- **Marathon 3c (same day, round 2):** 40 more questions appended (code
+  output, geography, math breadth → generator now 119). 4 fresh passes
+  (r1..r4, 118 rows each) → **687 unique rows**
+  (`teacher_curriculum_merged6.jsonl`, +261 rows / +61% vs merged5).
+  `teach-distill-d63fcb38` (687 @10ep, eval 5.8892 on the broadened split —
+  not 1:1 comparable to 5.6913, the eval set grew); `teach-distill-139e1cb0`
+  (687 @14ep, **eval 5.7566 on the SAME split = −2.25% vs v7** → best
+  same-split eval). Adapters `-v7`, `-v8`. Caveat (see §9): better eval
+  loss does NOT equal better generation — generation remains ❌ latched.
 - **UNPROVEN:** generated answers are not yet fluent Q/A. A 100M model
   recovering from ~0.9%-of-corpus training needs far more curriculum than
-  even 426 unique rows; the recipe is the point, not yet the outcome.
+  even 687 unique rows; the recipe is the point, not yet the outcome.
 
 ## 3. Vision (read images) — `orion_runner/vision.py`
 ORION is a text model. `describe(image)` routes an image through
@@ -162,25 +171,27 @@ Ollama at build time). Greedy decoding, 80 token cap. Raw generations:
 
 | Metric | base | v6 | v7 | v8 |
 |---|---|---|---|---|
-| Held-out latch rate (`A:` scaffold) | 0% (gibbers) | 88% | 94% | PENDING |
-| Fresh-domain latch rate | 0% (gibbers) | 89% | 100% | PENDING |
-| Fluency latch rate | 0% | 100% | 100% | PENDING |
-| Teacher-answer match (held-out) | 0/16 | 0/16 | 0/16 | PENDING |
-| Teacher-answer match (fresh-domain) | 0/9 | 0/9 | 0/9 | PENDING |
-| Reached EOS / stop token | 0% | 0% | 0% | PENDING |
-| Repetition (1 − distinct-token ratio) | 87–90% | 67–70% | 70–80% | PENDING |
+| Held-out latch rate (`A:` scaffold) | 0% (gibbers) | 88% | 94% | 94% |
+| Fresh-domain latch rate | 0% (gibbers) | 89% | 100% | 100% |
+| Fluency latch rate | 0% | 100% | 100% | 80% |
+| Teacher-answer match (held-out) | 0/16 | 0/16 | 0/16 | 0/16 |
+| Teacher-answer match (fresh-domain) | 0/9 | 0/9 | 0/9 | 0/9 |
+| Reached EOS / stop token | 0% | 0% | 0% | 0% |
+| Repetition (1 − distinct-token ratio) | 87–90% | 67–70% | 70–80% | 64–86% |
 
 **Honest conclusion:** the `A:` latch claim is now reproducible and
-quantified — distillation adapters do not answer held-out questions; they
-re-emit scaffolding (88–100% of the time starting with `A:/Q:`) or fall
-into repetition loops, and match the teacher reference on **0/25** QA rows
-between them. The base model produces word-salad (no latch, heavier
-repetition). **No model reaches the stop token in 80 tokens.** Eval-loss
-gains (5.69→5.89 trajectory) measure next-token loss, NOT answer quality —
-the two diverged, which is exactly why the earlier "0/10" phrasing was
-kept. Generation remains ❌ UNSOLVED; next candidate recipes are plain-format
-QA SFT (no `Q:/A:` scaffolding), rollout-style fine-tuning on clean answers,
-or a preference/RLHF-style stage — none attempted yet this cycle (no thrash).
+quantified across **four models** — distillation adapters do not answer
+held-out questions; they re-emit scaffolding (80–100% of the time starting
+with `A:/Q:`) or fall into repetition loops, and match the teacher
+reference on **0/25** QA rows for every adapter, including v8 (best eval
+loss 5.7566 on the same split). The base model produces word-salad (no
+latch, heavier repetition). **No model reaches the stop token in 80
+tokens.** Eval-loss gains (v8 5.7566 < v7 5.8892 on same split, −2.25%)
+measure next-token loss, NOT answer quality — the two diverged, which is
+exactly why the earlier "0/10" phrasing was kept. Generation remains ❌
+UNSOLVED; next candidate recipes are plain-format QA SFT (no `Q:/A:`
+scaffolding), rollout-style fine-tuning on clean answers, or a
+preference/RLHF-style stage — none attempted yet this cycle (no thrash).
 
 ## How the pieces fit
 ```
