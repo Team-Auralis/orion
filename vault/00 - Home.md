@@ -112,9 +112,18 @@
 <!-- VAULT:AUTO:START note=home-training -->
 ### ORION Model & Training (auto)
 
-> Last sync: 2026-09-26T17:21+00:00
+> Last sync: 2026-09-27T05:39+00:00
 
 - [[ORION Capabilities]] — capability matrix with verified/unproven labels
 - [[ORION Training Ledger]] — every training run, honest numbers
 - [[ORION Screen-Vision & Actions]] — see your screen, act with confirmation
+
+### Repo & Knowledge Graphs (auto)
+
+> Last sync: 2026-09-27T05:39+00:00 · built from `graft/` and `graphify-out/` by
+> `scripts/vault/export_graft.py`
+
+- [[Repo Graph (graft)]] — what calls what: one note per top-level scope
+- [[Knowledge Graph (graphify)]] — what clusters together: communities + god
+  nodes, labelled with its own scope and date so it is never mistaken for live
 <!-- VAULT:AUTO:END -->

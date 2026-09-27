@@ -9,6 +9,10 @@ What it updates:
   - vault/01 - Project/ORION Screen-Vision & Actions.md (owned file)
   - vault/11 - Experiments/ORION Training Ledger.md (owned file, from
     logs/training_runs.jsonl)
+  - vault/02 - Architecture/Repo Graph (graft).md   (owned file, from graft/)
+  - vault/02 - Architecture/Repo Graph scope - *.md (owned files, one per scope)
+  - vault/11 - Experiments/Knowledge Graph (graphify).md (owned file, from
+    graphify-out/)
   - Marker-guarded blocks in:
       vault/01 - Project/ORION.md
       vault/00 - Home.md
@@ -18,16 +22,24 @@ Marker protocol: content between
     <!-- VAULT:AUTO:START note=<id> --> ... <!-- VAULT:AUTO:END -->
 is regenerated on every run; anything outside markers is left untouched.
 
+The graph notes come from scripts/vault/export_graft.py (see
+docs/plans/graft-graphify-vault-merge.md). If that module or its inputs are
+missing, the rest of the vault still builds - the graph notes are skipped with
+a warning rather than failing the pre-commit hook.
+
     python scripts/vault/build_vault.py
 """
 
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VAULT = REPO_ROOT / "vault"
@@ -69,17 +81,39 @@ def load_ledger() -> list[dict]:
     return rows
 
 
-def write_owned(path: Path, content: str) -> bool:
+ISO_TS_RE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?:[+-]\d{2}:\d{2})?")
+
+
+def reuse_existing_stamp(prev: str, content: str, ts: str | None) -> str:
+    """Rewrite `content`'s fresh sync stamp to the one already in `prev`.
+
+    The builder stamps every note with the current minute. Without this, a run
+    that changed *nothing* would still rewrite all 19 notes, and the pre-commit
+    hook would report a diff (and churn the index) on every commit. With it, the
+    stamp only advances when some other part of the note actually moved - which
+    is what makes a second consecutive run print "no changes (already current)".
+    """
+    if not ts:
+        return content
+    m = ISO_TS_RE.search(prev)
+    if not m or m.group(0) == ts:
+        return content
+    return content.replace(ts, m.group(0))
+
+
+def write_owned(path: Path, content: str, ts: str | None = None) -> bool:
     """Overwrite a builder-owned note; returns True if changed."""
     path.parent.mkdir(parents=True, exist_ok=True)
     prev = path.read_text(encoding="utf-8") if path.exists() else ""
+    if prev:
+        content = reuse_existing_stamp(prev, content, ts)
     if prev == content:
         return False
     path.write_text(content, encoding="utf-8")
     return True
 
 
-def upsert_marker(path: Path, note: str, block: str) -> bool:
+def upsert_marker(path: Path, note: str, block: str, ts: str | None = None) -> bool:
     """Insert/replace a marker block in an existing note; returns True if changed."""
     if not path.exists():
         return False
@@ -98,6 +132,7 @@ def upsert_marker(path: Path, note: str, block: str) -> bool:
         # insert before the final horizontal rule (or append)
         new_text = text.rstrip()
         new_text += f"\n\n---\n\n{rendered}\n"
+    new_text = reuse_existing_stamp(text, new_text, ts)
     if new_text == text:
         return False
     path.write_text(new_text, encoding="utf-8")
@@ -270,6 +305,8 @@ def orion_block(ts: str, commits: list[str]) -> str:
 - [[ORION Capabilities]] — verified capability matrix (screen vision, TTS, image gen, airllm, context)
 - [[ORION Screen-Vision & Actions]] — see-your-screen + confirm-first actions
 - [[ORION Training Ledger]] — every run, every number
+- [[Repo Graph (graft)]] — the repo as a queryable call graph, one note per scope
+- [[Knowledge Graph (graphify)]] — the community graph, scope- and date-labelled
 
 Recent commits:
 
@@ -283,22 +320,66 @@ def home_block(ts: str) -> str:
 
 - [[ORION Capabilities]] — capability matrix with verified/unproven labels
 - [[ORION Training Ledger]] — every training run, honest numbers
-- [[ORION Screen-Vision & Actions]] — see your screen, act with confirmation"""
+- [[ORION Screen-Vision & Actions]] — see your screen, act with confirmation
+
+### Repo & Knowledge Graphs (auto)
+
+> Last sync: {ts} · built from `graft/` and `graphify-out/` by
+> `scripts/vault/export_graft.py`
+
+- [[Repo Graph (graft)]] — what calls what: one note per top-level scope
+- [[Knowledge Graph (graphify)]] — what clusters together: communities + god
+  nodes, labelled with its own scope and date so it is never mistaken for live"""
 
 
 def kg_block(ts: str) -> str:
-    return f"""## ORION Capability Nodes (auto)
+    return f"""## ORION Capability + Graph Nodes (auto)
 
 > Last sync: {ts}
+
+### Capability edges
 
 - `ORION Capabilities` → `ORION Training Ledger` : every verified run/claim
 - `ORION Screen-Vision & Actions` → `ORION Capabilities` : the see/act layer is a verified capability
 - `ORION Capabilities` → `Forensic Audit` : same provenance discipline, model-scale
-- Edges as wikilinks: [[ORION Capabilities]], [[ORION Screen-Vision & Actions]],
-  [[ORION Training Ledger]]"""
+
+### Graph edges (repo graph → community graph)
+
+- `ORION` → `Repo Graph (graft)` : the repo as a queryable call graph, one note per scope
+- `Repo Graph (graft)` → `Knowledge Graph (graphify)` : same repo, different question
+  (who calls whom vs. what clusters together); the community graph is scoped to
+  `scripts/training` and dated in its own note
+- `Repo Graph (graft)` → `ORION Screen-Vision & Actions` : the `orion_runner` scope is what see/do actually is
+
+### Two graphs, honestly scoped
+
+- **Repo Graph (graft)** — VERIFIED current: rebuilt from the live `graft/`
+  tree on every run. Edges stay in graft's `.graph` DB (`graft callers <sym>`);
+  Obsidian holds the nodes, not the edges.
+- **Knowledge Graph (graphify)** — VERIFIED as a *labelled snapshot*, not a live
+  graph: `graphify-out/` is only re-run deliberately, so its note carries its own
+  scope + date and is never presented as current.
+
+Edges as wikilinks: [[ORION Capabilities]], [[ORION Screen-Vision & Actions]],
+  [[ORION Training Ledger]], [[Repo Graph (graft)]], [[Knowledge Graph (graphify)]]"""
 
 
 # ---------------------------------------------------------------- main
+
+
+def graph_notes() -> dict[Path, str]:
+    """Notes from scripts/vault/export_graft.py (graft + graphify projections).
+
+    Never raises: a broken/missing exporter or a missing graft/ tree degrades to
+    an empty dict plus a warning, so the pre-commit hook cannot be wedged.
+    """
+    try:
+        import export_graft  # noqa: PLC0415 - sibling module, path set above
+
+        return export_graft.build_notes()
+    except Exception as exc:  # noqa: BLE001 - vault must still build
+        print(f"[VAULT] WARN: graph notes skipped ({type(exc).__name__}: {exc})")
+        return {}
 
 
 def main() -> int:
@@ -314,8 +395,9 @@ def main() -> int:
             ts, rows, commits
         ),
     }
-    for path, content in notes.items():
-        if write_owned(path, content):
+    notes.update(graph_notes())
+    for path, content in sorted(notes.items()):
+        if write_owned(path, content, ts):
             changed.append(str(path.relative_to(REPO_ROOT)))
 
     marks = [
@@ -328,7 +410,7 @@ def main() -> int:
         (VAULT / "00 - Knowledge Graph.md", "kg-orion", kg_block(ts)),
     ]
     for path, note, block in marks:
-        if upsert_marker(path, note, block):
+        if upsert_marker(path, note, block, ts):
             changed.append(str(path.relative_to(REPO_ROOT)))
 
     if changed:

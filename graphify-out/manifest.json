@@ -153,5 +153,85 @@
     "mtime": 1787853858.90052,
     "ast_hash": "a7a04383e582ab6b93641c8466ddfc1e",
     "semantic_hash": "a7a04383e582ab6b93641c8466ddfc1e"
+  },
+  "D:\\orion\\scripts\\training\\bpe_tokenizer.py": {
+    "mtime": 1790248872.7719884,
+    "ast_hash": "5806eecb650dd6fa7bfc1a62cecd57e0",
+    "semantic_hash": "5806eecb650dd6fa7bfc1a62cecd57e0"
+  },
+  "D:\\orion\\scripts\\training\\build_vision_actions.py": {
+    "mtime": 1790442564.307166,
+    "ast_hash": "853794dba578c041f36a3786fc788aa0",
+    "semantic_hash": "853794dba578c041f36a3786fc788aa0"
+  },
+  "D:\\orion\\scripts\\training\\convert_hf_to_gguf.py": {
+    "mtime": 1790248872.77404,
+    "ast_hash": "28e57389229be3d6cc9581da18082e25",
+    "semantic_hash": "28e57389229be3d6cc9581da18082e25"
+  },
+  "D:\\orion\\scripts\\training\\corpus_builder.py": {
+    "mtime": 1790248872.7775693,
+    "ast_hash": "00d09f8527f00febd96212291fd3a922",
+    "semantic_hash": "00d09f8527f00febd96212291fd3a922"
+  },
+  "D:\\orion\\scripts\\training\\deploy_orion.py": {
+    "mtime": 1790248872.7786112,
+    "ast_hash": "4ad47875bb964d16d28eb0d89ffa4804",
+    "semantic_hash": "4ad47875bb964d16d28eb0d89ffa4804"
+  },
+  "D:\\orion\\scripts\\training\\e2e_training_smoke_test.py": {
+    "mtime": 1790248872.7811983,
+    "ast_hash": "9f43786af493cc56f4cd19d28dc71780",
+    "semantic_hash": "9f43786af493cc56f4cd19d28dc71780"
+  },
+  "D:\\orion\\scripts\\training\\eval_vision_actions.py": {
+    "mtime": 1790442118.586954,
+    "ast_hash": "738c29263e7dafca36584cadec74d2ae",
+    "semantic_hash": "738c29263e7dafca36584cadec74d2ae"
+  },
+  "D:\\orion\\scripts\\training\\export_gguf_matrix.py": {
+    "mtime": 1790248872.7811983,
+    "ast_hash": "8720715e919aa3457cd42657c7261c8e",
+    "semantic_hash": "8720715e919aa3457cd42657c7261c8e"
+  },
+  "D:\\orion\\scripts\\training\\extend_context.py": {
+    "mtime": 1790352720.9489677,
+    "ast_hash": "34dedd80b93fa8e2aeba159938812ec4",
+    "semantic_hash": "34dedd80b93fa8e2aeba159938812ec4"
+  },
+  "D:\\orion\\scripts\\training\\finalize_context_extension.py": {
+    "mtime": 1790354767.7534134,
+    "ast_hash": "ea7475c08bb587ed3af6b07b928a17ea",
+    "semantic_hash": "ea7475c08bb587ed3af6b07b928a17ea"
+  },
+  "D:\\orion\\scripts\\training\\orion_corpus.py": {
+    "mtime": 1790248872.7832463,
+    "ast_hash": "026367722764fe77c7e5be73a407d5a2",
+    "semantic_hash": "026367722764fe77c7e5be73a407d5a2"
+  },
+  "D:\\orion\\scripts\\training\\orion_dataset.py": {
+    "mtime": 1790248872.7852614,
+    "ast_hash": "afd2dd59f71c0b23ecca1719716aec1c",
+    "semantic_hash": "afd2dd59f71c0b23ecca1719716aec1c"
+  },
+  "D:\\orion\\scripts\\training\\orion_dpo.py": {
+    "mtime": 1790248872.7852614,
+    "ast_hash": "2a7b6e324472a8207d3568fcc104509b",
+    "semantic_hash": "2a7b6e324472a8207d3568fcc104509b"
+  },
+  "D:\\orion\\scripts\\training\\orion_train.py": {
+    "mtime": 1790248872.7883365,
+    "ast_hash": "51f9f5d3e7b2d15fe7ffdc71ecdc311a",
+    "semantic_hash": "51f9f5d3e7b2d15fe7ffdc71ecdc311a"
+  },
+  "D:\\orion\\scripts\\training\\train_comp001.py": {
+    "mtime": 1790248872.7903502,
+    "ast_hash": "1d8f2a512ca9e2c9ed47fe617e7c7bac",
+    "semantic_hash": "1d8f2a512ca9e2c9ed47fe617e7c7bac"
+  },
+  "D:\\orion\\scripts\\training\\verify_context_extension.py": {
+    "mtime": 1790354817.7109542,
+    "ast_hash": "98a4a393978b1a58f90fe74f47923b38",
+    "semantic_hash": "98a4a393978b1a58f90fe74f47923b38"
   }
 }

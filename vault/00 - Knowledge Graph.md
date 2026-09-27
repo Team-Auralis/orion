@@ -55,13 +55,33 @@
 ---
 
 <!-- VAULT:AUTO:START note=kg-orion -->
-## ORION Capability Nodes (auto)
+## ORION Capability + Graph Nodes (auto)
 
-> Last sync: 2026-09-26T17:21+00:00
+> Last sync: 2026-09-27T05:39+00:00
+
+### Capability edges
 
 - `ORION Capabilities` → `ORION Training Ledger` : every verified run/claim
 - `ORION Screen-Vision & Actions` → `ORION Capabilities` : the see/act layer is a verified capability
 - `ORION Capabilities` → `Forensic Audit` : same provenance discipline, model-scale
-- Edges as wikilinks: [[ORION Capabilities]], [[ORION Screen-Vision & Actions]],
-  [[ORION Training Ledger]]
+
+### Graph edges (repo graph → community graph)
+
+- `ORION` → `Repo Graph (graft)` : the repo as a queryable call graph, one note per scope
+- `Repo Graph (graft)` → `Knowledge Graph (graphify)` : same repo, different question
+  (who calls whom vs. what clusters together); the community graph is scoped to
+  `scripts/training` and dated in its own note
+- `Repo Graph (graft)` → `ORION Screen-Vision & Actions` : the `orion_runner` scope is what see/do actually is
+
+### Two graphs, honestly scoped
+
+- **Repo Graph (graft)** — VERIFIED current: rebuilt from the live `graft/`
+  tree on every run. Edges stay in graft's `.graph` DB (`graft callers <sym>`);
+  Obsidian holds the nodes, not the edges.
+- **Knowledge Graph (graphify)** — VERIFIED as a *labelled snapshot*, not a live
+  graph: `graphify-out/` is only re-run deliberately, so its note carries its own
+  scope + date and is never presented as current.
+
+Edges as wikilinks: [[ORION Capabilities]], [[ORION Screen-Vision & Actions]],
+  [[ORION Training Ledger]], [[Repo Graph (graft)]], [[Knowledge Graph (graphify)]]
 <!-- VAULT:AUTO:END -->
