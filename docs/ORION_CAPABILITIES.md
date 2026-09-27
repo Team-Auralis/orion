@@ -193,6 +193,19 @@ UNSOLVED; next candidate recipes are plain-format QA SFT (no `Q:/A:`
 scaffolding), rollout-style fine-tuning on clean answers, or a
 preference/RLHF-style stage — none attempted yet this cycle (no thrash).
 
+**Root-cause investigation (2026-09-27):** `docs/ORION_GENERATION_ROOT_CAUSE.md`
+— the failure is reproduced on frozen v8, the SFT pipeline is verified clean
+(tokenizer round-trip 16/16, label alignment 0/61,119 mismatches), decoding is
+faithful, but the base model is **insufficiently pretrained** (0.88% of one
+epoch; residual stream std ~465, max |h| ~11.5K; grad clip 1.0 saturated, raw
+grads to 10K). Controls: tiny 8-row memorization reaches only 25–34%
+teacher-forced acc at 300 steps; lr 3e-3 diverges; 60-row synth control
+acquires nothing in 50 steps. Minimum fix: **pretrain the base ≥1 epoch (or
+swap to a properly pretrained small model), then rerun the same SFT recipe**;
+secondary: bigger LoRA (rank, modules) or full FT, scale-aware grad clip,
+warmup+scheduler, explicit EOS supervision. Raw outputs:
+`logs/gen_root_cause/`; ledger: `logs/training_runs.jsonl`.
+
 ## How the pieces fit
 ```
 Image ──► vision.py (Florence-2) ──► caption ──► ORION (100M)

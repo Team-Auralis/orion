@@ -139,10 +139,10 @@ graph TD
 
 Recent commits:
 
+- `750c5d6 test(eval): generative root-cause harness - reproducible diagnostics + raw outputs`
 - `bffd60f train(eval): marathon 3c complete - v8 best same-split eval 5.7566, gen matrix proven`
 - `d083ba9 docs: generation proof matrix (honest - held-out/generalization/fluency quantified)`
 - `b2dcdd6 test(eval): generation-probe matrix - quantifies held-out/generalization/fluency`
 - `1c515ce feat(runner): classifier reuses last real screen caption when available`
 - `daded6e feat(runner): self-check for classifier + rules + router layers`
-- `0650f74 feat(vision): classification-head verb mapping (VERIFIED 19/20 held-out) + layered router`
 <!-- VAULT:AUTO:END -->
