@@ -1,0 +1,42 @@
+{
+  "tag": "v7",
+  "adapter": "models/comp001/100m-teacher-distill-v7",
+  "sets": {
+    "heldout_same": {
+      "n": 16,
+      "latch_rate": 0.9375,
+      "clean_rate": 0.0625,
+      "stop_rate": 0.0,
+      "punct_rate": 0.0,
+      "avg_len_tokens": 80.0,
+      "avg_distinct_ratio": 0.2018,
+      "ref_contain_rate": 0.0,
+      "ref_exact_rate": 0.0,
+      "ref_first3_rate": 0.0
+    },
+    "fresh_domain": {
+      "n": 9,
+      "latch_rate": 1.0,
+      "clean_rate": 0.0,
+      "stop_rate": 0.0,
+      "punct_rate": 0.0,
+      "avg_len_tokens": 80.0,
+      "avg_distinct_ratio": 0.2415,
+      "ref_contain_rate": 0.0,
+      "ref_exact_rate": 0.0,
+      "ref_first3_rate": 0.0
+    },
+    "fluency": {
+      "n": 5,
+      "latch_rate": 1.0,
+      "clean_rate": 0.0,
+      "stop_rate": 0.0,
+      "punct_rate": 0.0,
+      "avg_len_tokens": 80.0,
+      "avg_distinct_ratio": 0.1279,
+      "ref_contain_rate": null,
+      "ref_exact_rate": null,
+      "ref_first3_rate": null
+    }
+  }
+}
