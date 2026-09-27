@@ -154,6 +154,9 @@ with `error_message`. Run → capability links: [[ORION Capabilities]] and
 | `teach-distill-87f1da62` | COMPLETED | vision_actions3.jsonl | 182 | 8 | 7.1598 → 5.7276 | 20.0 | 5.6783 | 97.56 |
 | `teach-distill-f6fa2561` | COMPLETED | teacher_curriculum_variants.jsonl | 246 | 15 | 6.6650 → 5.5470 | 16.77 | 5.7791 | 924.33 |
 | `teach-distill-e160eb96` | COMPLETED | teacher_curriculum_merged5.jsonl | 426 | 10 | 6.5917 → 5.7196 | 13.23 | 5.6913 | 1082.33 |
+| `teach-vision-cls-e1d00439` | COMPLETED | vision_actions_cls.jsonl | 718 | 8 | - → - | - | - | 448.87 |
+| `teach-vision-cls-270dd30a` | COMPLETED | vision_actions_cls.jsonl | 708 | 8 | - → - | - | - | 460.4 |
+| `teach-vision-cls-df34c868` | COMPLETED | vision_actions_cls.jsonl | 708 | 8 | - → - | - | - | 459.55 |
 
 ## Honest warnings
 
@@ -164,12 +167,12 @@ with `error_message`. Run → capability links: [[ORION Capabilities]] and
 
 ## Recent commits (context)
 
+- `dc3d1d1 feat(train): marathon 3b - expanded 79-question curriculum (426 rows), best eval 5.6913`
 - `7051a2f feat(train): training marathon 3 - 246-row distill + vision-action fmt3 (honest negative)`
 - `c413c29 feat(vault): merge graft + graphify into Obsidian vault`
 - `553bdb2 docs(plan): merge graft + graphify into Obsidian vault - readiness plan`
 - `289c72a chore(vault): Obsidian vault sync rule - auto-update on every commit`
 - `2151aab feat(train): training marathon 2 - expanded distill + vision-action v2`
-- `cc97b69 feat(train): vision-action SFT experiment (honest negative)`
 
 ## Related
 

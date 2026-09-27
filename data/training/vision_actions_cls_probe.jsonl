@@ -1,0 +1,12 @@
+{"id": "probe-000", "prompt": "screen: a browser window with a search bar\nuser: open the browser\naction:", "caption": "a browser window with a search bar", "intent": "open the browser", "verb": "open"}
+{"id": "probe-001", "prompt": "screen: a desktop with a terminal window and a code editor\nuser: launch the terminal\naction:", "caption": "a desktop with a terminal window and a code editor", "intent": "launch the terminal", "verb": "open"}
+{"id": "probe-002", "prompt": "screen: an empty desktop with a wallpaper\nuser: start the calculator\naction:", "caption": "an empty desktop with a wallpaper", "intent": "start the calculator", "verb": "open"}
+{"id": "probe-003", "prompt": "screen: a browser window with a search bar\nuser: show me the browser\naction:", "caption": "a browser window with a search bar", "intent": "show me the browser", "verb": "open"}
+{"id": "probe-004", "prompt": "screen: a desktop with a clock and a taskbar\nuser: what's on my screen\naction:", "caption": "a desktop with a clock and a taskbar", "intent": "what's on my screen", "verb": "see"}
+{"id": "probe-005", "prompt": "screen: a computer screen with a code on it\nuser: what can you see\naction:", "caption": "a computer screen with a code on it", "intent": "what can you see", "verb": "see"}
+{"id": "probe-006", "prompt": "screen: an empty desktop with a wallpaper\nuser: look at the screen\naction:", "caption": "an empty desktop with a wallpaper", "intent": "look at the screen", "verb": "see"}
+{"id": "probe-007", "prompt": "screen: a chat application with a message input box\nuser: type hello world\naction:", "caption": "a chat application with a message input box", "intent": "type hello world", "verb": "type"}
+{"id": "probe-008", "prompt": "screen: a notes application with white text on a dark background\nuser: write this down\naction:", "caption": "a notes application with white text on a dark background", "intent": "write this down", "verb": "type"}
+{"id": "probe-009", "prompt": "screen: a login page with username and password fields\nuser: press enter\naction:", "caption": "a login page with username and password fields", "intent": "press enter", "verb": "key"}
+{"id": "probe-010", "prompt": "screen: a game window with graphics\nuser: hit escape\naction:", "caption": "a game window with graphics", "intent": "hit escape", "verb": "key"}
+{"id": "probe-011", "prompt": "screen: a browser window with a search bar\nuser: click\naction:", "caption": "a browser window with a search bar", "intent": "click", "verb": "click"}

@@ -25,13 +25,25 @@ the *description*; actions are whitelist-only and confirm-first.
 ## Assistant integration
 
 - `scripts/orion_assistant.py` routes plain words → whitelisted verbs
+- **Layered router (VERIFIED, 2026-09-27):** explicit verb → prefix rules
+  (`orion_runner/actions.py`: launch/start/run→open, press/hit→key,
+  click/select→click, what/look/describe→see) → classifier fallback
+  ("show me the browser" → open @82%) → honest fallback. `--once` mode for
+  scripted runs; `type`/`key`/`click` report BLOCKED until `pyautogui` is
+  installed; every action stays confirm-first
 - Non-screen asks get an honest "not wired yet" — no fake free-form reasoning
 
 ## Training status (caption → action mapping)
 
-- **Honest negative so far:** two formats, both 0/10 held-out verb accuracy —
-  see [[ORION Training Ledger]] runs `teach-distill-b63388c3` and
-  `teach-distill-f8590729`. Not a working auto-pilot; the user picks the action.
+- **Generation-era (3 honest negatives):** SFT formats `teach-distill-b63388c3`,
+  `teach-distill-f8590729`, `teach-distill-87f1da62` all 0/10 held-out verb
+  accuracy — the 100M decoder latches onto scaffolding. Generation verb
+  mapping stopped (no thrash).
+- **Classification head (VERIFIED, 2026-09-27):** LoRA + linear head on the
+  encoder scores the 5 verbs directly (`orion_runner/vision_actions.py`).
+  Held-out **19/20 (0.95)**; honest out-of-grid probe **9/12 (0.75)** — runs
+  `teach-vision-cls-270dd30a`, `teach-vision-cls-df34c868`. Artifact
+  `models/comp001/100m-vision-actions-cls`.
 
 ## Related
 

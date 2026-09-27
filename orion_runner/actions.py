@@ -10,12 +10,23 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 LOG_PATH = REPO_ROOT / "logs" / "orion_actions.jsonl"
+
+# Strip verb prefixes to recover the action target ("launch the notepad" ->
+# "notepad", "type hello world" -> "hello world").
+_PREFIX = re.compile(
+    r"^(please\s+)?(open\s+(the|up\s+the|me\s+the)?|launch\s+(the)?|start\s+(the)?|"
+    r"run\s+(the)?|type\s+(out\s+)?(the)?|write\s+(down\s+)?(the)?|"
+    r"input\s+(the)?|press\s+(the)?|hit\s+(the)?|click\s+(on\s+)?(the)?|"
+    r"select\s+(the)?)\s*",
+    re.IGNORECASE,
+)
 
 
 def log_action(
@@ -76,6 +87,46 @@ ACTIONS = {
     "key": (_press_key, True, "key <name> (enter, esc, tab, ...)"),
     "click": (_click, True, "click (at current mouse position)"),
 }
+
+# Deterministic prefix layer: first-word -> verb. Covers the common plain
+# phrasings (launch/start/run are "open"); the classifier (vision_actions)
+# handles everything these rules don't.
+PREFIX_RULES = {
+    "open": "open",
+    "launch": "open",
+    "start": "open",
+    "run": "open",
+    "type": "type",
+    "write": "type",
+    "input": "type",
+    "press": "key",
+    "hit": "key",
+    "click": "click",
+    "select": "click",
+    "double": "click",
+    "see": "see",
+    "look": "see",
+    "describe": "see",
+    "what": "see",
+}
+
+
+def match_by_prefix(phrase: str) -> tuple[str, str] | None:
+    """Return (verb, rest) from the deterministic prefix rules, or None."""
+    low = phrase.strip().lower()
+    first = low.split()[0] if low.split() else ""
+    verb = PREFIX_RULES.get(first)
+    if verb is None:
+        return None
+    if verb == "see":
+        return "see", ""
+    rest = _PREFIX.sub("", phrase).strip()
+    return verb, rest
+
+
+def strip_target(phrase: str) -> str:
+    """Strip verb prefixes and return the target text (may be empty)."""
+    return _PREFIX.sub("", phrase).strip()
 
 
 def execute(verb: str, rest: str, confirm_fn) -> tuple[bool, str]:

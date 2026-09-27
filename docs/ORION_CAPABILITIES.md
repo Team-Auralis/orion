@@ -121,26 +121,35 @@ before executing; ORION never derives an action from text found on screen.
   is logged to `logs/orion_actions.jsonl` (confirmed / aborted / error).
 - **VERIFIED:** `open notepad` confirmed → Notepad launched, screen
   re-captured + re-described; an aborted run recorded `"confirmed": false`.
-- **Not (yet):** full autonomous UI-driving by ORION itself — the 100M
-  model's instruction-following is UNPROVEN, so choosing the action stays
-  with the user; this module is the safe, honest bridge.
-- **Small vision-action SFT (experiment, honest negative):** a 192-row
-  synthetic run teaching ORION to pick a whitelist verb from
-  `caption + user request` converged (loss 7.27 → 4.00, run
-  `teach-distill-b63388c3`) but generation does not yet emit whitelisted
-  verbs on held-out rows (0/10 greedy and sampled) — recorded in
-  `logs/training_runs.jsonl`; the model latched onto the `A:` format
-  scaffolding instead of the action mapping. A second verb-only format
-  (response = single verb, `teach-distill-f8590729`, loss 7.22 -> 3.64)
-  also yields 0/10 at generation time. **Format #3** — the last serious
-  attempt (`teach-distill-87f1da62`, 2026-09-27): removed the `Q:/A:`
-  scaffolding entirely (plain `screen:/user:/action:` prompt, verb appended,
-  `--fmt plain` in `distill_train.py` + `--format3` in
-  `build_vision_actions.py`); training converged (+20.00%, eval 5.6783) but
-  held-out generation is **still 0/10 greedy and sampled** — three
-  independent formats, all honest negatives. Training on verb mapping is
-  stopped (no thrash); the user-chooses-action bridge above remains the
-  working design.
+- **Generation-era verb mapping (3 honest negatives, kept for history):**
+  three SFT formats teaching ORION to *write* the verb —
+  `teach-distill-b63388c3` (Q/A, loss 7.27→4.00), `teach-distill-f8590729`
+  (verb-only response, 7.22→3.64), and format #3 `teach-distill-87f1da62`
+  (plain `screen:/user:/action:` prompt, 2026-09-27, eval 5.6783) — all
+  **0/10** held-out generation (the 100M decoder latches onto scaffolding).
+  Generation-based verb mapping: STOPPED (no thrash).
+- **Classification-head verb mapping (VERIFIED, 2026-09-27):** instead of
+  asking ORION to generate, a LoRA adapter + linear head on the encoder's
+  last-token hidden state scores the 5 whitelist verbs directly —
+  `scripts/training/build_vision_actions_classifier.py` (728-row
+  caption×intent grid) + `train_vision_actions_classifier.py` (class-weight
+  balanced, best-epoch save). Held-out top-1 **19/20 (0.95)**, balanced
+  4-per-verb eval (run `teach-vision-cls-270dd30a`; artifact
+  `models/comp001/100m-vision-actions-cls`). **Honest out-of-grid probe:
+  9/12 (0.75)** on real-user phrasings (`vision_actions_cls_probe.jsonl`,
+  run `teach-vision-cls-df34c868`) — the grid held-out shares vocabulary
+  with training, so 0.75 is the honest generalization number.
+- **Layered router (VERIFIED, 2026-09-27):** `scripts/orion_assistant.py`
+  now routes 1) explicit whitelist verb, 2) deterministic prefix rules in
+  `orion_runner/actions.py` (launch/start/run→open, press/hit→key,
+  click/select→click, what/look/describe→see), 3) the classifier for novel
+  phrasing (e.g. "show me the browser" → open @82%), 4) honest fallback.
+  Confirm-first is unchanged; `type`/`key`/`click` still report BLOCKED
+  honestly until `pyautogui` is installed. Inference:
+  `orion_runner/vision_actions.py` (`classify(caption, intent)`).
+- **Not (yet):** full autonomous UI-driving — verb *choice* is now handled
+  by ORION (classification), but every action still asks `confirm? [y/N]`
+  before executing, and pixel-level clicking/typing needs `pyautogui`.
 
 ## How the pieces fit
 ```
