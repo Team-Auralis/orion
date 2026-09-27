@@ -167,6 +167,8 @@ Repo  ──► archify skill ──► docs/ORION_ARCHITECTURE.html (interactiv
 - Distill: `python scripts/teacher/distill_train.py`
 - Context extend: `python scripts/training/extend_context.py`
 - Vision self-check: `python -m orion_runner.vision`
+- Runner self-check (classifier + rules + router, no real actions):
+  `python scripts/orion_selfcheck.py`
 - Generation self-check: `python -m orion_runner.gen`
 - Voice: `python scripts/orion_speak.py "Hello I am ORION" --play`
 - Low-memory inference probe: `python scripts/tools/probe_airllm.py`

@@ -157,6 +157,7 @@ with `error_message`. Run → capability links: [[ORION Capabilities]] and
 | `teach-vision-cls-e1d00439` | COMPLETED | vision_actions_cls.jsonl | 718 | 8 | - → - | - | - | 448.87 |
 | `teach-vision-cls-270dd30a` | COMPLETED | vision_actions_cls.jsonl | 708 | 8 | - → - | - | - | 460.4 |
 | `teach-vision-cls-df34c868` | COMPLETED | vision_actions_cls.jsonl | 708 | 8 | - → - | - | - | 459.55 |
+| `teach-distill-d63fcb38` | COMPLETED | teacher_curriculum_merged6.jsonl | 687 | 10 | 6.7330 → 5.8357 | 13.33 | 5.8892 | 1806.12 |
 
 ## Honest warnings
 
@@ -167,12 +168,12 @@ with `error_message`. Run → capability links: [[ORION Capabilities]] and
 
 ## Recent commits (context)
 
+- `0650f74 feat(vision): classification-head verb mapping (VERIFIED 19/20 held-out) + layered router`
 - `dc3d1d1 feat(train): marathon 3b - expanded 79-question curriculum (426 rows), best eval 5.6913`
 - `7051a2f feat(train): training marathon 3 - 246-row distill + vision-action fmt3 (honest negative)`
 - `c413c29 feat(vault): merge graft + graphify into Obsidian vault`
 - `553bdb2 docs(plan): merge graft + graphify into Obsidian vault - readiness plan`
 - `289c72a chore(vault): Obsidian vault sync rule - auto-update on every commit`
-- `2151aab feat(train): training marathon 2 - expanded distill + vision-action v2`
 
 ## Related
 

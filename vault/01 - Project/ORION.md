@@ -139,10 +139,10 @@ graph TD
 
 Recent commits:
 
+- `0650f74 feat(vision): classification-head verb mapping (VERIFIED 19/20 held-out) + layered router`
 - `dc3d1d1 feat(train): marathon 3b - expanded 79-question curriculum (426 rows), best eval 5.6913`
 - `7051a2f feat(train): training marathon 3 - 246-row distill + vision-action fmt3 (honest negative)`
 - `c413c29 feat(vault): merge graft + graphify into Obsidian vault`
 - `553bdb2 docs(plan): merge graft + graphify into Obsidian vault - readiness plan`
 - `289c72a chore(vault): Obsidian vault sync rule - auto-update on every commit`
-- `2151aab feat(train): training marathon 2 - expanded distill + vision-action v2`
 <!-- VAULT:AUTO:END -->

@@ -115,6 +115,9 @@ def match_by_prefix(phrase: str) -> tuple[str, str] | None:
     """Return (verb, rest) from the deterministic prefix rules, or None."""
     low = phrase.strip().lower()
     first = low.split()[0] if low.split() else ""
+    first = first.strip(".,!?")  # "what's?" -> "what's"
+    if first.endswith("'s"):  # "what's" -> "what"
+        first = first[:-2]
     verb = PREFIX_RULES.get(first)
     if verb is None:
         return None
