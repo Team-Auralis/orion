@@ -11,6 +11,7 @@ rule-built (no teacher calls), so the experiment is reproducible and cheap.
     -> data/training/vision_actions.jsonl (train+eval, seed 907)
 """
 
+import argparse
 import json
 import random
 from pathlib import Path
@@ -61,12 +62,27 @@ INTENTS = [
 
 
 def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument(
+        "--format3",
+        action="store_true",
+        help="emit the plain no-scaffold format (screen:/user:/action:)",
+    )
+    args = ap.parse_args()
+
     rng = random.Random(SEED)
     rows = []
     for idx, (caption, (cmd, action)) in enumerate(
         (c, pair) for c in CAPTIONS for pair in INTENTS
     ):
-        instruction = f"Screen: {caption} | User wants: {cmd} | What should ORION do?"
+        if args.format3:
+            # Format #3: no "Q:/A:" scaffolding anywhere. The prompt ends
+            # with "action: " and the target IS the verb appended directly.
+            instruction = f"screen: {caption}\nuser: {cmd}\naction: "
+        else:
+            instruction = (
+                f"Screen: {caption} | User wants: {cmd} | What should ORION do?"
+            )
         rows.append(
             {
                 "id": f"va-{idx:03d}",
@@ -81,10 +97,27 @@ def main() -> int:
     n_eval = 10
     eval_rows, train_rows = rows[:n_eval], rows[n_eval:]
 
-    with open(OUT, "w", encoding="utf-8") as f:
+    out = (
+        REPO_ROOT
+        / "data"
+        / "training"
+        / ("vision_actions3.jsonl" if args.format3 else "vision_actions2.jsonl")
+    )
+    eval_out = (
+        REPO_ROOT
+        / "data"
+        / "training"
+        / (
+            "vision_actions_eval3.jsonl"
+            if args.format3
+            else "vision_actions_eval2.jsonl"
+        )
+    )
+
+    with open(out, "w", encoding="utf-8") as f:
         for r in train_rows:
             f.write(json.dumps(r) + "\n")
-    with open(EVAL_OUT, "w", encoding="utf-8") as f:
+    with open(eval_out, "w", encoding="utf-8") as f:
         for r in eval_rows:
             f.write(json.dumps(r) + "\n")
 
@@ -92,9 +125,11 @@ def main() -> int:
     for r in rows:
         v = r["response"].split()[0]
         verbs[v] = verbs.get(v, 0) + 1
-    print(f"[BUILD] {len(rows)} rows (train {len(train_rows)} / eval {len(eval_rows)})")
+    print(
+        f"[BUILD] {len(rows)} rows (train {len(train_rows)} / eval {len(eval_rows)}) fmt3={args.format3}"
+    )
     print(f"[BUILD] verb distribution: {verbs}")
-    print(f"[BUILD] -> {OUT.name}, {EVAL_OUT.name}")
+    print(f"[BUILD] -> {out.name}, {eval_out.name}")
     return 0
 
 

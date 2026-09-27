@@ -150,6 +150,9 @@ with `error_message`. Run → capability links: [[ORION Capabilities]] and
 | `teach-distill-b63388c3` | COMPLETED | vision_actions.jsonl | 182 | 8 | 7.2725 → 3.9992 | 45.01 | 3.9725 | 157.01 |
 | `teach-distill-c843c285` | COMPLETED | teacher_curriculum_merged2.jsonl | 98 | 10 | 6.5371 → 6.1033 | 6.64 | 6.2509 | 168.38 |
 | `teach-distill-f8590729` | COMPLETED | vision_actions2.jsonl | 182 | 8 | 7.2218 → 3.6374 | 49.63 | 3.5894 | 153.88 |
+| `teach-distill-abdd5a15` | COMPLETED | teacher_curriculum_merged4.jsonl | 246 | 10 | 6.6397 → 5.7638 | 13.19 | 5.7677 | 637.2 |
+| `teach-distill-87f1da62` | COMPLETED | vision_actions3.jsonl | 182 | 8 | 7.1598 → 5.7276 | 20.0 | 5.6783 | 97.56 |
+| `teach-distill-f6fa2561` | COMPLETED | teacher_curriculum_variants.jsonl | 246 | 15 | 6.6650 → 5.5470 | 16.77 | 5.7791 | 924.33 |
 
 ## Honest warnings
 
@@ -160,12 +163,12 @@ with `error_message`. Run → capability links: [[ORION Capabilities]] and
 
 ## Recent commits (context)
 
+- `c413c29 feat(vault): merge graft + graphify into Obsidian vault`
 - `553bdb2 docs(plan): merge graft + graphify into Obsidian vault - readiness plan`
 - `289c72a chore(vault): Obsidian vault sync rule - auto-update on every commit`
 - `2151aab feat(train): training marathon 2 - expanded distill + vision-action v2`
 - `cc97b69 feat(train): vision-action SFT experiment (honest negative)`
 - `62d8eb7 feat(assistant): ORION assistant router - plain words to screen actions`
-- `fcedded docs: capabilities section 8 - screen vision + confirmed actions`
 
 ## Related
 

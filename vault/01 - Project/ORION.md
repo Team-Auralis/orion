@@ -139,10 +139,10 @@ graph TD
 
 Recent commits:
 
+- `c413c29 feat(vault): merge graft + graphify into Obsidian vault`
 - `553bdb2 docs(plan): merge graft + graphify into Obsidian vault - readiness plan`
 - `289c72a chore(vault): Obsidian vault sync rule - auto-update on every commit`
 - `2151aab feat(train): training marathon 2 - expanded distill + vision-action v2`
 - `cc97b69 feat(train): vision-action SFT experiment (honest negative)`
 - `62d8eb7 feat(assistant): ORION assistant router - plain words to screen actions`
-- `fcedded docs: capabilities section 8 - screen vision + confirmed actions`
 <!-- VAULT:AUTO:END -->

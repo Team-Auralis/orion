@@ -41,8 +41,19 @@ from e2e_training_smoke_test import (  # noqa: E402
 from orion_runner.loader import pack_sequences, tokenize_samples  # noqa: E402
 
 
-def fmt_row(row: dict) -> str:
+def fmt_qa(row: dict) -> str:
     return f"Q: {row['instruction']}\nA: {row['response']}"
+
+
+def fmt_plain(row: dict) -> str:
+    # Format #3 (vision-actions): no Q:/A: scaffolding tokens. The
+    # instruction carries its own prompt suffix ("... action: ") and the
+    # response is appended directly, so the model only ever emits the verb.
+    # The 100M student latches onto "A:" otherwise (seen at 0/10 eval).
+    return f"{row['instruction']}{row['response']}"
+
+
+FORMATS = {"qa": fmt_qa, "plain": fmt_plain}
 
 
 def load_rows(path: Path) -> list:
@@ -75,6 +86,7 @@ def main():
     ap.add_argument("--max-len", type=int, default=256)
     ap.add_argument("--batch-size", type=int, default=2)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--fmt", choices=["qa", "plain"], default="qa")
     args = ap.parse_args()
 
     avail_gb = psutil.virtual_memory().available / (1024**3)
@@ -92,7 +104,10 @@ def main():
     dataset_path = Path(args.dataset)
     dataset_hash = compute_file_sha256(dataset_path)
     rows = load_rows(dataset_path)
-    print(f"[DATA] {len(rows)} teacher rows | sha256 {dataset_hash[:16]}...")
+    fmt_row = FORMATS[args.fmt]
+    print(
+        f"[DATA] {len(rows)} teacher rows | sha256 {dataset_hash[:16]}... | fmt={args.fmt}"
+    )
 
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from peft import LoraConfig, get_peft_model

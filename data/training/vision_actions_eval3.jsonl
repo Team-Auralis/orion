@@ -1,0 +1,10 @@
+{"id": "va-084", "teacher": "template", "temperature": 0.0, "instruction": "screen: a file explorer with several folders\nuser: open the calculator\naction: ", "response": "open"}
+{"id": "va-068", "teacher": "template", "temperature": 0.0, "instruction": "screen: a notes application with white text on a dark background\nuser: click\naction: ", "response": "click"}
+{"id": "va-157", "teacher": "template", "temperature": 0.0, "instruction": "screen: a settings window with several toggles\nuser: type hello\naction: ", "response": "type"}
+{"id": "va-002", "teacher": "template", "temperature": 0.0, "instruction": "screen: a desktop with a terminal window and a code editor\nuser: describe the screen\naction: ", "response": "see"}
+{"id": "va-114", "teacher": "template", "temperature": 0.0, "instruction": "screen: an empty desktop with a wallpaper\nuser: press the tab key\naction: ", "response": "key"}
+{"id": "va-175", "teacher": "template", "temperature": 0.0, "instruction": "screen: a computer screen with a code on it\nuser: open my documents folder\naction: ", "response": "open"}
+{"id": "va-113", "teacher": "template", "temperature": 0.0, "instruction": "screen: an empty desktop with a wallpaper\nuser: hit escape\naction: ", "response": "key"}
+{"id": "va-024", "teacher": "template", "temperature": 0.0, "instruction": "screen: a browser window with a search bar\nuser: see what's on my screen\naction: ", "response": "see"}
+{"id": "va-100", "teacher": "template", "temperature": 0.0, "instruction": "screen: an empty desktop with a wallpaper\nuser: open chrome\naction: ", "response": "open"}
+{"id": "va-155", "teacher": "template", "temperature": 0.0, "instruction": "screen: a settings window with several toggles\nuser: launch the terminal\naction: ", "response": "open"}

@@ -28,6 +28,12 @@ def main() -> int:
     )
     ap.add_argument("--max-new-tokens", type=int, default=12)
     ap.add_argument("--do-sample", action="store_true")
+    ap.add_argument(
+        "--fmt",
+        choices=["qa", "plain"],
+        default="qa",
+        help="prompt shape: qa = 'Q: <instruction>\\nA: ', plain = instruction as-is",
+    )
     args = ap.parse_args()
 
     from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -53,7 +59,7 @@ def main() -> int:
     correct = 0
     in_whitelist = 0
     for r in rows:
-        prompt = f"Q: {r['instruction']}\nA: "
+        prompt = f"Q: {r['instruction']}\nA: " if args.fmt == "qa" else r["instruction"]
         expected = r["response"].split()[0]
         inputs = tokenizer(prompt, return_tensors="pt")
         inputs.pop("token_type_ids", None)

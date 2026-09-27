@@ -27,9 +27,17 @@ teacher's answers.
 - **VERIFIED:** loss 6.33 -> 6.14 (−3.06%) on 64 train rows; eval loss 5.58;
   adapter logit delta `True` (per-token mean 5e-4). End-to-end pipeline works
   and is audited in `logs/training_runs.jsonl`.
+- **Marathon 3 (2026-09-27):** 10 curriculum passes added (p1..p10) → 246
+  unique `(instruction, response)` rows from the fixed 39-question set (11
+  passes total; the teacher saturates — per-question variants max out ~13).
+  Runs: `teach-distill-abdd5a15` (246 rows @10ep, loss 6.6397 → 5.7638,
+  +13.19%, eval **5.7677** = best so far, vs 6.2509 prior-best: −7.7%
+  relative); `teach-distill-f6fa2561` (246 rows @15ep, +16.77%, eval 5.7791
+  ≈ same — dataset saturates by epoch 10). Adapters:
+  `100m-teacher-distill-v4` (best) and `-v5`.
 - **UNPROVEN:** generated answers are not yet fluent Q/A. A 100M model
-  recovering from 0.9%-of-corpus training needs far more curriculum than 64
-  examples; the recipe is the point, not yet the outcome.
+  recovering from ~0.9%-of-corpus training needs far more curriculum than 246
+  unique rows; the recipe is the point, not yet the outcome.
 
 ## 3. Vision (read images) — `orion_runner/vision.py`
 ORION is a text model. `describe(image)` routes an image through
@@ -119,8 +127,15 @@ before executing; ORION never derives an action from text found on screen.
   `logs/training_runs.jsonl`; the model latched onto the `A:` format
   scaffolding instead of the action mapping. A second verb-only format
   (response = single verb, `teach-distill-f8590729`, loss 7.22 -> 3.64)
-  also yields 0/10 at generation time — two independent formats, both
-  honest negatives.
+  also yields 0/10 at generation time. **Format #3** — the last serious
+  attempt (`teach-distill-87f1da62`, 2026-09-27): removed the `Q:/A:`
+  scaffolding entirely (plain `screen:/user:/action:` prompt, verb appended,
+  `--fmt plain` in `distill_train.py` + `--format3` in
+  `build_vision_actions.py`); training converged (+20.00%, eval 5.6783) but
+  held-out generation is **still 0/10 greedy and sampled** — three
+  independent formats, all honest negatives. Training on verb mapping is
+  stopped (no thrash); the user-chooses-action bridge above remains the
+  working design.
 
 ## How the pieces fit
 ```

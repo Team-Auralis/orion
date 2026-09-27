@@ -1,0 +1,9 @@
+{
+  "run_id": "cb28016d",
+  "model": "qwen2.5:3b",
+  "temperature": 0.6,
+  "count": 39,
+  "duration_s": 111.4,
+  "out": "data\\training\\teacher_curriculum_p4.jsonl",
+  "git_commit": null
+}
