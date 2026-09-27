@@ -16,6 +16,15 @@ from orion_runner.vision import describe
 
 SCREENSHOT_DIR = Path(__file__).resolve().parents[1] / "data" / "screenshots"
 
+# Last successful caption, so the classifier can reuse a REAL screen
+# description instead of the neutral placeholder when available.
+_last_caption = ""
+
+
+def last_caption() -> str:
+    """Caption of the most recent successful see(); '' if none yet."""
+    return _last_caption
+
 
 def capture(path: Path | str | None = None) -> Path:
     """Grab the primary display to a PNG and return the saved path."""
@@ -31,6 +40,7 @@ def capture(path: Path | str | None = None) -> Path:
 
 def see(path: Path | str | None = None) -> str:
     """Capture the screen (or reuse an existing image) and describe it."""
+    global _last_caption
     shot = capture(path)
     try:
         caption = describe(shot)  # lazy-loads Florence-2 on first use
@@ -38,6 +48,7 @@ def see(path: Path | str | None = None) -> str:
         return (
             f"[VISION BLOCKED] capture saved to {shot}; Florence-2 unavailable: {exc}"
         )
+    _last_caption = caption
     return f"shot={shot}\ncaption: {caption}"
 
 

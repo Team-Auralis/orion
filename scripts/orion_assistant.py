@@ -72,8 +72,12 @@ def route_once(line: str, confirm_fn, last_caption: str = "") -> str:
                 f"[RULE:{verb}] which {verb} target? I need the app/url/text/key name."
             )
 
-    # 3) Classifier path: plain phrase -> whitelisted verb + target.
-    verdict = classify(last_caption or "", low, min_conf=0.55)
+    # 3) Classifier path: plain phrase -> whitelisted verb + target. Uses the
+    #    last real screen caption when available (classifier was trained on
+    #    real caption distributions), else the neutral placeholder.
+    from orion_runner.screen import last_caption as cached_caption
+
+    verdict = classify(last_caption or cached_caption() or "", low, min_conf=0.55)
     if verdict["verb"] is not None:
         verb = verdict["verb"]
         conf = verdict["confidence"]
