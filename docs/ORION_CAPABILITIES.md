@@ -151,6 +151,37 @@ before executing; ORION never derives an action from text found on screen.
   by ORION (classification), but every action still asks `confirm? [y/N]`
   before executing, and pixel-level clicking/typing needs `pyautogui`.
 
+## 9. Generation proof matrix (held-out / generalization / fluent) — honest ❌
+
+2026-09-27. The three vaguest claims ("0/10 held-out", "generalization
+unproven", "fluent unproven") are now quantified by
+`scripts/eval/gen_probe.py` over 30 rows (16 held-out same-category + 9
+fresh-domain + 5 fluency prompts, teacher references pulled live from
+Ollama at build time). Greedy decoding, 80 token cap. Raw generations:
+`logs/gen_probe_*.jsonl`; summaries `logs/gen_probe_summary_*.json`.
+
+| Metric | base | v6 | v7 | v8 |
+|---|---|---|---|---|
+| Held-out latch rate (`A:` scaffold) | 0% (gibbers) | 88% | 94% | PENDING |
+| Fresh-domain latch rate | 0% (gibbers) | 89% | 100% | PENDING |
+| Fluency latch rate | 0% | 100% | 100% | PENDING |
+| Teacher-answer match (held-out) | 0/16 | 0/16 | 0/16 | PENDING |
+| Teacher-answer match (fresh-domain) | 0/9 | 0/9 | 0/9 | PENDING |
+| Reached EOS / stop token | 0% | 0% | 0% | PENDING |
+| Repetition (1 − distinct-token ratio) | 87–90% | 67–70% | 70–80% | PENDING |
+
+**Honest conclusion:** the `A:` latch claim is now reproducible and
+quantified — distillation adapters do not answer held-out questions; they
+re-emit scaffolding (88–100% of the time starting with `A:/Q:`) or fall
+into repetition loops, and match the teacher reference on **0/25** QA rows
+between them. The base model produces word-salad (no latch, heavier
+repetition). **No model reaches the stop token in 80 tokens.** Eval-loss
+gains (5.69→5.89 trajectory) measure next-token loss, NOT answer quality —
+the two diverged, which is exactly why the earlier "0/10" phrasing was
+kept. Generation remains ❌ UNSOLVED; next candidate recipes are plain-format
+QA SFT (no `Q:/A:` scaffolding), rollout-style fine-tuning on clean answers,
+or a preference/RLHF-style stage — none attempted yet this cycle (no thrash).
+
 ## How the pieces fit
 ```
 Image ──► vision.py (Florence-2) ──► caption ──► ORION (100M)
@@ -170,6 +201,8 @@ Repo  ──► archify skill ──► docs/ORION_ARCHITECTURE.html (interactiv
 - Runner self-check (classifier + rules + router, no real actions):
   `python scripts/orion_selfcheck.py`
 - Generation self-check: `python -m orion_runner.gen`
+- Generation proof matrix: `scripts/eval/build_gen_probe_data.py` then
+  `python scripts/eval/gen_probe.py --adapter <dir|base> --tag <name>`
 - Voice: `python scripts/orion_speak.py "Hello I am ORION" --play`
 - Low-memory inference probe: `python scripts/tools/probe_airllm.py`
 - Low-memory inference self-check: `python -m orion_runner.airllm_bridge`
